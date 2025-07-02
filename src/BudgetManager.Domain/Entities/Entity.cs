@@ -2,9 +2,9 @@ namespace BudgetManager.Domain.Entities;
 
 public abstract class Entity : IEquatable<Entity>
 {
-  public Guid Id { get; init; } = Guid.NewGuid();
-  public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
-  public DateTimeOffset? UpdatedAt { get; init; }
+  public Guid Id { get; set; } = Guid.NewGuid();
+  public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+  public DateTimeOffset? UpdatedAt { get; set; }
 
   public bool Equals(Entity? other)
   {

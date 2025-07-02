@@ -1,3 +1,3 @@
 namespace BudgetManager.Domain.Entities;
 
-public sealed class Allocation : BudgetOperation;
+public sealed class Allocation : BudgetTransaction;

@@ -1,12 +1,14 @@
-using BudgetManager.Common.Models;
-
 namespace BudgetManager.Domain.Entities;
 
 public class Account : Entity
 {
-  public required Balance Balance { get; init; }
-  public required string Name { get; init; }
+  public required Guid LedgerId { get; set; }
+  public required string Name { get; set; }
+  public string? Description { get; set; }
 
-  public void Add(Money money) => Balance.Add(money);
-  public void Deduct(Money money) => Balance.Deduct(money);
+  public Ledger Ledger { get; set; } = null!;
+  public virtual ICollection<Income> Incomes { get; set; } = [];
+  public virtual ICollection<Expense> Expenses { get; set; } = [];
+  public virtual ICollection<Transfer> OutgoingTransfers { get; set; } = [];
+  public virtual ICollection<Transfer> IncomingTransfers { get; set; } = [];
 }

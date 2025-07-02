@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BudgetManager.Common", "Bud
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BudgetManager.Domain", "BudgetManager.Domain\BudgetManager.Domain.csproj", "{EAEAAE80-02B7-4353-B9AA-269AAE40244F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BudgetManager.Api", "BudgetManager.Api\BudgetManager.Api.csproj", "{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{EAEAAE80-02B7-4353-B9AA-269AAE40244F}.Release|x64.Build.0 = Release|Any CPU
 		{EAEAAE80-02B7-4353-B9AA-269AAE40244F}.Release|x86.ActiveCfg = Release|Any CPU
 		{EAEAAE80-02B7-4353-B9AA-269AAE40244F}.Release|x86.Build.0 = Release|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Debug|x64.Build.0 = Debug|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Debug|x86.Build.0 = Debug|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Release|x64.ActiveCfg = Release|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Release|x64.Build.0 = Release|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Release|x86.ActiveCfg = Release|Any CPU
+		{6AD72B5C-40D7-48D2-9A61-0EA09530D3D2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
