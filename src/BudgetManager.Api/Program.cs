@@ -1,4 +1,7 @@
 using BudgetManager.Infrastructure.Configuration;
+using BudgetManager.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +41,23 @@ builder.Services.UsePostgreSQL(builder.Configuration);
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 app.UseCors();
+
+app.UseStaticFiles(
+  new StaticFileOptions
+  {
+    FileProvider = new PhysicalFileProvider(
+      Path.Combine(builder.Environment.ContentRootPath, "Assets")
+      ),
+    RequestPath = "/assets"
+  }
+);
 
 if (app.Environment.IsDevelopment())
 {
@@ -54,5 +73,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapGet("/", (HttpContext context) => context.Response.Redirect("/swagger", true)).ExcludeFromDescription();
 
 app.Run();
