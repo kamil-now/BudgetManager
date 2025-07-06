@@ -7,6 +7,16 @@ namespace BudgetManager.Infrastructure.Persistence.Services;
 
 public class BudgetService(ApplicationDbContext dbContext) : IBudgetService
 {
+  public async Task<IEnumerable<Fund>> GetAllFundsWithTransactions(Guid budgetId, CancellationToken cancellationToken)
+  {
+    return await dbContext.Funds
+      .Include(f => f.Allocations)
+      .Include(f => f.Deallocations)
+      .Include(f => f.Reallocations)
+      .Where(x => x.BudgetId == budgetId)
+      .ToArrayAsync(cancellationToken);
+  }
+
   public async Task<T> Add<T>(T entity, CancellationToken cancellationToken) where T : Entity
   {
     if (entity is null)
@@ -39,5 +49,12 @@ public class BudgetService(ApplicationDbContext dbContext) : IBudgetService
     return await dbContext.Set<T>()
         .Where(predicate)
         .ToListAsync(cancellationToken);
+  }
+
+  public async Task<bool> Exists<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
+  {
+    ArgumentNullException.ThrowIfNull(predicate);
+
+    return await dbContext.Set<T>().AnyAsync(predicate,cancellationToken);
   }
 }

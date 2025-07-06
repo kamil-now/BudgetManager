@@ -10,9 +10,6 @@ public static class EntityBuilderExtensions
     {
         builder.ConfigureEntity();
 
-        builder.Property(x => x.LedgerId)
-            .IsRequired();
-
         builder.Property(x => x.AccountId)
             .IsRequired();
 

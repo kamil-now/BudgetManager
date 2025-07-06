@@ -1,3 +1,5 @@
+using BudgetManager.Common.Models;
+
 namespace BudgetManager.Domain.Entities;
 
 public class Fund : Entity
@@ -10,5 +12,29 @@ public class Fund : Entity
   public virtual ICollection<Allocation> Allocations { get; set; } = [];
   public virtual ICollection<Deallocation> Deallocations { get; set; } = [];
   public virtual ICollection<Reallocation> Reallocations { get; set; } = [];
-  public virtual ICollection<Reallocation> Unallocations { get; set; } = [];
+
+  public Balance GetBalance()
+  {
+    Balance balance = [];
+    foreach (var x in Allocations)
+    {
+      balance.Add(x.Amount);
+    }
+    foreach (var x in Deallocations)
+    {
+      balance.Deduct(x.Amount);
+    }
+    foreach (var x in Reallocations)
+    {
+      if (x.FundId == Id)
+      {
+        balance.Deduct(x.Amount);
+      }
+      else
+      {
+        balance.Add(x.Amount);
+      }
+    }
+    return balance;
+  }
 }

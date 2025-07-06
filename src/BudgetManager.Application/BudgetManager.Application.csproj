@@ -10,4 +10,8 @@
     <ProjectReference Include="..\BudgetManager.Common\BudgetManager.Common.csproj" />
     <ProjectReference Include="..\BudgetManager.Domain\BudgetManager.Domain.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="BudgetManager.Common" />
+  </ItemGroup>
 </Project>

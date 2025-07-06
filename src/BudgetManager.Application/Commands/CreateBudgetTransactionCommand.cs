@@ -2,8 +2,9 @@ using BudgetManager.Common.Models;
 
 namespace BudgetManager.Application.Commands;
 
-public abstract record CreateTransactionCommand(
-  Guid AccountId,
+public abstract record CreateBudgetTransactionCommand(
+  Guid BudgetId,
+  Guid FundId,
   Money Amount,
   DateTimeOffset Date,
   string Title,

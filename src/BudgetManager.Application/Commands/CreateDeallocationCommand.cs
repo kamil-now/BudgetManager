@@ -2,15 +2,18 @@ using BudgetManager.Common.Models;
 
 namespace BudgetManager.Application.Commands;
 
-public record CreateExpenseCommand(
-  Guid AccountId,
+public record CreateDeallocationCommand(
+  Guid BudgetId,
+  Guid FundId,
+  Guid ExpenseId,
   Money Amount,
   DateTimeOffset Date,
   string Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-): CreateTransactionCommand(
-  AccountId,
+): CreateBudgetTransactionCommand(
+  BudgetId,
+  FundId,
   Amount,
   Date,
   Title,

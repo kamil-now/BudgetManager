@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -15,10 +15,10 @@
     </PackageReference>
   </ItemGroup>
 
-  
   <ItemGroup>
     <ProjectReference Include="..\BudgetManager.Common\BudgetManager.Common.csproj" />
     <ProjectReference Include="..\BudgetManager.Infrastructure\BudgetManager.Infrastructure.csproj" />
+    <ProjectReference Include="..\BudgetManager.Application\BudgetManager.Application.csproj" />
   </ItemGroup>
 
 </Project>

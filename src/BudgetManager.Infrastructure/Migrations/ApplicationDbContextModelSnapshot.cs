@@ -35,7 +35,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("LedgerId")
+                    b.Property<Guid?>("LedgerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -46,9 +46,14 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LedgerId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Accounts", (string)null);
                 });
@@ -142,6 +147,9 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<Guid>("ExpenseId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("FundId")
                         .HasColumnType("uuid");
 
@@ -151,6 +159,8 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BudgetId");
+
+                    b.HasIndex("ExpenseId");
 
                     b.HasIndex("FundId");
 
@@ -176,9 +186,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("LedgerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Tags")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -194,8 +201,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("LedgerId");
 
                     b.ToTable("Expenses", (string)null);
                 });
@@ -250,9 +255,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("LedgerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Tags")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -268,8 +270,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("LedgerId");
 
                     b.ToTable("Incomes", (string)null);
                 });
@@ -363,9 +363,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("LedgerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Tags")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -384,8 +381,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("LedgerId");
 
                     b.HasIndex("TargetAccountId");
 
@@ -407,6 +402,10 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasColumnType("character varying(254)")
                         .HasAnnotation("RegularExpression", "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -425,10 +424,17 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
                         .WithMany("Accounts")
                         .HasForeignKey("LedgerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BudgetManager.Domain.Entities.User", "User")
+                        .WithMany("Accounts")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Ledger");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Allocation", b =>
@@ -503,6 +509,12 @@ namespace BudgetManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BudgetManager.Domain.Entities.Expense", "Expense")
+                        .WithMany()
+                        .HasForeignKey("ExpenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BudgetManager.Domain.Entities.Fund", "Fund")
                         .WithMany("Deallocations")
                         .HasForeignKey("FundId")
@@ -538,6 +550,8 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.Navigation("Budget");
 
+                    b.Navigation("Expense");
+
                     b.Navigation("Fund");
                 });
 
@@ -546,12 +560,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasOne("BudgetManager.Domain.Entities.Account", "Account")
                         .WithMany("Expenses")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
-                        .WithMany()
-                        .HasForeignKey("LedgerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -583,8 +591,6 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.Navigation("Amount")
                         .IsRequired();
-
-                    b.Navigation("Ledger");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Fund", b =>
@@ -603,12 +609,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasOne("BudgetManager.Domain.Entities.Account", "Account")
                         .WithMany("Incomes")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
-                        .WithMany()
-                        .HasForeignKey("LedgerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -640,8 +640,6 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.Navigation("Amount")
                         .IsRequired();
-
-                    b.Navigation("Ledger");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Ledger", b =>
@@ -664,7 +662,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("BudgetManager.Domain.Entities.Fund", "Fund")
-                        .WithMany("Unallocations")
+                        .WithMany()
                         .HasForeignKey("FundId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -717,12 +715,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
-                        .WithMany()
-                        .HasForeignKey("LedgerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("BudgetManager.Domain.Entities.Account", "TargetAccount")
                         .WithMany("IncomingTransfers")
                         .HasForeignKey("TargetAccountId")
@@ -758,8 +750,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("Amount")
                         .IsRequired();
 
-                    b.Navigation("Ledger");
-
                     b.Navigation("TargetAccount");
                 });
 
@@ -786,8 +776,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("Deallocations");
 
                     b.Navigation("Reallocations");
-
-                    b.Navigation("Unallocations");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Ledger", b =>
@@ -799,6 +787,8 @@ namespace BudgetManager.Infrastructure.Migrations
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Accounts");
+
                     b.Navigation("Budgets");
 
                     b.Navigation("Ledgers");

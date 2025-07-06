@@ -18,6 +18,7 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
+                    HashedPassword = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
@@ -53,7 +54,8 @@ namespace BudgetManager.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LedgerId = table.Column<Guid>(type: "uuid", nullable: true),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -66,6 +68,12 @@ namespace BudgetManager.Infrastructure.Migrations
                         name: "FK_Accounts_Ledgers_LedgerId",
                         column: x => x.LedgerId,
                         principalTable: "Ledgers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Accounts_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -106,7 +114,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
                     AccountId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
@@ -124,12 +131,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         principalTable: "Accounts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Expenses_Ledgers_LedgerId",
-                        column: x => x.LedgerId,
-                        principalTable: "Ledgers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -139,7 +140,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
                     AccountId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
@@ -157,12 +157,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         principalTable: "Accounts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Incomes_Ledgers_LedgerId",
-                        column: x => x.LedgerId,
-                        principalTable: "Ledgers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -173,7 +167,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     TargetAccountId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
                     AccountId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
@@ -195,12 +188,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         name: "FK_Transfers_Accounts_TargetAccountId",
                         column: x => x.TargetAccountId,
                         principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Transfers_Ledgers_LedgerId",
-                        column: x => x.LedgerId,
-                        principalTable: "Ledgers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -263,6 +250,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExpenseId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     FundId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -279,6 +267,12 @@ namespace BudgetManager.Infrastructure.Migrations
                         name: "FK_Deallocations_Budgets_BudgetId",
                         column: x => x.BudgetId,
                         principalTable: "Budgets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Deallocations_Expenses_ExpenseId",
+                        column: x => x.ExpenseId,
+                        principalTable: "Expenses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -333,6 +327,11 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "LedgerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Accounts_UserId",
+                table: "Accounts",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Allocations_BudgetId",
                 table: "Allocations",
                 column: "BudgetId");
@@ -358,6 +357,11 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "BudgetId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Deallocations_ExpenseId",
+                table: "Deallocations",
+                column: "ExpenseId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Deallocations_FundId",
                 table: "Deallocations",
                 column: "FundId");
@@ -368,11 +372,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "AccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Expenses_LedgerId",
-                table: "Expenses",
-                column: "LedgerId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Funds_BudgetId",
                 table: "Funds",
                 column: "BudgetId");
@@ -381,11 +380,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "IX_Incomes_AccountId",
                 table: "Incomes",
                 column: "AccountId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Incomes_LedgerId",
-                table: "Incomes",
-                column: "LedgerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ledgers_UserId",
@@ -413,11 +407,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "AccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transfers_LedgerId",
-                table: "Transfers",
-                column: "LedgerId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Transfers_TargetAccountId",
                 table: "Transfers",
                 column: "TargetAccountId");
@@ -433,9 +422,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "Deallocations");
 
             migrationBuilder.DropTable(
-                name: "Expenses");
-
-            migrationBuilder.DropTable(
                 name: "Incomes");
 
             migrationBuilder.DropTable(
@@ -443,6 +429,9 @@ namespace BudgetManager.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Transfers");
+
+            migrationBuilder.DropTable(
+                name: "Expenses");
 
             migrationBuilder.DropTable(
                 name: "Funds");

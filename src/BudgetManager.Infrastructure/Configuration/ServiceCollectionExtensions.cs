@@ -4,6 +4,7 @@ using BudgetManager.Infrastructure.Auth.Models;
 using BudgetManager.Infrastructure.Auth.Services;
 using BudgetManager.Infrastructure.Events;
 using BudgetManager.Infrastructure.Persistence;
+using BudgetManager.Infrastructure.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,8 @@ public static class ServiceCollectionExtensions
 
   public static IServiceCollection UsePostgreSQL(this IServiceCollection services, IConfiguration configuration)
   {
+    services.AddScoped<IBudgetService, BudgetService>();
+
     var connectionString = configuration.GetConnectionString("DefaultConnection");
     services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
     return services;

@@ -31,11 +31,6 @@ public class FundConfiguration : IEntityTypeConfiguration<Fund>
             .HasForeignKey(x => x.FundId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.Unallocations)
-            .WithOne(x => x.Fund)
-            .HasForeignKey(x => x.FundId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasMany(x => x.Reallocations)
             .WithOne(x => x.TargetFund)
             .HasForeignKey(x => x.TargetFundId)

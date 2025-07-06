@@ -1,11 +1,11 @@
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
+using BudgetManager.Application.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -37,6 +37,7 @@ builder.Services.AddCors(
     options => options.AddDefaultPolicy(
     build => build.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
+builder.Services.UseMediator();
 builder.Services.UsePostgreSQL(builder.Configuration);
 
 var app = builder.Build();
