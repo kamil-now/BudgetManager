@@ -4,7 +4,7 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateUserHandler(IBudgetService budgetService) : IRequestHandler<CreateUserCommand, Guid>
+public sealed class CreateUserHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateUserCommand, Guid>
 {
   public async Task<Guid> Handle(CreateUserCommand command, CancellationToken cancellationToken)
   {

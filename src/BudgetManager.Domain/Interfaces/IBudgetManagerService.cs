@@ -3,7 +3,7 @@ using BudgetManager.Domain.Entities;
 
 namespace BudgetManager.Domain.Interfaces;
 
-public interface IBudgetService
+public interface IBudgetManagerService
 {
   Task<IEnumerable<Fund>> GetAllFundsWithTransactions(Guid budgetId, CancellationToken cancellationToken);
 

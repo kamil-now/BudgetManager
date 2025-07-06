@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
 
   public static IServiceCollection UsePostgreSQL(this IServiceCollection services, IConfiguration configuration)
   {
-    services.AddScoped<IBudgetService, BudgetService>();
+    services.AddScoped<IBudgetManagerService, BudgetManagerService>();
 
     var connectionString = configuration.GetConnectionString("DefaultConnection");
     services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));

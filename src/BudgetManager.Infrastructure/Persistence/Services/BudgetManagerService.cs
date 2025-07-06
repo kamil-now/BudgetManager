@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BudgetManager.Infrastructure.Persistence.Services;
 
-public class BudgetService(ApplicationDbContext dbContext) : IBudgetService
+public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManagerService
 {
   public async Task<IEnumerable<Fund>> GetAllFundsWithTransactions(Guid budgetId, CancellationToken cancellationToken)
   {

@@ -4,7 +4,7 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetFundsHandler(IBudgetService budgetService) : IRequestHandler<GetFundsQuery, IEnumerable<FundDTO>>
+public sealed class GetFundsHandler(IBudgetManagerService budgetService) : IRequestHandler<GetFundsQuery, IEnumerable<FundDTO>>
 {
   public async Task<IEnumerable<FundDTO>> Handle(GetFundsQuery command, CancellationToken cancellationToken)
   {

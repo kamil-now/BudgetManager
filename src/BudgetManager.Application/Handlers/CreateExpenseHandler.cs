@@ -4,7 +4,7 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateExpenseHandler(IBudgetService budgetService) : IRequestHandler<CreateExpenseCommand, Guid>
+public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateExpenseCommand, Guid>
 {
   public async Task<Guid> Handle(CreateExpenseCommand command, CancellationToken cancellationToken)
   {
