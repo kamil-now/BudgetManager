@@ -7,7 +7,7 @@ namespace BudgetManager.Infrastructure.Persistence.Services;
 
 public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManagerService
 {
-  public async Task<IEnumerable<Fund>> GetAllFundsWithTransactions(Guid budgetId, CancellationToken cancellationToken)
+  public async Task<IEnumerable<Fund>> GetAllFundsWithTransactionsAsync(Guid budgetId, CancellationToken cancellationToken)
   {
     return await dbContext.Funds
       .Include(f => f.Allocations)
@@ -17,7 +17,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
       .ToArrayAsync(cancellationToken);
   }
 
-  public async Task<T> Add<T>(T entity, CancellationToken cancellationToken) where T : Entity
+  public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken) where T : Entity
   {
     if (entity is null)
     {
@@ -31,7 +31,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
     return entity;
   }
 
-  public async Task<T> Get<T>(Guid id, CancellationToken cancellationToken) where T : Entity
+  public async Task<T> GetAsync<T>(Guid id, CancellationToken cancellationToken) where T : Entity
   {
     if (id == Guid.Empty)
     {
@@ -42,7 +42,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
       ?? throw new KeyNotFoundException($"Entity of type {typeof(T).Name} with ID {id} not found.");
   }
 
-  public async Task<IEnumerable<T>> Get<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
+  public async Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
   {
     ArgumentNullException.ThrowIfNull(predicate);
 
@@ -51,7 +51,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
         .ToListAsync(cancellationToken);
   }
 
-  public async Task<bool> Exists<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
+  public async Task<bool> ExistsAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
   {
     ArgumentNullException.ThrowIfNull(predicate);
 

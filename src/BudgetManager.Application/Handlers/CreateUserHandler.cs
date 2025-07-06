@@ -8,11 +8,11 @@ public sealed class CreateUserHandler(IBudgetManagerService budgetService) : IRe
 {
   public async Task<Guid> Handle(CreateUserCommand command, CancellationToken cancellationToken)
   {
-    if (await budgetService.Exists<User>(u => u.Email == command.Email, cancellationToken))
+    if (await budgetService.ExistsAsync<User>(u => u.Email == command.Email, cancellationToken))
     {
       throw new InvalidOperationException($"User with email {command.Email} already exists.");
     }
-    var entity = await budgetService.Add(new User
+    var entity = await budgetService.AddAsync(new User
     {
       Name = command.Name,
       Email = command.Email,

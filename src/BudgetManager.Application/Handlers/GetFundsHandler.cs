@@ -8,7 +8,7 @@ public sealed class GetFundsHandler(IBudgetManagerService budgetService) : IRequ
 {
   public async Task<IEnumerable<FundDTO>> Handle(GetFundsQuery command, CancellationToken cancellationToken)
   {
-    var funds = await budgetService.GetAllFundsWithTransactions(command.BudgetId, cancellationToken);
+    var funds = await budgetService.GetAllFundsWithTransactionsAsync(command.BudgetId, cancellationToken);
 
     return funds.Select(fund => new FundDTO(fund));
   }

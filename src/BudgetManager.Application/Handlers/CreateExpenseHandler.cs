@@ -10,7 +10,7 @@ public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : 
   {
     await ValidateCommandAsync(command, cancellationToken);
 
-    var entity = await budgetService.Add(new Expense
+    var entity = await budgetService.AddAsync(new Expense
     {
       AccountId = command.AccountId,
       Title = command.Title,
@@ -33,7 +33,7 @@ public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : 
     {
       throw new ArgumentException("Account ID cannot be empty.", nameof(command));
     }
-    if (!await budgetService.Exists<Account>(x => x.Id == command.AccountId, cancellationToken))
+    if (!await budgetService.ExistsAsync<Account>(x => x.Id == command.AccountId, cancellationToken))
     {
       throw new InvalidOperationException($"Account with ID {command.AccountId} does not exist.");
     }
