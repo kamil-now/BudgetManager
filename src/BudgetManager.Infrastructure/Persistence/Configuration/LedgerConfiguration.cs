@@ -27,6 +27,7 @@ public class LedgerConfiguration : IEntityTypeConfiguration<Ledger>
         builder.HasMany(x => x.Accounts)
             .WithOne(x => x.Ledger)
             .HasForeignKey(x => x.LedgerId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => x.UserId);

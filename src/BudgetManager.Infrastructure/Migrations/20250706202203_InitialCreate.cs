@@ -410,6 +410,12 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "IX_Transfers_TargetAccountId",
                 table: "Transfers",
                 column: "TargetAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />

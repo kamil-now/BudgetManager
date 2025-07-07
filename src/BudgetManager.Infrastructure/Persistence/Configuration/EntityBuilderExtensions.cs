@@ -1,5 +1,6 @@
 using BudgetManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BudgetManager.Infrastructure.Persistence.Configuration;
@@ -39,10 +40,15 @@ public static class EntityBuilderExtensions
             .HasConversion(
                 tags => tags == null ? null : string.Join(',', tags),
                 value => value == null ? null : value.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
-            .HasMaxLength(Constants.MaxTagsLength);
+            .HasMaxLength(Constants.MaxTagsLength)
+            .Metadata.SetValueComparer(
+                new ValueComparer<List<string>>(
+                (c1, c2) => c1 != null && c2!=null && c1.SequenceEqual(c2),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()));
 
         builder.HasIndex(x => x.AccountId);
-  }
+    }
 
     public static void ConfigureBudgetTransactionEntity<T>(this EntityTypeBuilder<T> builder) where T : BudgetTransaction
     {
@@ -68,11 +74,11 @@ public static class EntityBuilderExtensions
 
         builder.Property(x => x.Description)
             .HasMaxLength(Constants.MaxDescriptionLength);
-        
-        builder.HasIndex(x => x.FundId);
-  }
 
-  public static void ConfigureEntity<T>(this EntityTypeBuilder<T> builder) where T : Entity
+        builder.HasIndex(x => x.FundId);
+    }
+
+    public static void ConfigureEntity<T>(this EntityTypeBuilder<T> builder) where T : Entity
     {
         builder.HasKey(x => x.Id);
 

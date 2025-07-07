@@ -20,7 +20,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(254) // RFC 5321 limit
             .HasAnnotation("RegularExpression", @"^[^@\s]+@[^@\s]+\.[^@\s]+$")
             .IsRequired();
-        
+
         builder.HasMany(x => x.Ledgers)
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId)
@@ -30,5 +30,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.HasIndex(x => x.Email).IsUnique();
     }
 }

@@ -6,6 +6,7 @@ namespace BudgetManager.Infrastructure.Persistence;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
   public DbSet<User> Users { get; set; }
+  public DbSet<Account> Accounts { get; set; }
   public DbSet<Ledger> Ledgers { get; set; }
   public DbSet<Budget> Budgets { get; set; }
   public DbSet<Fund> Funds { get; set; }
