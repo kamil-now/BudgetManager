@@ -1,4 +1,3 @@
-using BudgetManager.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetManager.Application.Configuration;
@@ -7,6 +6,7 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection UseMediator(this IServiceCollection services)
   {
+    services.AddScoped<IMediator, Mediator>();
     var assembly = typeof(IAssemblyMarker).Assembly;
     // Find all types in the assembly that implement IRequestHandler<,> or IRequestHandler<>
     var handlerTypes = assembly.GetTypes()

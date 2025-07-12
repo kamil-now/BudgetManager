@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,24 @@ namespace BudgetManager.Infrastructure.Persistence.Services;
 
 public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManagerService
 {
+  public async Task SaveChangesAsync(CancellationToken cancellationToken = default) => await dbContext.SaveChangesAsync(cancellationToken);
+
+  public async Task RunInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+  {
+    var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+    try
+    {
+      await action();
+      await transaction.CommitAsync(cancellationToken);
+    }
+    catch
+    {
+      await transaction.RollbackAsync(cancellationToken);
+      throw;
+    }
+  }
+
   public async Task<IEnumerable<Fund>> GetAllFundsWithTransactionsAsync(Guid budgetId, CancellationToken cancellationToken)
   {
     return await dbContext.Funds
@@ -17,16 +36,14 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
       .ToArrayAsync(cancellationToken);
   }
 
-  public async Task<T> AddAsync<T>(T entity, CancellationToken cancellationToken) where T : Entity
+  public async Task<T> CreateAsync<T>(T entity, CancellationToken cancellationToken) where T : Entity
   {
     if (entity is null)
     {
       throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
     }
 
-    dbContext.Set<T>().Add(entity);
-
-    await dbContext.SaveChangesAsync(cancellationToken);
+    await dbContext.Set<T>().AddAsync(entity, cancellationToken);
 
     return entity;
   }
@@ -55,6 +72,40 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
   {
     ArgumentNullException.ThrowIfNull(predicate);
 
-    return await dbContext.Set<T>().AnyAsync(predicate,cancellationToken);
+    return await dbContext.Set<T>().AnyAsync(predicate, cancellationToken);
+  }
+
+  public async Task UpdateAsync<T>(Guid id, IEnumerable<Expression<Func<T, object>>> updatedProperties, CancellationToken cancellationToken) where T : Entity
+  {
+    if (id == Guid.Empty)
+    {
+      throw new ArgumentException("ID cannot be empty", nameof(id));
+    }
+
+    if (updatedProperties is null || !updatedProperties.Any())
+    {
+      throw new ArgumentException("At least one property must be specified for update", nameof(updatedProperties));
+    }
+
+    var entity = await GetAsync<T>(id, cancellationToken);
+
+    var dbEntity = dbContext.Entry(entity);
+    dbEntity.State = EntityState.Unchanged;
+
+    foreach (var property in updatedProperties)
+    {
+      dbEntity.Property(property).IsModified = true;
+    }
+  }
+
+  public async Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity
+  {
+    if (id == Guid.Empty)
+    {
+      throw new ArgumentException("ID cannot be empty", nameof(id));
+    }
+
+    var entity = await GetAsync<T>(id, cancellationToken);
+    dbContext.Set<T>().Remove(entity);
   }
 }

@@ -4,7 +4,7 @@ namespace BudgetManager.Common;
 
 public interface IMediator
 {
-    Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
+  Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
 }
 
 public interface IRequest<TResponse> { }
@@ -20,8 +20,18 @@ public class Mediator(IServiceProvider serviceProvider) : IMediator
 
   public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
   {
-    var handler = serviceProvider.GetService<IRequestHandler<IRequest<TResponse>, TResponse>>()
-      ?? throw new InvalidOperationException($"No handler registered for request type {typeof(IRequest<TResponse>)}");
-    return await handler.Handle(request, cancellationToken);
+    var requestType = request.GetType();
+    var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+
+    var handler = serviceProvider.GetService(handlerType)
+        ?? throw new InvalidOperationException($"No handler registered for request type {requestType}");
+
+    var handleMethod = handlerType.GetMethod("Handle")
+      ?? throw new InvalidOperationException($"Handler {handlerType} does not implement Handle method.");
+
+    var task = handleMethod.Invoke(handler, [request, cancellationToken]) as Task<TResponse>
+      ?? throw new InvalidOperationException($"Handler {handlerType} did not return a valid task.");
+
+    return await task;
   }
 }
