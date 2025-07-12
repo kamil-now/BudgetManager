@@ -1,6 +1,6 @@
+using BudgetManager.Application.Configuration;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
-using BudgetManager.Application.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
@@ -24,13 +24,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // TODO
-// builder.Services.UseBudgetManagerAuth(builder.Configuration);
 
-// services.AddAuthentication("Bearer")
-//     .AddJwtBearer("Bearer", options =>
-//     {
-//       options.TokenValidationParameters = JwtTokenGenerator.GetTokenValidationParameters(configuration);
-//     });
+builder.Services.AddAuthorization();
+builder.Services.UseBudgetManagerAuth(builder.Configuration);
+
+
 
 // TODO
 builder.Services.AddCors(
@@ -40,12 +38,18 @@ builder.Services.AddCors(
 builder.Services.UseMediator();
 builder.Services.UsePostgreSQL(builder.Configuration);
 
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+app.UseAuthentication();
+app.UseAuthorization();
+
+if (!app.Environment.IsEnvironment("Test"))
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+  using var scope = app.Services.CreateScope();
+  var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+  db.Database.Migrate();
 }
 
 app.UseCors();
@@ -53,10 +57,10 @@ app.UseCors();
 app.UseStaticFiles(
   new StaticFileOptions
   {
-    FileProvider = new PhysicalFileProvider(
+      FileProvider = new PhysicalFileProvider(
       Path.Combine(builder.Environment.ContentRootPath, "Assets")
       ),
-    RequestPath = "/assets"
+      RequestPath = "/assets"
   }
 );
 
@@ -74,6 +78,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapControllers().RequireAuthorization();
+
 app.MapGet("/", (HttpContext context) => context.Response.Redirect("/swagger", true)).ExcludeFromDescription();
 
 app.Run();
+
+public partial class Program { } // for testing purposes

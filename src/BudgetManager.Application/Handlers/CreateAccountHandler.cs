@@ -8,13 +8,13 @@ public sealed class CreateAccountHandler(IBudgetManagerService budgetService) : 
 {
   public async Task<Guid> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
   {
-    if (!await budgetService.ExistsAsync<User>(x => x.Id == command.UserId, cancellationToken))
+    if (!await budgetService.ExistsAsync<User>(x => x.Id == command.OwnerId, cancellationToken))
     {
-      throw new InvalidOperationException($"User with ID {command.UserId} does not exist.");
+      throw new InvalidOperationException($"User with ID {command.OwnerId} does not exist.");
     }
-    if (await budgetService.ExistsAsync<Account>(x => x.Name == command.Name && x.UserId == command.UserId, cancellationToken))
+    if (await budgetService.ExistsAsync<Account>(x => x.Name == command.Name && x.OwnerId == command.OwnerId, cancellationToken))
     {
-      throw new InvalidOperationException($"Account with name {command.Name} already exists for user {command.UserId}.");
+      throw new InvalidOperationException($"Account with name {command.Name} already exists for user {command.OwnerId}.");
     }
     if (command.LedgerId.HasValue && !await budgetService.ExistsAsync<Ledger>(x => x.Id == command.LedgerId.Value, cancellationToken))
     {
@@ -22,7 +22,7 @@ public sealed class CreateAccountHandler(IBudgetManagerService budgetService) : 
     }
     var entity = await budgetService.CreateAsync(new Account
     {
-      UserId = command.UserId,
+      OwnerId = command.OwnerId,
       LedgerId = command.LedgerId,
       Name = command.Name,
       Description = command.Description,

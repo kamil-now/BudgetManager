@@ -1,6 +1,5 @@
 using BudgetManager.Common;
 using BudgetManager.Domain.Interfaces;
-using BudgetManager.IntegrationTests.Fixtures;
 using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 

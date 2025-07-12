@@ -22,8 +22,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.HasMany(x => x.Ledgers)
-            .WithOne(x => x.User)
-            .HasForeignKey(x => x.UserId)
+            .WithOne(x => x.Owner)
+            .HasForeignKey(x => x.OwnerId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Budgets)

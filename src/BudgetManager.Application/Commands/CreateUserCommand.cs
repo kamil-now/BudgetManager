@@ -1,7 +1,9 @@
+using BudgetManager.Application.Models;
+
 namespace BudgetManager.Application.Commands;
 
 public record CreateUserCommand(
-  string Name,
   string Email,
-  string HashedPassword
-): IRequest<Guid>;
+  string Password,
+  string? Name
+): IRequest<UserDTO>;

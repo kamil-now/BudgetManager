@@ -11,7 +11,6 @@ namespace BudgetManager.Infrastructure.Auth.Services;
 public class JwtTokenGenerator(IOptions<JwtTokenSettings> options) : IJwtTokenGenerator
 {
   private readonly JwtTokenSettings _settings = options.Value;
-
   public string GenerateToken(UserDTO user)
   {
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret));
@@ -19,9 +18,10 @@ public class JwtTokenGenerator(IOptions<JwtTokenSettings> options) : IJwtTokenGe
 
     var claims = new[]
     {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email)
-        };
+      new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+      new Claim(ClaimTypes.Email, user.Email),
+      new Claim(ClaimTypes.Name, user.Name ?? user.Email)
+    };
 
     var token = new JwtSecurityToken(
         issuer: _settings.Issuer,
@@ -31,21 +31,5 @@ public class JwtTokenGenerator(IOptions<JwtTokenSettings> options) : IJwtTokenGe
         signingCredentials: credentials);
 
     return new JwtSecurityTokenHandler().WriteToken(token);
-  }
-
-  public TokenValidationParameters GetTokenValidationParameters()
-  {
-    return new TokenValidationParameters
-    {
-      ValidateIssuer = true,
-      ValidateAudience = true,
-      ValidateLifetime = true,
-      ValidateIssuerSigningKey = true,
-      ValidIssuer = _settings.Issuer,
-      ValidAudience = _settings.Audience,
-      IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_settings.Secret)),
-      ClockSkew = TimeSpan.Zero
-    };
   }
 }

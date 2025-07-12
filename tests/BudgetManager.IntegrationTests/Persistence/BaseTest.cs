@@ -1,5 +1,4 @@
 using BudgetManager.Infrastructure.Persistence;
-using BudgetManager.IntegrationTests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection.Abstracts;

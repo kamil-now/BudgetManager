@@ -1,5 +1,4 @@
 using BudgetManager.Domain.Entities;
-using BudgetManager.IntegrationTests.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit.Abstractions;
@@ -16,7 +15,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         {
             Id = Guid.NewGuid(),
             Name = "Test Account",
-            UserId = Guid.NewGuid()
+            OwnerId = Guid.NewGuid()
         };
         var dbContext = GetContext();
         using var transaction = await dbContext.Database.BeginTransactionAsync();
@@ -45,7 +44,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         {
             Name = "Test Account",
             Description = "Test Account Description",
-            UserId = user.Id,
+            OwnerId = user.Id,
             LedgerId = Guid.NewGuid()
         };
         var dbContext = GetContext();
@@ -77,7 +76,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         var ledger = new Ledger()
         {
             Id = Guid.NewGuid(),
-            UserId = user.Id,
+            OwnerId = user.Id,
             Name = "Test Ledger"
         };
 
@@ -85,7 +84,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         {
             Name = "Test Account",
             Description = "Test Account Description",
-            UserId = user.Id,
+            OwnerId = user.Id,
             LedgerId = ledger.Id
         };
 
@@ -97,7 +96,6 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         dbContext.Ledgers.Add(ledger);
         dbContext.Accounts.Add(account);
         await dbContext.SaveChangesAsync(CancellationToken.None);
-
 
         // Assert
         var result = dbContext.Accounts.FirstOrDefault(a => a.Id == account.Id);
@@ -122,7 +120,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         {
             Name = "Test Account",
             Description = "Test Account Description",
-            UserId = user.Id,
+            OwnerId = user.Id,
             LedgerId = null,
         };
 
@@ -133,7 +131,6 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         dbContext.Users.Add(user);
         dbContext.Accounts.Add(account);
         await dbContext.SaveChangesAsync(CancellationToken.None);
-
 
         // Assert
         var result = dbContext.Accounts.FirstOrDefault(a => a.Id == account.Id);
@@ -146,7 +143,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         result.Id.ShouldNotBe(Guid.Empty);
         result.Name.ShouldBe(expected.Name);
         result.Description.ShouldBe(expected.Description);
-        result.UserId.ShouldBe(expected.UserId);
+        result.OwnerId.ShouldBe(expected.OwnerId);
         result.LedgerId.ShouldBe(expected.LedgerId);
         result.CreatedAt.ShouldBeGreaterThanOrEqualTo(timestamp);
         result.UpdatedAt.ShouldBeNull();

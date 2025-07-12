@@ -30,6 +30,6 @@ public class LedgerConfiguration : IEntityTypeConfiguration<Ledger>
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => x.OwnerId);
     }
 }

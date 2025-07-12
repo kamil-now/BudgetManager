@@ -10,7 +10,7 @@ public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : 
   {
     await ValidateCommandAsync(command, cancellationToken);
 
-    var entity = await budgetService.AddAsync(new Expense
+    var entity = await budgetService.CreateAsync(new Expense
     {
       AccountId = command.AccountId,
       Title = command.Title,

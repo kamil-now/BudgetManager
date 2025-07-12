@@ -21,4 +21,7 @@
     <ProjectReference Include="..\BudgetManager.Application\BudgetManager.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="BudgetManager.Common" />
+  </ItemGroup>
 </Project>

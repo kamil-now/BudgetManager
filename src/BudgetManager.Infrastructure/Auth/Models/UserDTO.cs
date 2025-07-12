@@ -1,3 +1,3 @@
 namespace BudgetManager.Infrastructure.Auth.Models;
 
-public sealed record UserDTO(Guid Id, string Name, string Email);
+public sealed record UserDTO(Guid Id, string? Name, string Email);

@@ -3,7 +3,7 @@ using BudgetManager.Common.Models;
 namespace BudgetManager.Application.Commands;
 
 public record CreateAccountCommand(
-  Guid UserId,
+  Guid OwnerId,
   Guid? LedgerId,
   Money CurrentBalance,
   string Name,

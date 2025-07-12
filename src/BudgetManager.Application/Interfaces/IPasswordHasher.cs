@@ -1,4 +1,4 @@
-namespace BudgetManager.Infrastructure.Auth.Interfaces;
+namespace BudgetManager.Application.Interfaces;
 
 public interface IPasswordHasher
 {

@@ -1,8 +1,5 @@
 using BudgetManager.Application.Commands;
-using BudgetManager.Common.Models;
 using BudgetManager.Domain.Entities;
-using BudgetManager.IntegrationTests.Fixtures;
-using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -66,7 +63,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
     account.Id.ShouldBe(accountId);
     account.Name.ShouldBe(command.Name);
     account.Description.ShouldBe(command.Description);  
-    account.UserId.ShouldBe(user.Id);
+    account.OwnerId.ShouldBe(user.Id);
     account.LedgerId.ShouldBeNull();
     // account.CurrentBalance.ShouldBe(new Money(0, "PLN"));
   }

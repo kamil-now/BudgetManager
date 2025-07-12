@@ -16,9 +16,13 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .IsRequired()
             .HasMaxLength(Constants.MaxNameLength);
 
+        builder
+            .HasIndex(a => new { a.Name, a.OwnerId })
+            .IsUnique();
+
         builder.Property(x => x.Description)
             .HasMaxLength(Constants.MaxDescriptionLength);
-        
+
         builder.HasMany(x => x.Expenses)
             .WithOne(x => x.Account)
             .HasForeignKey(x => x.AccountId)
@@ -33,7 +37,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .WithOne(x => x.Account)
             .HasForeignKey(x => x.AccountId)
             .OnDelete(DeleteBehavior.Cascade);
-            
+
         builder.HasMany(x => x.IncomingTransfers)
             .WithOne(x => x.TargetAccount)
             .HasForeignKey(x => x.TargetAccountId)

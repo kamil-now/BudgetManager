@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Xunit.Microsoft.DependencyInjection;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
-namespace BudgetManager.IntegrationTests.Fixtures;
+namespace BudgetManager.IntegrationTests.Application;
 
 public class ApplicationFixture : TestBedFixture
 {
