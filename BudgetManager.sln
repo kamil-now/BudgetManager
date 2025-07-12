@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BudgetManager.IntegrationTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BudgetManager.Common", "src\BudgetManager.Common\BudgetManager.Common.csproj", "{63FEED86-3063-4AB5-96BC-DE60342A8C53}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BudgetManager.UnitTests", "tests\BudgetManager.UnitTests\BudgetManager.UnitTests.csproj", "{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +103,18 @@ Global
 		{63FEED86-3063-4AB5-96BC-DE60342A8C53}.Release|x64.Build.0 = Release|Any CPU
 		{63FEED86-3063-4AB5-96BC-DE60342A8C53}.Release|x86.ActiveCfg = Release|Any CPU
 		{63FEED86-3063-4AB5-96BC-DE60342A8C53}.Release|x86.Build.0 = Release|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Debug|x64.Build.0 = Debug|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Debug|x86.Build.0 = Debug|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Release|x64.ActiveCfg = Release|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Release|x64.Build.0 = Release|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Release|x86.ActiveCfg = Release|Any CPU
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -110,5 +126,6 @@ Global
 		{59B3DBE5-790E-4376-B2A4-DFBC5E187AB3} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{B4DA845A-8CD7-46D2-823A-8517C27E016A} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{63FEED86-3063-4AB5-96BC-DE60342A8C53} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{7B47EFE4-DCBA-4E7D-A89C-6145EC73D64A} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
