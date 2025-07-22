@@ -1,4 +1,6 @@
+using BudgetManager.Api.Services;
 using BudgetManager.Application.Configuration;
+using BudgetManager.Application.Services;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +30,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddAuthorization();
 builder.Services.UseBudgetManagerAuth(builder.Configuration);
 
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, HttpContextUserService>();
 
 // TODO
 builder.Services.AddCors(
