@@ -1,6 +1,9 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using BudgetManager.Api.Models;
 using BudgetManager.Application.Commands;
+using BudgetManager.Common.Enums;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -18,6 +21,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
   public async Task CompleteWorkflow_Works()
   {
     await Register();
+    await Login();
 
     await CreateLedgerWithAccounts();
     await FetchLedgerSummary();
@@ -71,12 +75,28 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
     response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-    _token = await response.Content.ReadAsStringAsync();
+    var id = await response.Content.ReadAsStringAsync();
 
-    _token.ShouldNotBeEmpty();
+    id.ShouldNotBeEmpty();
+    id.ShouldNotBe(Guid.Empty.ToString());
   }
 
-#pragma warning disable CS1998, CA1822
+  private async Task Login()
+  {
+    var response = await Client.PostAsJsonAsync("/api/auth/login", new LoginCommand(_userEmail, _userPassword));
+
+    response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+    var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>();
+
+    tokenResponse.ShouldNotBeNull();
+
+    _token = tokenResponse.Token;
+
+    _token.ShouldNotBeEmpty();
+
+    Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+  }
 
   private async Task CreateLedgerWithAccounts()
   {
@@ -104,11 +124,6 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
   }
 
   private async Task Logout()
-  {
-    // TODO
-  }
-
-  private async Task Login()
   {
     // TODO
   }

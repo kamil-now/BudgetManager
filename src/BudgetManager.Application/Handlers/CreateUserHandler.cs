@@ -20,12 +20,12 @@ public sealed class CreateUserHandler(IBudgetManagerService budgetService, IPass
     }, cancellationToken) ?? throw new InvalidOperationException("Failed to create user.");
 
     await budgetService.SaveChangesAsync(cancellationToken);
-
+    var user = await budgetService.GetAsync<User>(x => x.Id == entity.Id, cancellationToken);
     if (entity.Id == Guid.Empty)
     {
       throw new InvalidOperationException("User ID cannot be empty.");
     }
-    
+
     return new UserDTO(entity);
   }
 

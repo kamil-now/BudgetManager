@@ -1,4 +1,5 @@
 
+using BudgetManager.Api.Models;
 using BudgetManager.Application.Commands;
 using BudgetManager.Infrastructure.Auth.Interfaces;
 using BudgetManager.Infrastructure.Auth.Models;
@@ -16,16 +17,13 @@ public class AuthController(IMediator mediator, IJwtTokenGenerator jwtGenerator)
     var user = await mediator.Send(command);
     var token = jwtGenerator.GenerateToken(new UserDTO(user.Id, user.Name, user.Email));
 
-    return Ok(token);
+    return Ok(new TokenResponse(token));
   }
 
   [HttpPost("register")]
   public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
   {
     var user = await mediator.Send(command);
-
-    var token = jwtGenerator.GenerateToken(new UserDTO(user.Id, user.Name, user.Email));
-
-    return Ok(token);
+    return Ok(user.Id);
   }
 }

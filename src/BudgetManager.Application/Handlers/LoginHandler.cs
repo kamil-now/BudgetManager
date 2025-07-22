@@ -10,8 +10,11 @@ public sealed class LoginHandler(IBudgetManagerService budgetService, IPasswordH
 {
   public async Task<UserDTO> Handle(LoginCommand command, CancellationToken cancellationToken)
   {
-    var users = await budgetService.GetAsync<User>(x => x.Email == command.Email, cancellationToken)
-        ?? throw new UnauthorizedAccessException($"User with email {command.Email} not found.");
+    var users = await budgetService.GetAsync<User>(x => x.Email == command.Email, cancellationToken);
+    if (users == null || !users.Any())
+    {
+      throw new UnauthorizedAccessException($"User with email {command.Email} not found.");
+    }
     if (users.Count() > 1)
     {
       throw new InvalidOperationException($"Multiple users found with email {command.Email}. Please contact support.");
