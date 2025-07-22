@@ -16,7 +16,7 @@ public class AuthController(IMediator mediator, IJwtTokenGenerator jwtGenerator)
     var user = await mediator.Send(command);
     var token = jwtGenerator.GenerateToken(new UserDTO(user.Id, user.Name, user.Email));
 
-    return Ok(new { Token = token });
+    return Ok(token);
   }
 
   [HttpPost("register")]
@@ -26,6 +26,6 @@ public class AuthController(IMediator mediator, IJwtTokenGenerator jwtGenerator)
 
     var token = jwtGenerator.GenerateToken(new UserDTO(user.Id, user.Name, user.Email));
 
-    return Ok(new { Token = token });
+    return Ok(token);
   }
 }
