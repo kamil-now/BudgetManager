@@ -1,13 +1,7 @@
+using BudgetManager.Common.Enums;
 using BudgetManager.Common.Models;
 
 namespace BudgetManager.Domain.Entities;
-
-public enum AllocationType
-{
-  Fixed,
-  Percent,
-  PercentOf
-}
 
 public class Fund : Entity
 {

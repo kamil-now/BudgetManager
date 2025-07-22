@@ -100,8 +100,30 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
   private async Task CreateLedgerWithAccounts()
   {
-    // TODO
+    var command = new CreateLedgerCommand("Default Ledger", null,
+      new("Main budget", [
+          new("Food", 0, 600, AllocationType.Fixed),
+          new("Rent", 1, 800, AllocationType.Fixed),
+          new("Utilities", 2, 200, AllocationType.Fixed),
+          new("Entertainment", 3, 0.2m, AllocationType.Percent),
+          new("Savings", 4, 0.8m, AllocationType.Percent)
+          ]),
+          [
+            new(new(256, "EUR"), "Cash"),
+            new(new(2048, "EUR"), "Main Account"),
+            new(new(4096, "EUR"), "Savings Account")
+          ]);
+    var response = await Client.PostAsJsonAsync("/api/ledgers", command);
+
+    response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+    var id = await response.Content.ReadAsStringAsync();
+
+    id.ShouldNotBeEmpty();
+    id.ShouldNotBe(Guid.Empty.ToString());
   }
+
+#pragma warning disable CS1998, CA1822
 
   private async Task FetchLedgerSummary()
   {
