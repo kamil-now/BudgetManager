@@ -28,12 +28,15 @@ public class ApiFixture : TestBedFixture
          if (descriptor != null)
            services.Remove(descriptor);
 
-         // Add in-memory database
-         services.AddDbContext<ApplicationDbContext>(options =>
-           options
+         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
              .UseInMemoryDatabase($"BudgetManagerTestDb_{Guid.NewGuid()}")
              .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
-             .EnableSensitiveDataLogging());
+             .EnableSensitiveDataLogging()
+             .Options;
+
+         var sharedDbContext = new ApplicationDbContext(options);
+
+         services.AddSingleton(sharedDbContext);
        });
 
        // Configure test environment
