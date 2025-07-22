@@ -32,7 +32,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -42,8 +42,8 @@ namespace BudgetManager.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Ledgers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Ledgers_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Ledgers_Users_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -54,7 +54,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     LedgerId = table.Column<Guid>(type: "uuid", nullable: true),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
@@ -71,8 +71,8 @@ namespace BudgetManager.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Accounts_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Accounts_Users_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -200,6 +200,9 @@ namespace BudgetManager.Infrastructure.Migrations
                     BudgetId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    AllocationTemplateSequence = table.Column<int>(type: "integer", nullable: false),
+                    AllocationTemplateValue = table.Column<decimal>(type: "numeric", nullable: false),
+                    AllocationTemplateType = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
@@ -250,7 +253,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ExpenseId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExpenseId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     FundId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -273,8 +276,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         name: "FK_Deallocations_Expenses_ExpenseId",
                         column: x => x.ExpenseId,
                         principalTable: "Expenses",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Deallocations_Funds_FundId",
                         column: x => x.FundId,
@@ -327,9 +329,15 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "LedgerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Accounts_UserId",
+                name: "IX_Accounts_Name_OwnerId",
                 table: "Accounts",
-                column: "UserId");
+                columns: new[] { "Name", "OwnerId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Accounts_OwnerId",
+                table: "Accounts",
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Allocations_BudgetId",
@@ -382,9 +390,9 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "AccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ledgers_UserId",
+                name: "IX_Ledgers_OwnerId",
                 table: "Ledgers",
-                column: "UserId");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reallocations_BudgetId",

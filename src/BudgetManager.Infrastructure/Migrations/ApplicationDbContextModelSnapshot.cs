@@ -43,17 +43,20 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LedgerId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("Name", "OwnerId")
+                        .IsUnique();
 
                     b.ToTable("Accounts", (string)null);
                 });
@@ -147,7 +150,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("ExpenseId")
+                    b.Property<Guid?>("ExpenseId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("FundId")
@@ -210,6 +213,15 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("AllocationTemplateSequence")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AllocationTemplateType")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("AllocationTemplateValue")
+                        .HasColumnType("numeric");
 
                     b.Property<Guid>("BudgetId")
                         .HasColumnType("uuid");
@@ -292,15 +304,15 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Ledgers", (string)null);
                 });
@@ -429,15 +441,15 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasForeignKey("LedgerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("BudgetManager.Domain.Entities.User", "User")
+                    b.HasOne("BudgetManager.Domain.Entities.User", "Owner")
                         .WithMany("Accounts")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Ledger");
 
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Allocation", b =>
@@ -514,9 +526,7 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasOne("BudgetManager.Domain.Entities.Expense", "Expense")
                         .WithMany()
-                        .HasForeignKey("ExpenseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ExpenseId");
 
                     b.HasOne("BudgetManager.Domain.Entities.Fund", "Fund")
                         .WithMany("Deallocations")
@@ -647,13 +657,13 @@ namespace BudgetManager.Infrastructure.Migrations
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Ledger", b =>
                 {
-                    b.HasOne("BudgetManager.Domain.Entities.User", "User")
+                    b.HasOne("BudgetManager.Domain.Entities.User", "Owner")
                         .WithMany("Ledgers")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Reallocation", b =>

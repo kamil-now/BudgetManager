@@ -2,11 +2,21 @@ using BudgetManager.Common.Models;
 
 namespace BudgetManager.Domain.Entities;
 
+public enum AllocationType
+{
+  Fixed,
+  Percent,
+  PercentOf
+}
+
 public class Fund : Entity
 {
   public required Guid BudgetId { get; set; }
   public required string Name { get; set; }
   public string? Description { get; set; }
+  public int AllocationTemplateSequence { get; set; }
+  public decimal AllocationTemplateValue { get; set; }
+  public AllocationType AllocationTemplateType { get; set; }
 
   public Budget Budget { get; set; } = null!;
   public virtual ICollection<Allocation> Allocations { get; set; } = [];
