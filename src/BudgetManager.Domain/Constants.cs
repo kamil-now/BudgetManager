@@ -1,4 +1,4 @@
-namespace BudgetManager.Infrastructure.Persistence.Configuration;
+namespace BudgetManager.Domain;
 
 public static class Constants
 {

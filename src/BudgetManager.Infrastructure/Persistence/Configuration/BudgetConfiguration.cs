@@ -1,3 +1,4 @@
+using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
