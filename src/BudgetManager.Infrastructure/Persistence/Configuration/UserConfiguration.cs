@@ -28,8 +28,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Budgets)
-            .WithOne(x => x.User)
-            .HasForeignKey(x => x.UserId)
+            .WithOne(x => x.Owner)
+            .HasForeignKey(x => x.OwnerId)
             .OnDelete(DeleteBehavior.Restrict);
             
         builder.HasIndex(x => x.Email).IsUnique();

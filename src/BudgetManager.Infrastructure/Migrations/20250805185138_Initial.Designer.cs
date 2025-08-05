@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BudgetManager.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250722165621_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250805185138_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -119,17 +119,17 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LedgerId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Budgets", (string)null);
                 });
@@ -508,15 +508,15 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasForeignKey("LedgerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("BudgetManager.Domain.Entities.User", "User")
+                    b.HasOne("BudgetManager.Domain.Entities.User", "Owner")
                         .WithMany("Budgets")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Ledger");
 
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Deallocation", b =>

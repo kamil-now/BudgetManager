@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using BudgetManager.Application.Services;
-using BudgetManager.Common.Models;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 
@@ -36,15 +34,6 @@ public static class ValidationExtensions
     return val;
   }
 
-  public static Money EnsureNonnegative(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
-  {
-    if (val.Amount < 0)
-    {
-      throw new ValidationException($"{paramName} amount must be greater than or equal zero.");
-    }
-    return val;
-  }
-
   public static int EnsureNonnegative(this int val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
    => (int)EnsureNonnegative((decimal)val, paramName);
 
@@ -70,7 +59,16 @@ public static class ValidationExtensions
   {
     if (!await service.ExistsAsync<T>(x => x.Id == id, cancellationToken))
     {
-      throw new ValidationException($"Entity with id '{id}' does not exist.");
+      throw new ValidationException($"Entity with ID '{id}' does not exist.");
     }
+  }
+
+  public static string EnsureValidCurrency(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+  {
+    if (val.Length != 3 || val.Any(x => !char.IsLetter(x)))
+    {
+      throw new ValidationException($"{paramName} value '{val}' is not a valid currency code.");
+    }
+    return val;
   }
 }
