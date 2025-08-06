@@ -13,6 +13,10 @@
 - use `Theory` for parameterized tests
 
 ## Tests
+To run tests go to `/tests` and run `dotnet test -l "console;verbosity=detailed"`
+To run peristance integration tests download and install postgreSQL, use the default port, and after it's installed create user `dev` with password `kmwtw` and  priviledges `create database` and `login`.
+If you wish to make changes to your postgresql install remember to update `ConnectionStrings__DefaultConnection` in appsettings.
+
 `xUnit` with `Shouldly` and `NSubstitute`
 
 `MethodName_WhenCondition_ShouldResult`
