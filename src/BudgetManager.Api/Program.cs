@@ -1,3 +1,4 @@
+using BudgetManager.Api.Middlewares;
 using BudgetManager.Api.Services;
 using BudgetManager.Application.Configuration;
 using BudgetManager.Application.Services;
@@ -83,6 +84,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapControllers().RequireAuthorization();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapGet("/", (HttpContext context) => context.Response.Redirect("/swagger", true)).ExcludeFromDescription();
 
