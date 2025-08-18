@@ -32,7 +32,7 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fi
     var response = await Client.PostAsJsonAsync(endpoint, new { });
     response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
   }
-  public async Task AssertFailsWhenTokenIsInvalid(string endpoint)
+  public async Task AssertUnauthorizedWhenTokenIsInvalid(string endpoint)
   {
     Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "invalid_token");
     var response = await Client.PostAsJsonAsync(endpoint, new { });

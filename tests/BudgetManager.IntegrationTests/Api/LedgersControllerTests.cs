@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Models;
 using BudgetManager.Common.Enums;
+using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -12,15 +14,15 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
   private const string _baseUrl = "/api/ledgers";
 
   [Fact]
-  public async Task CreateLedger_WhenUserIsUnauthorized_Fails()
+  public async Task CreateLedger_WhenUserIsUnauthorized_401()
   => await AssertPostFailsWhenUnauthorized(_baseUrl);
 
   [Fact]
-  public async Task CreateLedger_WhenBearerTokenIsInvalid_Fails()
-  => await AssertFailsWhenTokenIsInvalid(_baseUrl);
+  public async Task CreateLedger_WhenBearerTokenIsInvalid_401()
+  => await AssertUnauthorizedWhenTokenIsInvalid(_baseUrl);
 
   [Fact]
-  public async Task CreateLedger_WhenBearerTokenIsValid_Succeeds()
+  public async Task CreateLedger_WhenRequestIsValid_OK()
   {
     // Arrange
     await RegisterAndLogin();
@@ -38,7 +40,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
   }
 
   [Fact]
-  public async Task CreateLedger_WhenFailsValidation_BadRequest()
+  public async Task CreateLedger_WhenRequestIsInvalid_400()
   {
     // Arrange
     await RegisterAndLogin();
@@ -49,5 +51,21 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
     // Assert
     response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
   }
-  // TODO
+
+  [Fact]
+  public async Task CreateLedger_WhenCommandFailsValidation_400_WithErrorMessage()
+  {
+    // Arrange
+    await RegisterAndLogin();
+
+    // Act
+    var response = await Client.PostAsJsonAsync(_baseUrl,
+    new CreateLedgerCommand(string.Empty, null, new CreateBudgetDTO(string.Empty, []), []));
+
+    // Assert
+    response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+    var error = await response.Content.ReadAsStringAsync();
+    error.ShouldBeEquivalentTo("Accounts cannot be empty.");
+  }
 }
