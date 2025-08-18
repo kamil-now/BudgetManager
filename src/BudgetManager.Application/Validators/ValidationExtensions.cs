@@ -20,7 +20,7 @@ public static class ValidationExtensions
   {
     if (val is null || !Guid.TryParse(val, out var userId) || userId == Guid.Empty)
     {
-      throw new ValidationException($"{paramName} value '{val}' is invalid.");
+      throw new ValidationException($"{paramName?.TrimName()} value '{val}' is invalid.");
     }
     return userId;
   }
@@ -29,7 +29,7 @@ public static class ValidationExtensions
   {
     if (val.Count() > max)
     {
-      throw new ValidationException($"{paramName} value is too long. Max length is {max}.");
+      throw new ValidationException($"{paramName?.TrimName()} value is too long. Max length is {max}.");
     }
     return val;
   }
@@ -41,7 +41,7 @@ public static class ValidationExtensions
   {
     if (val < 0)
     {
-      throw new ValidationException($"{paramName} must be greater than or equal zero.");
+      throw new ValidationException($"{paramName?.TrimName()} must be greater than or equal zero.");
     }
     return val;
   }
@@ -50,7 +50,7 @@ public static class ValidationExtensions
   {
     if (!val.Any())
     {
-      throw new ValidationException($"{paramName} cannot be empty.");
+      throw new ValidationException($"{paramName?.TrimName()} cannot be empty.");
     }
     return val;
   }
@@ -67,8 +67,10 @@ public static class ValidationExtensions
   {
     if (val.Length != 3 || val.Any(x => !char.IsLetter(x)))
     {
-      throw new ValidationException($"{paramName} value '{val}' is not a valid currency code.");
+      throw new ValidationException($"{paramName?.TrimName()} value '{val}' is not a valid currency code.");
     }
     return val;
   }
+
+  private static string? TrimName(this string? paramName) => paramName?.Split('.').Last();
 }
