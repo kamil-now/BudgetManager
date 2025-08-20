@@ -1,10 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using BudgetManager.Application.Commands;
-using BudgetManager.Application.Models;
 using BudgetManager.Common.Enums;
 using BudgetManager.Domain;
-using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using Xunit.Abstractions;
 
