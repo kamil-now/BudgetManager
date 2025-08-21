@@ -4,5 +4,5 @@ namespace BudgetManager.Infrastructure.Auth.Interfaces;
 
 public interface IJwtTokenGenerator
 {
-  string GenerateToken(UserDTO user);
+    string GenerateToken(UserDTO user);
 }

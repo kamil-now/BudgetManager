@@ -7,14 +7,14 @@ namespace BudgetManager.IntegrationTests.Persistence;
 
 public abstract class BaseTest(ITestOutputHelper testOutputHelper, PersistenceFixture fixture) : TestBed<PersistenceFixture>(testOutputHelper, fixture)
 {
-  public ApplicationDbContext GetContext()
-  {
-    var scope = _fixture.GetServiceProvider(_testOutputHelper).CreateScope();
-    var dbContext = scope.ServiceProvider.GetService<ApplicationDbContext>()
-      ?? throw new InvalidOperationException($"{nameof(ApplicationDbContext)} is not registered in the service collection.");
+    public ApplicationDbContext GetContext()
+    {
+        var scope = _fixture.GetServiceProvider(_testOutputHelper).CreateScope();
+        var dbContext = scope.ServiceProvider.GetService<ApplicationDbContext>()
+          ?? throw new InvalidOperationException($"{nameof(ApplicationDbContext)} is not registered in the service collection.");
 
-    dbContext.Database.EnsureCreated();
+        dbContext.Database.EnsureCreated();
 
-    return dbContext;
-  }
+        return dbContext;
+    }
 }

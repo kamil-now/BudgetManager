@@ -51,9 +51,9 @@ app.UseAuthorization();
 
 if (!app.Environment.IsEnvironment("Test"))
 {
-  using var scope = app.Services.CreateScope();
-  var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-  db.Database.Migrate();
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
 }
 
 app.UseCors();

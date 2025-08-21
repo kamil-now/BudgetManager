@@ -8,4 +8,4 @@ namespace BudgetManager.Api.Controllers;
 [Consumes("application/json")]
 public abstract class BaseController : ControllerBase
 {
-} 
+}

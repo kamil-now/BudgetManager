@@ -9,7 +9,7 @@ public record CreateExpenseCommand(
   string Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-): CreateTransactionCommand(
+) : CreateTransactionCommand(
   AccountId,
   Amount,
   Date,

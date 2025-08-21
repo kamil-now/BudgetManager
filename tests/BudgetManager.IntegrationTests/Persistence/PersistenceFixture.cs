@@ -10,29 +10,29 @@ namespace BudgetManager.IntegrationTests.Persistence;
 
 public class PersistenceFixture : TestBedFixture
 {
-  private IServiceProvider? _serviceProvider;
+    private IServiceProvider? _serviceProvider;
 
-  protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
-  {
-    var connectionString = configuration!.GetConnectionString("DefaultConnection");
-    services.AddDbContext<ApplicationDbContext>(options =>
-      options.UseNpgsql(connectionString).LogTo(Console.WriteLine, LogLevel.Warning));
-
-    _serviceProvider = services.BuildServiceProvider();
-  }
-
-  protected override async ValueTask DisposeAsyncCore()
-  {
-    if (_serviceProvider != null)
+    protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
     {
-      using var scope = _serviceProvider.CreateScope();
-      var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-      await context.Database.EnsureDeletedAsync();
-    }
-  }
+        var connectionString = configuration!.GetConnectionString("DefaultConnection");
+        services.AddDbContext<ApplicationDbContext>(options =>
+          options.UseNpgsql(connectionString).LogTo(Console.WriteLine, LogLevel.Warning));
 
-  protected override IEnumerable<TestAppSettings> GetTestAppSettings()
-  {
-    yield return new() { Filename = "appsettings.Test.json", IsOptional = false };
-  }
+        _serviceProvider = services.BuildServiceProvider();
+    }
+
+    protected override async ValueTask DisposeAsyncCore()
+    {
+        if (_serviceProvider != null)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            await context.Database.EnsureDeletedAsync();
+        }
+    }
+
+    protected override IEnumerable<TestAppSettings> GetTestAppSettings()
+    {
+        yield return new() { Filename = "appsettings.Test.json", IsOptional = false };
+    }
 }

@@ -7,10 +7,10 @@ namespace BudgetManager.Api.Controllers;
 [Authorize]
 public class AccountsController(IMediator mediator) : BaseController
 {
-  [HttpPost]
-  public async Task<ActionResult> CreateAccount([FromBody] CreateAccountCommand request)
-  {
-    var id = await mediator.Send(request);
-    return Ok(id);
-  }
+    [HttpPost]
+    public async Task<ActionResult> CreateAccount([FromBody] CreateAccountCommand request)
+    {
+        var id = await mediator.Send(request);
+        return Ok(id);
+    }
 }

@@ -8,4 +8,4 @@ public record CreateAccountCommand(
   Money InitialBalance,
   string Name,
   string? Description = null
-): IRequest<Guid>;
+) : IRequest<Guid>;

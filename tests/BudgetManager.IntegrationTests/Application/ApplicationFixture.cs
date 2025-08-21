@@ -15,34 +15,34 @@ namespace BudgetManager.IntegrationTests.Application;
 
 public class ApplicationFixture : TestBedFixture
 {
-  protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
-  {
-    services.AddDbContext<ApplicationDbContext>(options =>
-      options
-        .UseInMemoryDatabase("BudgetManagerTestDb")
-        .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
-        .EnableSensitiveDataLogging());
+    protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
+    {
+        services.AddDbContext<ApplicationDbContext>(options =>
+          options
+            .UseInMemoryDatabase("BudgetManagerTestDb")
+            .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
+            .EnableSensitiveDataLogging());
 
-    services.AddSingleton<IBudgetManagerService, BudgetManagerService>();
-    services.AddSingleton<ICurrentUserService, MockCurrentUserService>();
-    services.UseMediator();
-  }
+        services.AddSingleton<IBudgetManagerService, BudgetManagerService>();
+        services.AddSingleton<ICurrentUserService, MockCurrentUserService>();
+        services.UseMediator();
+    }
 
-  protected override ValueTask DisposeAsyncCore()
-      => new();
+    protected override ValueTask DisposeAsyncCore()
+        => new();
 
-  protected override IEnumerable<TestAppSettings> GetTestAppSettings()
-  {
-    yield return new() { Filename = "appsettings.Test.json", IsOptional = false };
-  }
+    protected override IEnumerable<TestAppSettings> GetTestAppSettings()
+    {
+        yield return new() { Filename = "appsettings.Test.json", IsOptional = false };
+    }
 }
 
 public class MockCurrentUserService : ICurrentUserService
 {
-  public const string MockUserId = "4ec3a3b3-a6f5-4720-9c57-ba0495dec583"; 
-  public const string MockUserEmail = "email@mock.com";
-  public const string MockUserName = "Mock User"; 
-  public string? Id => MockUserId;
-  public string? Email => MockUserEmail;
-  public string? Name => MockUserName;
+    public const string MockUserId = "4ec3a3b3-a6f5-4720-9c57-ba0495dec583";
+    public const string MockUserEmail = "email@mock.com";
+    public const string MockUserName = "Mock User";
+    public string? Id => MockUserId;
+    public string? Email => MockUserEmail;
+    public string? Name => MockUserName;
 }

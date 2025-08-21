@@ -31,7 +31,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(x => x.Owner)
             .HasForeignKey(x => x.OwnerId)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         builder.HasIndex(x => x.Email).IsUnique();
     }
 }

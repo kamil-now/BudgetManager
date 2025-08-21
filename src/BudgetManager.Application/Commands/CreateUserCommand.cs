@@ -6,4 +6,4 @@ public record CreateUserCommand(
   string Email,
   string Password,
   string? Name
-): IRequest<UserDTO>;
+) : IRequest<UserDTO>;

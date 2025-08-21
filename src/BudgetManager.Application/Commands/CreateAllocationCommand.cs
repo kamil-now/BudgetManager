@@ -10,7 +10,7 @@ public record CreateAllocationCommand(
   string Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-): CreateBudgetTransactionCommand(
+) : CreateBudgetTransactionCommand(
   BudgetId,
   FundId,
   Amount,

@@ -11,19 +11,19 @@ namespace BudgetManager.Api.Controllers;
 [AllowAnonymous]
 public class AuthController(IMediator mediator, IJwtTokenGenerator jwtGenerator) : BaseController
 {
-  [HttpPost("login")]
-  public async Task<IActionResult> Login([FromBody] LoginCommand command)
-  {
-    var user = await mediator.Send(command);
-    var token = jwtGenerator.GenerateToken(new UserDTO(user.Id, user.Name, user.Email));
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
+    {
+        var user = await mediator.Send(command);
+        var token = jwtGenerator.GenerateToken(new UserDTO(user.Id, user.Name, user.Email));
 
-    return Ok(new TokenResponse(token));
-  }
+        return Ok(new TokenResponse(token));
+    }
 
-  [HttpPost("register")]
-  public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
-  {
-    var user = await mediator.Send(command);
-    return Ok(user.Id);
-  }
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] CreateUserCommand command)
+    {
+        var user = await mediator.Send(command);
+        return Ok(user.Id);
+    }
 }
