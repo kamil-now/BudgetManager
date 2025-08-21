@@ -1,4 +1,54 @@
 [*.cs]
+# Basic formatting
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Organize usings
+dotnet_sort_system_directives_first = true
+
+# Language preferences
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
+
+# Modern C# features
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+
+# Brace formatting
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# Indentation
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+# Spacing
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_around_binary_operators = before_and_after
+
+# Qualification preferences
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+
+# Opening brace on new line
+csharp_new_line_before_open_brace = all
+
+# Indent contents inside braces
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+
+# Object initializer formatting
+csharp_new_line_before_members_in_object_initializers = true
 
 # xUnit1045: Avoid using TheoryData type arguments that might not be serializable
 dotnet_diagnostic.xUnit1045.severity = none
