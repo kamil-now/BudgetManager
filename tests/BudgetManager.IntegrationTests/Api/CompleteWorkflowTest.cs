@@ -12,6 +12,9 @@ using Xunit.Abstractions;
 
 namespace BudgetManager.IntegrationTests.Api;
 
+/// <summary>
+/// Serves as E2E test substitute by validating full user journey and cross-feature integration through the API layer
+/// </summary>
 public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
     private const string _userEmail = "test@test.test";
