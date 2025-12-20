@@ -15,23 +15,26 @@ public sealed class GetLedgerHandler(IBudgetManagerService budgetService) : IReq
             return null;
         }
 
-        var accounts = ledger.Accounts.Select(x => new LedgerDTO.Account()
+        var accounts = ledger.Accounts.Select(account => new LedgerDTO.Account()
         {
-            Balance = x.GetBalance(),
-            Name = x.Name,
-            Description = x.Description
+            Id = account.Id,
+            Balance = account.GetBalance(),
+            Name = account.Name,
+            Description = account.Description
         }).ToArray();
 
         var budgets = ledger.Budgets.Select(budget =>
         {
             var funds = budget.Funds.Select(fund => new LedgerDTO.Fund()
             {
+                Id = fund.Id,
                 Balance = fund.GetBalance(),
                 Name = fund.Name,
                 Description = fund.Description
             });
             return new LedgerDTO.Budget()
             {
+                Id = budget.Id,
                 Funds = funds,
                 Balance = Balance.Sum(funds.Select(x => x.Balance)),
                 Name = budget.Name,
@@ -41,6 +44,7 @@ public sealed class GetLedgerHandler(IBudgetManagerService budgetService) : IReq
 
         return new LedgerDTO()
         {
+            Id = ledger.Id,
             Name = ledger.Name,
             Description = ledger.Description,
             Accounts = accounts,
