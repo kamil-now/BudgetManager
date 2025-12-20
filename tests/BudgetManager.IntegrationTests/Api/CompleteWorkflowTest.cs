@@ -6,6 +6,7 @@ using BudgetManager.Application.Commands;
 using BudgetManager.Application.Models;
 using BudgetManager.Common.Enums;
 using BudgetManager.Common.Models;
+using BudgetManager.Domain.Entities;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -26,8 +27,9 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         await Login();
 
         var (id, expectedLedger) = await CreateLedgerWithAccounts();
-        await FetchLedgerSummary(id, expectedLedger);
-        await CreateLedgerTransactions();
+        var ledger = await FetchLedgerSummary(id, expectedLedger);
+
+        await CreateAccountTransactions([.. ledger.Accounts]);
         await FetchTransactionTags();
         await FetchLedgerTransactionLog();
         await UpdateTransactions();
@@ -71,16 +73,17 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         await FetchAllBudgets();
     }
 
-    private async Task Register()
+    private async Task<Guid> Register()
     {
         var response = await Client.PostAsJsonAsync("/api/auth/register", new CreateUserCommand(_userEmail, _userPassword, _userName));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var id = await response.Content.ReadAsStringAsync();
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
 
-        id.ShouldNotBeEmpty();
-        id.ShouldNotBe(Guid.Empty.ToString());
+        id.ShouldNotBe(Guid.Empty);
+
+        return id;
     }
 
     private async Task Login()
@@ -112,8 +115,8 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
               ]),
               [
                 new(new(256, "EUR"), "Cash"),
-                  new(new(2048, "EUR"), "Main Account"),
-                  new(new(4096, "EUR"), "Savings Account")
+                new(new(2048, "EUR"), "Main Account"),
+                new(new(4096, "EUR"), "Savings Account")
               ]);
         var response = await Client.PostAsJsonAsync("/api/ledgers", command);
 
@@ -125,7 +128,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         return (id, command);
     }
 
-    private async Task FetchLedgerSummary(Guid id, CreateLedgerCommand expected)
+    private async Task<LedgerDTO> FetchLedgerSummary(Guid id, CreateLedgerCommand expected)
     {
         var response = await Client.GetAsync($"/api/ledgers/{id}");
 
@@ -165,13 +168,40 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             account.Balance.ContainsKey(expectedAccount.InitialBalance.Currency).ShouldBeTrue();
             account.Balance[expectedAccount.InitialBalance.Currency].ShouldBe(expectedAccount.InitialBalance.Amount);
         }
+
+        return ledger;
     }
 
-
-    private async Task CreateLedgerTransactions()
+    private async Task CreateAccountTransactions(LedgerDTO.Account[] accounts)
     {
-        // TODO
+        accounts.Length.ShouldBe(3);
+
+        async Task POST<T>(string url, T payload)
+        {
+            var response = await Client.PostAsJsonAsync(url, payload);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK, response.Content.ReadAsStringAsync().Result);
+            var id = await response.Content.ReadFromJsonAsync<Guid>();
+            id.ShouldNotBe(Guid.Empty);
+        }
+
+        var cashGift = new CreateIncomeCommand(accounts[0].Id, new Money(100, "USD"), DateTimeOffset.UtcNow.AddDays(-2), "gift", "birthday", ["extra"]);
+        var currencyExchangeOut = new CreateExpenseCommand(accounts[0].Id, new Money(100, "USD"), DateTimeOffset.UtcNow.AddDays(-1), null, null, ["currency exchange"]);
+        var currencyExchangeIn = new CreateIncomeCommand(accounts[0].Id, new Money(85.38m, "EUR"), DateTimeOffset.UtcNow.AddDays(-1), null, null, ["currency exchange"]);
+
+        var salary = new CreateIncomeCommand(accounts[1].Id, new Money(3000.01234567890123456789m, "EUR"), DateTimeOffset.UtcNow, "Salary", null, ["regular"]);
+
+        var savingsTransfer = new CreateTransferCommand(accounts[1].Id, accounts[2].Id, new Money(1000, "EUR"), DateTimeOffset.UtcNow, "monthly", "from salary", null);
+        var rent = new CreateExpenseCommand(accounts[1].Id, new Money(1000, "EUR"), DateTimeOffset.UtcNow, "Rent", null, ["regular"]);
+
+        await POST($"/api/accounts/{accounts[0].Id}/income", cashGift);
+        await POST($"/api/accounts/{accounts[0].Id}/expense", currencyExchangeOut);
+        await POST($"/api/accounts/{accounts[0].Id}/income", currencyExchangeIn);
+
+        await POST($"/api/accounts/{accounts[1].Id}/income", salary);
+        await POST($"/api/accounts/{accounts[1].Id}/transfer", savingsTransfer);
+        await POST($"/api/accounts/{accounts[1].Id}/expense", rent);
     }
+
 #pragma warning disable CS1998, CA1822
 
     private async Task FetchLedgerTransactionLog()

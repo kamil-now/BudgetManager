@@ -6,34 +6,37 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateExpenseCommand, Guid>
+public sealed class CreateTransferHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateTransferCommand, Guid>
 {
-    public async Task<Guid> Handle(CreateExpenseCommand command, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(CreateTransferCommand command, CancellationToken cancellationToken)
     {
         await ValidateCommandAsync(command, cancellationToken);
 
-        var entity = await budgetService.CreateAsync(new Expense
+        var entity = await budgetService.CreateAsync(new Transfer
         {
             AccountId = command.AccountId,
+            TargetAccountId = command.TargetAccountId,
             Title = command.Title,
             Tags = command.Tags?.ToList(),
             Amount = command.Amount,
             Description = command.Description,
             Date = command.Date,
-        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create expense.");
+        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create transfer.");
 
         if (entity.Id == Guid.Empty)
         {
-            throw new InvalidOperationException("Expense ID cannot be empty.");
+            throw new InvalidOperationException("Transfer ID cannot be empty.");
         }
         return entity.Id;
     }
 
-    private async Task ValidateCommandAsync(CreateExpenseCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(CreateTransferCommand command, CancellationToken cancellationToken)
     {
         command.AccountId.EnsureNotEmpty();
+        command.TargetAccountId.EnsureNotEmpty();
         
         await command.AccountId.EnsureExists<Account>(budgetService, cancellationToken);
+        await command.TargetAccountId.EnsureExists<Account>(budgetService, cancellationToken);
 
         command.Amount.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);

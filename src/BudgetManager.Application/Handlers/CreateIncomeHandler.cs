@@ -6,13 +6,13 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateExpenseCommand, Guid>
+public sealed class CreateIncomeHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateIncomeCommand, Guid>
 {
-    public async Task<Guid> Handle(CreateExpenseCommand command, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(CreateIncomeCommand command, CancellationToken cancellationToken)
     {
         await ValidateCommandAsync(command, cancellationToken);
 
-        var entity = await budgetService.CreateAsync(new Expense
+        var entity = await budgetService.CreateAsync(new Income
         {
             AccountId = command.AccountId,
             Title = command.Title,
@@ -20,19 +20,19 @@ public sealed class CreateExpenseHandler(IBudgetManagerService budgetService) : 
             Amount = command.Amount,
             Description = command.Description,
             Date = command.Date,
-        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create expense.");
+        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create income.");
 
         if (entity.Id == Guid.Empty)
         {
-            throw new InvalidOperationException("Expense ID cannot be empty.");
+            throw new InvalidOperationException("Income ID cannot be empty.");
         }
         return entity.Id;
     }
 
-    private async Task ValidateCommandAsync(CreateExpenseCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(CreateIncomeCommand command, CancellationToken cancellationToken)
     {
         command.AccountId.EnsureNotEmpty();
-        
+
         await command.AccountId.EnsureExists<Account>(budgetService, cancellationToken);
 
         command.Amount.EnsureValid();

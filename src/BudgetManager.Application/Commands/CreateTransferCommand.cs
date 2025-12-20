@@ -7,10 +7,10 @@ public record CreateTransferCommand(
   Guid TargetAccountId,
   Money Amount,
   DateTimeOffset Date,
-  string Title,
+  string? Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-) : CreateTransactionCommand(
+) : CreateAccountTransactionCommand(
   AccountId,
   Amount,
   Date,

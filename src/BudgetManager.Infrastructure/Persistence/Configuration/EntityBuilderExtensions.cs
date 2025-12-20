@@ -23,7 +23,7 @@ public static class EntityBuilderExtensions
                .IsRequired();
             money.Property(m => m.Currency)
                .HasColumnName("Currency")
-               .HasMaxLength(3)
+               .HasMaxLength(Constants.CurrencyCodeLength)
                .IsRequired();
         });
 

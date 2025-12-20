@@ -6,10 +6,10 @@ public record CreateExpenseCommand(
   Guid AccountId,
   Money Amount,
   DateTimeOffset Date,
-  string Title,
+  string? Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-) : CreateTransactionCommand(
+) : CreateAccountTransactionCommand(
   AccountId,
   Amount,
   Date,

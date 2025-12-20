@@ -4,6 +4,7 @@ using BudgetManager.Application.Configuration;
 using BudgetManager.Application.Services;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;

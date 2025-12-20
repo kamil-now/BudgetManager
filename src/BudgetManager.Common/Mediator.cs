@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace BudgetManager.Common;
 
 public interface IMediator

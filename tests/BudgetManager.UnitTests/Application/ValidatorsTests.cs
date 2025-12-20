@@ -60,7 +60,7 @@ public class ValidatorsTests
         var input = "not a valid guid";
 
         // Act & Assert
-        var ex = Should.Throw<ValidationException>(() => input.EnsureValid());
+        var ex = Should.Throw<ValidationException>(() => input.EnsureValidId());
         ex.Message.ShouldBeEquivalentTo("input value 'not a valid guid' is invalid.");
     }
     // TODO
