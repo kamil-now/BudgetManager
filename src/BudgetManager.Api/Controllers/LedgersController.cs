@@ -15,10 +15,10 @@ public class LedgersController(IMediator mediator) : BaseController
         return Ok(id);
     }
 
-    [HttpGet]
-    public async Task<ActionResult> GetLedger()
+    [HttpGet("{id}")]
+    public async Task<ActionResult> GetLedger([FromRoute] Guid id)
     {
-        var id = await mediator.Send(new GetLedgerQuery());
-        return Ok(id);
+        var ledger = await mediator.Send(new GetLedgerQuery(id));
+        return Ok(ledger);
     }
 }

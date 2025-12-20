@@ -1,20 +1,15 @@
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
-using BudgetManager.Application.Services;
 using BudgetManager.Common.Models;
 using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetLedgerHandler(ICurrentUserService currentUser, IBudgetManagerService budgetService) : IRequestHandler<GetLedgerQuery, LedgerDTO?>
+public sealed class GetLedgerHandler(IBudgetManagerService budgetService) : IRequestHandler<GetLedgerQuery, LedgerDTO?>
 {
-    public async Task<LedgerDTO?> Handle(GetLedgerQuery command, CancellationToken cancellationToken)
+    public async Task<LedgerDTO?> Handle(GetLedgerQuery query, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(currentUser.Id, out var currentUserId) || currentUserId == Guid.Empty)
-        {
-            throw new InvalidOperationException($"Current user ID value is invalid '{currentUser.Id}'.");
-        }
-        var ledger = await budgetService.GetLedgerAsync(x => x.OwnerId == currentUserId, cancellationToken);
+        var ledger = await budgetService.GetLedgerAsync(x => x.Id == query.Id, cancellationToken);
         if (ledger is null)
         {
             return null;

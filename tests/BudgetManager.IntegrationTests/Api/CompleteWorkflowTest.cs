@@ -25,8 +25,8 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         await Register();
         await Login();
 
-        var created = await CreateLedgerWithAccounts();
-        await FetchLedgerSummary(created);
+        var (id, expectedLedger) = await CreateLedgerWithAccounts();
+        await FetchLedgerSummary(id, expectedLedger);
         await CreateLedgerTransactions();
         await FetchTransactionTags();
         await FetchLedgerTransactionLog();
@@ -100,7 +100,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
     }
 
-    private async Task<CreateLedgerCommand> CreateLedgerWithAccounts()
+    private async Task<(Guid id, CreateLedgerCommand command)> CreateLedgerWithAccounts()
     {
         var command = new CreateLedgerCommand("Default Ledger", null,
           new("Main budget", [
@@ -119,16 +119,15 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var id = await response.Content.ReadAsStringAsync();
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
 
-        id.ShouldNotBeEmpty();
-        id.ShouldNotBe(Guid.Empty.ToString());
-        return command;
+        id.ShouldNotBe(Guid.Empty);
+        return (id, command);
     }
 
-    private async Task FetchLedgerSummary(CreateLedgerCommand expected)
+    private async Task FetchLedgerSummary(Guid id, CreateLedgerCommand expected)
     {
-        var response = await Client.GetAsync("/api/ledgers");
+        var response = await Client.GetAsync($"/api/ledgers/{id}");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
@@ -168,12 +167,12 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         }
     }
 
-#pragma warning disable CS1998, CA1822
 
     private async Task CreateLedgerTransactions()
     {
         // TODO
     }
+#pragma warning disable CS1998, CA1822
 
     private async Task FetchLedgerTransactionLog()
     {
