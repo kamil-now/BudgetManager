@@ -3,7 +3,9 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using BudgetManager.Api.Models;
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Models;
 using BudgetManager.Common.Enums;
+using BudgetManager.Common.Models;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -23,8 +25,8 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         await Register();
         await Login();
 
-        await CreateLedgerWithAccounts();
-        await FetchLedgerSummary();
+        var created = await CreateLedgerWithAccounts();
+        await FetchLedgerSummary(created);
         await CreateLedgerTransactions();
         await FetchTransactionTags();
         await FetchLedgerTransactionLog();
@@ -98,7 +100,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
     }
 
-    private async Task CreateLedgerWithAccounts()
+    private async Task<CreateLedgerCommand> CreateLedgerWithAccounts()
     {
         var command = new CreateLedgerCommand("Default Ledger", null,
           new("Main budget", [
@@ -121,14 +123,52 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         id.ShouldNotBeEmpty();
         id.ShouldNotBe(Guid.Empty.ToString());
+        return command;
+    }
+
+    private async Task FetchLedgerSummary(CreateLedgerCommand expected)
+    {
+        var response = await Client.GetAsync("/api/ledgers");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var ledger = await response.Content.ReadFromJsonAsync<LedgerDTO>();
+
+        ledger.ShouldNotBeNull();
+
+        ledger.Name.ShouldBe(expected.Name);
+        ledger.Description.ShouldBe(expected.Description);
+
+        ledger.Budgets.Count().ShouldBe(1);
+        var budget = ledger.Budgets.First();
+
+        budget.Name.ShouldBe(expected.Budget.Name);
+        budget.Description.ShouldBe(expected.Budget.Description);
+
+        budget.Funds.Count().ShouldBe(expected.Budget.Funds.Count());
+
+        foreach (var expectedFund in expected.Budget.Funds)
+        {
+            var fund = budget.Funds.FirstOrDefault(x => x.Name == expectedFund.Name);
+            fund.ShouldNotBeNull($"Fund with name '{expectedFund.Name}' not found.");
+            fund.Description.ShouldBe(expectedFund.Description);
+            fund.Balance.Keys.ShouldBeEmpty();
+        }
+
+        ledger.Accounts.Count().ShouldBe(expected.Accounts.Count());
+
+        foreach (var expectedAccount in expected.Accounts)
+        {
+            var account = ledger.Accounts.FirstOrDefault(x => x.Name == expectedAccount.Name);
+            account.ShouldNotBeNull($"Account with name '{expectedAccount.Name}' not found.");
+            account.Description.ShouldBe(expectedAccount.Description);
+            account.Balance.Keys.Count.ShouldBe(1);
+            account.Balance.ContainsKey(expectedAccount.InitialBalance.Currency).ShouldBeTrue();
+            account.Balance[expectedAccount.InitialBalance.Currency].ShouldBe(expectedAccount.InitialBalance.Amount);
+        }
     }
 
 #pragma warning disable CS1998, CA1822
-
-    private async Task FetchLedgerSummary()
-    {
-        // TODO
-    }
 
     private async Task CreateLedgerTransactions()
     {

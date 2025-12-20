@@ -33,7 +33,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var id = await Mediator.Send(command);
 
         // Assert
-        var ledger = await BudgetManagerService.GetLedgerAsync(id);
+        var ledger = await BudgetManagerService.GetLedgerAsync(x => x.Id == id, default);
         ledger.ShouldNotBeNull();
         ledger.OwnerId.ToString().ShouldBe(MockCurrentUserService.MockUserId);
         ledger.Name.ShouldBe(command.Name);

@@ -1,4 +1,5 @@
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +12,13 @@ public class LedgersController(IMediator mediator) : BaseController
     public async Task<ActionResult> CreateLedger([FromBody] CreateLedgerCommand request)
     {
         var id = await mediator.Send(request);
+        return Ok(id);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> GetLedger()
+    {
+        var id = await mediator.Send(new GetLedgerQuery());
         return Ok(id);
     }
 }

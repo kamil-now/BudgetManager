@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -48,20 +47,18 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
         return entity;
     }
 
-    public async Task<Ledger> GetLedgerAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Ledger?> GetLedgerAsync(Expression<Func<Ledger, bool>> predicate, CancellationToken cancellationToken)
     {
-        if (id == Guid.Empty)
-        {
-            throw new ArgumentException("ID cannot be empty", nameof(id));
-        }
+        ArgumentNullException.ThrowIfNull(predicate);
 
-        return await dbContext.Ledgers.AsSplitQuery()
-          .Include(x => x.Budgets)
-          .ThenInclude(x => x.Funds)
-          .Include(x => x.Accounts)
-          .ThenInclude(x => x.Incomes)
-          .SingleAsync(x => x.Id == id, cancellationToken)
-          ?? throw new KeyNotFoundException($"Ledger with ID {id} not found.");
+        return await dbContext.Ledgers
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(x => x.Budgets)
+            .ThenInclude(x => x.Funds)
+            .Include(x => x.Accounts)
+            .ThenInclude(x => x.Incomes)
+            .SingleOrDefaultAsync(predicate, cancellationToken);
     }
 
     public async Task<T> GetAsync<T>(Guid id, CancellationToken cancellationToken) where T : Entity

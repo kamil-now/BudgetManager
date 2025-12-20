@@ -56,4 +56,13 @@ public class Balance : Dictionary<string, decimal>
             Remove(money.Currency);
         }
     }
+    public static Balance Sum(IEnumerable<Balance> balances)
+    {
+        var sum = new Balance();
+        foreach (var b in balances)
+        {
+            sum.Add(b);
+        }
+        return sum;
+    } 
 }

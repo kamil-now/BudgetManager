@@ -11,7 +11,7 @@ public interface IBudgetManagerService
 
     Task<IEnumerable<Fund>> GetAllFundsWithTransactionsAsync(Guid budgetId, CancellationToken cancellationToken = default);
 
-    Task<Ledger> GetLedgerAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Ledger?> GetLedgerAsync(Expression<Func<Ledger, bool>> predicate, CancellationToken cancellationToken);
 
     Task<T> GetAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity;
     Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;
