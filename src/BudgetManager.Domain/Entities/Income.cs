@@ -1,3 +1,3 @@
 namespace BudgetManager.Domain.Entities;
 
-public sealed class Income : Transaction;
+public sealed class Income : AccountTransaction;

@@ -2,7 +2,7 @@ using BudgetManager.Common.Models;
 
 namespace BudgetManager.Domain.Entities;
 
-public abstract class Transaction : Entity
+public abstract class AccountTransaction : Entity
 {
     public required Guid AccountId { get; set; }
     public required Money Amount { get; set; }

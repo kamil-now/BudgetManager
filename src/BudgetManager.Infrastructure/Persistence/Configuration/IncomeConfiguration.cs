@@ -10,6 +10,6 @@ public class IncomeConfiguration : IEntityTypeConfiguration<Income>
     {
         builder.ToTable("Incomes");
 
-        builder.ConfigureTransactionEntity();
+        builder.ConfigureAccountTransactionEntity();
     }
 }

@@ -10,6 +10,6 @@ public class TransferConfiguration : IEntityTypeConfiguration<Transfer>
     {
         builder.ToTable("Transfers");
 
-        builder.ConfigureTransactionEntity();
+        builder.ConfigureAccountTransactionEntity();
     }
 }

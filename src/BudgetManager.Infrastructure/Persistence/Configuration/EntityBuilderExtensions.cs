@@ -8,7 +8,7 @@ namespace BudgetManager.Infrastructure.Persistence.Configuration;
 
 public static class EntityBuilderExtensions
 {
-    public static void ConfigureTransactionEntity<T>(this EntityTypeBuilder<T> builder) where T : Transaction
+    public static void ConfigureAccountTransactionEntity<T>(this EntityTypeBuilder<T> builder) where T : AccountTransaction
     {
         builder.ConfigureEntity();
 

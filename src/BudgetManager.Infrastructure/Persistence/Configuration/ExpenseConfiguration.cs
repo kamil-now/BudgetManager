@@ -10,6 +10,6 @@ public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
     {
         builder.ToTable("Expenses");
 
-        builder.ConfigureTransactionEntity();
+        builder.ConfigureAccountTransactionEntity();
     }
 }
