@@ -53,12 +53,35 @@ public class FundTests
     }
 
     [Fact]
-    public void GetBalance_WhenReallocationFromThisFund_ShouldDeductAmount()
+    public void GetBalance_WhenIncomingReallocation_ShouldAddAmount()
+    {
+        // Arrange
+        var fund = CreateFund();
+        var sourceFund = CreateFund();
+
+        fund.IncomingReallocations.Add(new Reallocation
+        {
+            FundId = sourceFund.Id,
+            TargetFundId = fund.Id,
+            Amount = new Money(100, "USD")
+        });
+
+        // Act
+        var balance = fund.GetBalance();
+
+        // Assert
+        balance.ShouldContainKey("USD");
+        balance["USD"].ShouldBe(100);
+    }
+
+    [Fact]
+    public void GetBalance_WhenOutgoingReallocation_ShouldDeductAmount()
     {
         // Arrange
         var fund = CreateFund();
         var targetFund = CreateFund();
-        fund.Reallocations.Add(new Reallocation
+
+        fund.OutgoingReallocations.Add(new Reallocation
         {
             FundId = fund.Id,
             TargetFundId = targetFund.Id,
@@ -74,28 +97,6 @@ public class FundTests
     }
 
     [Fact]
-    public void GetBalance_WhenReallocationToThisFund_ShouldAddAmount()
-    {
-        // Arrange
-        var fund = CreateFund();
-        var targetFund = CreateFund();
-
-        fund.Reallocations.Add(new Reallocation
-        {
-            FundId = targetFund.Id,
-            TargetFundId = fund.Id,
-            Amount = new Money(100, "USD")
-        });
-
-        // Act
-        var balance = fund.GetBalance();
-
-        // Assert
-        balance.ShouldContainKey("USD");
-        balance["USD"].ShouldBe(100);
-    }
-
-    [Fact]
     public void GetBalance_WhenMixedTransactions_ShouldCalculateCorrectBalance()
     {
         // Arrange
@@ -104,13 +105,13 @@ public class FundTests
 
         fund.Allocations.Add(new Allocation { FundId = fund.Id, Amount = new Money(200, "USD") });
         fund.Deallocations.Add(new Deallocation { FundId = fund.Id, Amount = new Money(50, "USD") });
-        fund.Reallocations.Add(new Reallocation
+        fund.OutgoingReallocations.Add(new Reallocation
         {
             FundId = fund.Id,
             TargetFundId = targetFund.Id,
             Amount = new Money(30, "USD")
         });
-        fund.Reallocations.Add(new Reallocation
+        fund.IncomingReallocations.Add(new Reallocation
         {
             FundId = targetFund.Id,
             TargetFundId = fund.Id,
@@ -169,7 +170,7 @@ public class FundTests
         var fund = CreateFund();
         fund.Allocations = [];
         fund.Deallocations = [];
-        fund.Reallocations = [];
+        fund.IncomingReallocations = [];
 
         // Act & Assert
         Should.NotThrow(() => fund.GetBalance());

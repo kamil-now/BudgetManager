@@ -63,12 +63,12 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
     {
         public InvalidRequests()
         {
-            var tooLongDescription = new string('a', Constants.MaxDescriptionLength + 1);
+            var tooLongDescription = new string('a', Constants.MaxCommentLength + 1);
             var tooLongName = new string('b', Constants.MaxNameLength + 1);
             var validAccount = ValidCommand.Accounts.First();
             var validFund = ValidCommand.Budget.Funds.First();
 
-            Add(ValidCommand with { Description = tooLongDescription }, $"Description value is too long. Max length is {Constants.MaxDescriptionLength}.");
+            Add(ValidCommand with { Description = tooLongDescription }, $"Description value is too long. Max length is {Constants.MaxCommentLength}.");
 
             Add(ValidCommand with { Accounts = [] }, "Accounts cannot be empty.");
 
@@ -76,7 +76,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Accounts = [validAccount with { Name = tooLongName }] }, $"Account name value is too long. Max length is {Constants.MaxNameLength}.");
 
-            Add(ValidCommand with { Accounts = [validAccount with { Description = tooLongDescription }] }, $"Description of {validAccount.Name} value is too long. Max length is {Constants.MaxDescriptionLength}.");
+            Add(ValidCommand with { Accounts = [validAccount with { Description = tooLongDescription }] }, $"Description of {validAccount.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
             Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(-1, "USD") }] }, $"InitialBalance of {validAccount.Name} must be greater than or equal zero.");
 
@@ -88,7 +88,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Name = tooLongName } }, $"Budget name value is too long. Max length is {Constants.MaxNameLength}.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Description = tooLongDescription } }, $"Description of {ValidCommand.Budget.Name} value is too long. Max length is {Constants.MaxDescriptionLength}.");
+            Add(ValidCommand with { Budget = ValidCommand.Budget with { Description = tooLongDescription } }, $"Description of {ValidCommand.Budget.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [] } }, "Funds cannot be empty.");
 
@@ -96,7 +96,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Name = tooLongName }] } }, $"Fund name value is too long. Max length is {Constants.MaxNameLength}.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Description = tooLongDescription }] } }, $"Description of {validFund.Name} value is too long. Max length is {Constants.MaxDescriptionLength}.");
+            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Description = tooLongDescription }] } }, $"Description of {validFund.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { AllocationTemplateSequence = -1 }] } }, $"AllocationTemplateSequence of {validFund.Name} must be greater than or equal zero.");
         }

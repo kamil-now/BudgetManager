@@ -18,7 +18,7 @@ public class BudgetConfiguration : IEntityTypeConfiguration<Budget>
             .HasMaxLength(Constants.MaxNameLength);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxDescriptionLength);
+            .HasMaxLength(Constants.MaxCommentLength);
 
         builder.HasMany(x => x.Funds)
             .WithOne(x => x.Budget)

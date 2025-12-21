@@ -11,5 +11,9 @@ public class IncomeConfiguration : IEntityTypeConfiguration<Income>
         builder.ToTable("Incomes");
 
         builder.ConfigureAccountTransactionEntity();
+
+        builder.HasOne(x => x.Account)
+            .WithMany(x => x.Incomes)
+            .HasForeignKey(x => x.AccountId);
     }
 }

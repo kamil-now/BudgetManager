@@ -1,6 +1,8 @@
+using BudgetManager.Domain.Interfaces;
+
 namespace BudgetManager.Domain.Entities;
 
-public class Budget : Entity
+public class Budget : Entity, IAccessControlled
 {
     public required Guid OwnerId { get; set; }
     public Guid? LedgerId { get; set; }

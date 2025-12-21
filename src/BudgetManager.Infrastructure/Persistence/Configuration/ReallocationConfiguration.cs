@@ -11,5 +11,13 @@ public class ReallocationConfiguration : IEntityTypeConfiguration<Reallocation>
         builder.ToTable("Reallocations");
 
         builder.ConfigureBudgetTransactionEntity();
+
+        builder.HasOne(x => x.Fund)
+            .WithMany(x => x.OutgoingReallocations)
+            .HasForeignKey(x => x.FundId);
+
+        builder.HasOne(x => x.TargetFund)
+            .WithMany(x => x.IncomingReallocations)
+            .HasForeignKey(x => x.TargetFundId);
     }
 }

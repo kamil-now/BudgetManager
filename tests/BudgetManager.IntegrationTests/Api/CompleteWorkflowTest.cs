@@ -6,92 +6,44 @@ using BudgetManager.Application.Commands;
 using BudgetManager.Application.Models;
 using BudgetManager.Common.Enums;
 using BudgetManager.Common.Models;
-using BudgetManager.Domain.Entities;
 using Shouldly;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace BudgetManager.IntegrationTests.Api;
 
 /// <summary>
 /// Serves as E2E test substitute by validating full user journey and cross-feature integration through the API layer
 /// </summary>
-public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture fixture) : BaseTest(testOutputHelper, fixture)
+/// 
+[Collection("Sequential")]
+[TestCaseOrderer("BudgetManager.IntegrationTests.Api.PriorityOrderer", "BudgetManager.IntegrationTests")]
+public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture fixture, TestState state) : BaseTest(testOutputHelper, fixture), IClassFixture<TestState>
 {
-    private const string _userEmail = "test@test.test";
-    private const string _userName = "Test User";
-    private const string _userPassword = "1234";
+    private readonly TestState _testState = state;
 
-    private string _token = "invalid";
 
-    [Fact]
-    public async Task CompleteWorkflow_Works()
+    [Fact, TestPriority(1)]
+    public async Task UserRegistration()
     {
-        await Register();
-        await Login();
-
-        var (id, expectedLedger) = await CreateLedgerWithAccounts();
-        var ledger = await FetchLedgerSummary(id, expectedLedger);
-
-        await CreateAccountTransactions([.. ledger.Accounts]);
-        await FetchTransactionTags();
-        await FetchLedgerTransactionLog();
-        await UpdateTransactions();
-
-        await Logout();
-        await Login();
-
-        await FetchSpendingReports();
-        await GenerateBudgetProposal();
-        await AlterBudgetProposal();
-        await CreateBudget();
-
-        await CreateBudgetAllocations();
-        await FetchBudgetSummary();
-        await CreateBasicBudgetTransactions();
-        await CreateLedgerTransactionsLinkedToBudgetTransactions();
-
-        await FetchBudgetTransactionLog();
-        await UpdateBudgetTransactions();
-
-        await CreatePlannedBudget();
-        await UpdatePlannedBudget();
-
-        await CloseActiveBudget();
-        await OpenPlannedBudget();
-
-        await DeleteAccount();
-        await CreateNewAccount();
-        await UpdateAccount();
-
-        await CreateNewLedgers();
-        await AssignExisitngAccountsToNewLedgers();
-        await CreateBudgetsForNewLedgers();
-        await CreateNewBudgetsAllocations();
-
-        await CreateTransferBetweenLedgers();
-
-        await FetchAllAccounts();
-        await FetchAllTransactions();
-        await FetchAllLedgers();
-        await FetchAllBudgets();
-    }
-
-    private async Task<Guid> Register()
-    {
-        var response = await Client.PostAsJsonAsync("/api/auth/register", new CreateUserCommand(_userEmail, _userPassword, _userName));
+        var response = await Client.PostAsJsonAsync("/api/auth/register", new CreateUserCommand(_testState.UserEmail, _testState.UserPassword, _testState.UserName));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var id = await response.Content.ReadFromJsonAsync<Guid>();
+        var id = await response.Content.ReadFromJsonAsync<Guid?>();
 
+        id.ShouldNotBeNull();
         id.ShouldNotBe(Guid.Empty);
 
-        return id;
+        _testState.UserId = id;
     }
 
-    private async Task Login()
+    [Fact, TestPriority(2)]
+    public async Task UserLogin()
     {
-        var response = await Client.PostAsJsonAsync("/api/auth/login", new LoginCommand(_userEmail, _userPassword));
+        _testState.UserId.ShouldNotBeNull();
+
+        var response = await Client.PostAsJsonAsync("/api/auth/login", new LoginCommand(_testState.UserEmail, _testState.UserPassword));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
@@ -99,15 +51,16 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         tokenResponse.ShouldNotBeNull();
 
-        _token = tokenResponse.Token;
+        tokenResponse.Token.ShouldNotBeEmpty();
 
-        _token.ShouldNotBeEmpty();
-
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.Token);
     }
 
-    private async Task<(Guid id, CreateLedgerCommand command)> CreateLedgerWithAccounts()
+    [Fact, TestPriority(3)]
+    public async Task CreateLedgerWithAccounts()
     {
+        _testState.UserId.ShouldNotBeNull();
+
         var command = new CreateLedgerCommand("Default Ledger", null,
           new("Main budget", [
               new("Food", 0, 600, AllocationType.Fixed),
@@ -128,12 +81,17 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         var id = await response.Content.ReadFromJsonAsync<Guid>();
 
         id.ShouldNotBe(Guid.Empty);
-        return (id, command);
+        _testState.LedgerId = id;
+        _testState.ExpectedLedger = command;
     }
 
-    private async Task<LedgerDTO> FetchLedgerSummary(Guid id, CreateLedgerCommand expected)
+    [Fact, TestPriority(4)]
+    public async Task FetchLedgerSummary()
     {
-        var response = await Client.GetAsync($"/api/ledgers/{id}");
+        _testState.LedgerId.ShouldNotBeNull();
+        _testState.ExpectedLedger.ShouldNotBeNull();
+
+        var response = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
@@ -141,18 +99,18 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         ledger.ShouldNotBeNull();
 
-        ledger.Name.ShouldBe(expected.Name);
-        ledger.Description.ShouldBe(expected.Description);
+        ledger.Name.ShouldBe(_testState.ExpectedLedger.Name);
+        ledger.Description.ShouldBe(_testState.ExpectedLedger.Description);
 
         ledger.Budgets.Count().ShouldBe(1);
         var budget = ledger.Budgets.First();
 
-        budget.Name.ShouldBe(expected.Budget.Name);
-        budget.Description.ShouldBe(expected.Budget.Description);
+        budget.Name.ShouldBe(_testState.ExpectedLedger.Budget.Name);
+        budget.Description.ShouldBe(_testState.ExpectedLedger.Budget.Description);
 
-        budget.Funds.Count().ShouldBe(expected.Budget.Funds.Count());
+        budget.Funds.Count().ShouldBe(_testState.ExpectedLedger.Budget.Funds.Count());
 
-        foreach (var expectedFund in expected.Budget.Funds)
+        foreach (var expectedFund in _testState.ExpectedLedger.Budget.Funds)
         {
             var fund = budget.Funds.FirstOrDefault(x => x.Name == expectedFund.Name);
             fund.ShouldNotBeNull($"Fund with name '{expectedFund.Name}' not found.");
@@ -160,9 +118,9 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             fund.Balance.Keys.ShouldBeEmpty();
         }
 
-        ledger.Accounts.Count().ShouldBe(expected.Accounts.Count());
+        ledger.Accounts.Count().ShouldBe(_testState.ExpectedLedger.Accounts.Count());
 
-        foreach (var expectedAccount in expected.Accounts)
+        foreach (var expectedAccount in _testState.ExpectedLedger.Accounts)
         {
             var account = ledger.Accounts.FirstOrDefault(x => x.Name == expectedAccount.Name);
             account.ShouldNotBeNull($"Account with name '{expectedAccount.Name}' not found.");
@@ -172,11 +130,14 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             account.Balance[expectedAccount.InitialBalance.Currency].ShouldBe(expectedAccount.InitialBalance.Amount);
         }
 
-        return ledger;
+        _testState.Ledger = ledger;
     }
 
-    private async Task CreateAccountTransactions(LedgerDTO.Account[] accounts)
+    [Fact, TestPriority(5)]
+    public async Task CreateAccountTransactions()
     {
+        _testState.Ledger.ShouldNotBeNull();
+        var accounts = _testState.Ledger.Accounts.ToArray();
         accounts.Length.ShouldBe(3);
 
         async Task POST<T>(string url, T payload)
@@ -203,14 +164,56 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         await POST($"/api/accounts/{accounts[1].Id}/income", salary);
         await POST($"/api/accounts/{accounts[1].Id}/transfer", savingsTransfer);
         await POST($"/api/accounts/{accounts[1].Id}/expense", rent);
+
+        _testState.ExpectedIncomes = [cashGift, currencyExchangeIn, salary];
+        _testState.ExpectedExpenses = [currencyExchangeOut, rent];
+        _testState.ExpectedTransfers = [savingsTransfer];
+    }
+
+    [Fact, TestPriority(6)]
+    public async Task FetchLedgerTransactions()
+    {
+        _testState.ExpectedIncomes.ShouldNotBeNull();
+        _testState.ExpectedExpenses.ShouldNotBeNull();
+        _testState.ExpectedTransfers.ShouldNotBeNull();
+
+        var response = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/transactions");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+
+        var transactions = await response.Content.ReadFromJsonAsync<LedgerTransactionsDTO>();
+
+        transactions.ShouldNotBeNull();
+
+        foreach (var expectedIncome in _testState.ExpectedIncomes)
+        {
+            var transaction = transactions.Incomes.FirstOrDefault(x => x.Title == expectedIncome.Title);
+            transaction.ShouldNotBeNull($"Income with title '{expectedIncome.Title}' not found.");
+            transaction.Description.ShouldBe(expectedIncome.Description);
+            transaction.Title.ShouldBe(expectedIncome.Title);
+            transaction.Amount.ShouldBe(expectedIncome.Amount);
+        }
+
+        foreach (var expectedExpense in _testState.ExpectedExpenses)
+        {
+            var transaction = transactions.Expenses.FirstOrDefault(x => x.Title == expectedExpense.Title);
+            transaction.ShouldNotBeNull($"Expense with title '{expectedExpense.Title}' not found.");
+            transaction.Description.ShouldBe(expectedExpense.Description);
+            transaction.Title.ShouldBe(expectedExpense.Title);
+            transaction.Amount.ShouldBe(expectedExpense.Amount);
+        }
+
+        foreach (var expectedTransfer in _testState.ExpectedTransfers)
+        {
+            var transaction = transactions.Transfers.FirstOrDefault(x => x.Title == expectedTransfer.Title);
+            transaction.ShouldNotBeNull($"Transfer with title '{expectedTransfer.Title}' not found.");
+            transaction.Description.ShouldBe(expectedTransfer.Description);
+            transaction.Title.ShouldBe(expectedTransfer.Title);
+            transaction.Amount.ShouldBe(expectedTransfer.Amount);
+        }
     }
 
 #pragma warning disable CS1998, CA1822
-
-    private async Task FetchLedgerTransactionLog()
-    {
-        // TODO
-    }
 
     private async Task UpdateTransactions()
     {
@@ -351,10 +354,57 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
     {
         // TODO
     }
-
-    private async Task FetchTransactionTags()
-    {
-        // TODO
-    }
 #pragma warning restore CS1998, CA1822
+}
+
+public class PriorityOrderer : ITestCaseOrderer
+{
+    public IEnumerable<TTestCase> OrderTestCases<TTestCase>(
+        IEnumerable<TTestCase> testCases) where TTestCase : ITestCase
+    {
+        var assemblyName = typeof(TestPriorityAttribute).AssemblyQualifiedName!;
+        var sortedMethods = new SortedDictionary<int, List<TTestCase>>();
+
+        foreach (TTestCase testCase in testCases)
+        {
+            var priority = testCase.TestMethod.Method
+                .GetCustomAttributes(assemblyName)
+                .FirstOrDefault()
+                ?.GetNamedArgument<int>(nameof(TestPriorityAttribute.Priority)) ?? 0;
+
+            if (!sortedMethods.ContainsKey(priority))
+                sortedMethods[priority] = [];
+
+            sortedMethods[priority].Add(testCase);
+        }
+
+        foreach (var list in sortedMethods.Values)
+            foreach (var testCase in list)
+                yield return testCase;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Method)]
+public class TestPriorityAttribute(int priority) : Attribute
+{
+    public int Priority { get; } = priority; // XUnit doesn't preserve declaration order
+}
+[CollectionDefinition("Sequential", DisableParallelization = true)]
+public class SequentialCollection { }
+
+
+public class TestState
+{
+    public string UserEmail = "test@test.test";
+    public string UserName = "Test User";
+    public string UserPassword = "1234";
+    public string Token = "invalid";
+
+    public Guid? UserId { get; set; }
+    public Guid? LedgerId { get; set; }
+    public CreateLedgerCommand? ExpectedLedger { get; set; }
+    public LedgerDTO? Ledger { get; set; }
+    public CreateIncomeCommand[]? ExpectedIncomes { get; set; }
+    public CreateExpenseCommand[]? ExpectedExpenses { get; set; }
+    public CreateTransferCommand[]? ExpectedTransfers { get; set; }
 }

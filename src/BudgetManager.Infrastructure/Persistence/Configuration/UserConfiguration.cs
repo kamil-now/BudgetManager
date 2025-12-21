@@ -17,9 +17,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(Constants.MaxNameLength);
 
+        builder.Property(x => x.HashedPassword)
+            .IsRequired()
+            .HasMaxLength(Constants.HashedPasswordLength);
+
         builder.Property(x => x.Email)
-            .HasMaxLength(254) // RFC 5321 limit
-            .HasAnnotation("RegularExpression", @"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+            .HasMaxLength(Constants.MaxEmailLength)
+            .HasAnnotation("RegularExpression", Constants.EmailRegexp)
             .IsRequired();
 
         builder.HasMany(x => x.Ledgers)

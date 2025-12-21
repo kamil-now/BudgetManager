@@ -1,4 +1,5 @@
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
@@ -6,21 +7,23 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateIncomeHandler(IBudgetManagerService budgetService) : IRequestHandler<CreateIncomeCommand, Guid>
+public sealed class CreateIncomeHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<CreateIncomeCommand, Guid>
 {
     public async Task<Guid> Handle(CreateIncomeCommand command, CancellationToken cancellationToken)
     {
         await ValidateCommandAsync(command, cancellationToken);
 
-        var entity = await budgetService.CreateAsync(new Income
+        var entity = await service.CreateAsync(new Income
         {
             AccountId = command.AccountId,
             Title = command.Title,
             Tags = command.Tags?.ToList(),
             Amount = command.Amount,
-            Description = command.Description,
+            Comment = command.Description,
             Date = command.Date,
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create income.");
+
+        await service.SaveChangesAsync(cancellationToken);
 
         if (entity.Id == Guid.Empty)
         {
@@ -31,13 +34,11 @@ public sealed class CreateIncomeHandler(IBudgetManagerService budgetService) : I
 
     private async Task ValidateCommandAsync(CreateIncomeCommand command, CancellationToken cancellationToken)
     {
-        command.AccountId.EnsureNotEmpty();
-
-        await command.AccountId.EnsureExists<Account>(budgetService, cancellationToken);
+        await command.AccountId.EnsureNotEmpty().EnsureAccessibleAsync<Account>(currentUser, service, cancellationToken);
 
         command.Amount.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
-        command.Description?.EnsureNotLongerThan(Constants.MaxDescriptionLength);
+        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
         command.Tags.EnsureValidTags();
     }
 }

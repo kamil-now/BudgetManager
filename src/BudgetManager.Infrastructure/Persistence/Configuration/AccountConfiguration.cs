@@ -22,7 +22,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .IsUnique();
 
         builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxDescriptionLength);
+            .HasMaxLength(Constants.MaxCommentLength);
 
         builder.HasMany(x => x.Expenses)
             .WithOne(x => x.Account)

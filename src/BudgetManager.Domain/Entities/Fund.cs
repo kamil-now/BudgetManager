@@ -13,9 +13,11 @@ public class Fund : Entity
     public AllocationType AllocationTemplateType { get; set; }
 
     public Budget Budget { get; set; } = null!;
+
     public virtual ICollection<Allocation> Allocations { get; set; } = [];
     public virtual ICollection<Deallocation> Deallocations { get; set; } = [];
-    public virtual ICollection<Reallocation> Reallocations { get; set; } = [];
+    public virtual ICollection<Reallocation> IncomingReallocations { get; set; } = [];
+    public virtual ICollection<Reallocation> OutgoingReallocations { get; set; } = [];
 
     public Balance GetBalance()
     {
@@ -28,16 +30,13 @@ public class Fund : Entity
         {
             balance.Deduct(x.Amount);
         }
-        foreach (var x in Reallocations)
+        foreach (var x in IncomingReallocations)
         {
-            if (x.FundId == Id)
-            {
-                balance.Deduct(x.Amount);
-            }
-            else
-            {
-                balance.Add(x.Amount);
-            }
+            balance.Add(x.Amount);
+        }
+        foreach (var x in OutgoingReallocations)
+        {
+            balance.Deduct(x.Amount);
         }
         return balance;
     }

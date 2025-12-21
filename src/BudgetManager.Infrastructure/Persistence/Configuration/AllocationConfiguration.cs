@@ -11,5 +11,9 @@ public class AllocationConfiguration : IEntityTypeConfiguration<Allocation>
         builder.ToTable("Allocations");
 
         builder.ConfigureBudgetTransactionEntity();
+
+        builder.HasOne(x => x.Fund)
+            .WithMany(x => x.Allocations)
+            .HasForeignKey(x => x.FundId);
     }
 }

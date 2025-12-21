@@ -18,7 +18,7 @@ public class FundConfiguration : IEntityTypeConfiguration<Fund>
             .HasMaxLength(Constants.MaxNameLength);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxDescriptionLength);
+            .HasMaxLength(Constants.MaxCommentLength);
 
         builder.HasIndex(x => x.BudgetId);
 
@@ -32,7 +32,7 @@ public class FundConfiguration : IEntityTypeConfiguration<Fund>
             .HasForeignKey(x => x.FundId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.Reallocations)
+        builder.HasMany(x => x.IncomingReallocations)
             .WithOne(x => x.TargetFund)
             .HasForeignKey(x => x.TargetFundId)
             .OnDelete(DeleteBehavior.Cascade);

@@ -11,5 +11,13 @@ public class TransferConfiguration : IEntityTypeConfiguration<Transfer>
         builder.ToTable("Transfers");
 
         builder.ConfigureAccountTransactionEntity();
+
+        builder.HasOne(x => x.Account)
+            .WithMany(x => x.OutgoingTransfers)
+            .HasForeignKey(x => x.AccountId);
+
+        builder.HasOne(x => x.TargetAccount)
+            .WithMany(x => x.IncomingTransfers)
+            .HasForeignKey(x => x.TargetAccountId);
     }
 }

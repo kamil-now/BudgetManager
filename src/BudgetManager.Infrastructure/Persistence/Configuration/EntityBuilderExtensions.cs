@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,6 @@ public static class EntityBuilderExtensions
     public static void ConfigureAccountTransactionEntity<T>(this EntityTypeBuilder<T> builder) where T : AccountTransaction
     {
         builder.ConfigureEntity();
-
-        builder.Property(x => x.AccountId)
-            .IsRequired();
 
         builder.OwnsOne(x => x.Amount, money =>
         {
@@ -31,11 +29,10 @@ public static class EntityBuilderExtensions
             .IsRequired();
 
         builder.Property(x => x.Title)
-            .IsRequired()
             .HasMaxLength(Constants.MaxTitleLength);
 
-        builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxDescriptionLength);
+        builder.Property(x => x.Comment)
+            .HasMaxLength(Constants.MaxCommentLength);
 
         builder.Property(x => x.Tags)
             .HasConversion(
@@ -47,16 +44,11 @@ public static class EntityBuilderExtensions
                 (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 c => c.ToList()));
-
-        builder.HasIndex(x => x.AccountId);
     }
 
     public static void ConfigureBudgetTransactionEntity<T>(this EntityTypeBuilder<T> builder) where T : BudgetTransaction
     {
         builder.ConfigureEntity();
-
-        builder.Property(x => x.FundId)
-            .IsRequired();
 
         builder.OwnsOne(x => x.Amount, money =>
         {
@@ -73,10 +65,11 @@ public static class EntityBuilderExtensions
         builder.Property(x => x.Date)
             .IsRequired();
 
-        builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxDescriptionLength);
+        builder.Property(x => x.Title)
+            .HasMaxLength(Constants.MaxTitleLength);
 
-        builder.HasIndex(x => x.FundId);
+        builder.Property(x => x.Comment)
+            .HasMaxLength(Constants.MaxCommentLength);
     }
 
     public static void ConfigureEntity<T>(this EntityTypeBuilder<T> builder) where T : Entity

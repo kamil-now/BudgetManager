@@ -9,6 +9,22 @@ namespace BudgetManager.Application.Validators;
 
 public static class ValidationExtensions
 {
+    public static async Task<Guid> EnsureAccessibleAsync<T>(this Guid id, ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity, IAccessControlled
+    {
+        var ownerId = await service.GetOwnerIdAsync<T>(id, cancellationToken);
+
+        if (ownerId is null)
+        {
+            throw new ValidationException($"Entity with ID '{id}' does not exist.");
+        }
+
+        if (ownerId.ToString() != currentUser.Id)
+        {
+            throw new AccessException($"{nameof(T)} with ID '{id}' cannot be accessed by user with ID '{currentUser.Id}'.");
+        }
+        return id;
+    }
+
     public static async Task<Guid> EnsureExistsAsync(this ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken)
     {
         var userId = currentUser.Id.EnsureValidId();

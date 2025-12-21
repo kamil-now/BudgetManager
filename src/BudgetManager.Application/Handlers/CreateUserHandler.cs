@@ -1,6 +1,8 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Models;
+using BudgetManager.Application.Validators;
+using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 
@@ -31,22 +33,15 @@ public sealed class CreateUserHandler(IBudgetManagerService budgetService, IPass
 
     private async Task ValidateCommandAsync(CreateUserCommand command, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(command.Email))
-        {
-            throw new InvalidOperationException("Email cannot be empty.");
-        }
-        if (string.IsNullOrWhiteSpace(command.Password))
-        {
-            throw new InvalidOperationException("Password cannot be empty.");
-        }
-        if (string.IsNullOrWhiteSpace(command.Name))
-        {
-            throw new InvalidOperationException("Name cannot be empty.");
-        }
+        command.Email.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxEmailLength);
+        command.Name?.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxNameLength);
+        command.Password.EnsureNotEmpty();
+
+        // TODO evaluate password strenght
 
         if (await budgetService.ExistsAsync<User>(x => x.Email == command.Email, cancellationToken))
         {
-            throw new InvalidOperationException($"User with email {command.Email} already exists.");
+            throw new ValidationException($"User with email '{command.Email}' already exists.");
         }
     }
 }

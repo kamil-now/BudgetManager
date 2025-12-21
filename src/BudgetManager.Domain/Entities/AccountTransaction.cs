@@ -8,7 +8,7 @@ public abstract class AccountTransaction : Entity
     public required Money Amount { get; set; }
     public DateTimeOffset Date { get; set; }
     public string? Title { get; set; }
-    public string? Description { get; set; }
+    public string? Comment { get; set; }
     public List<string>? Tags { get; set; }
 
     public Account Account { get; set; } = null!;

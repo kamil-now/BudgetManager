@@ -66,25 +66,25 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
 
     private static void Validate(CreateLedgerCommand command)
     {
-        command.Description?.EnsureNotLongerThan(Constants.MaxDescriptionLength);
+        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
         command.Accounts.EnsureNotEmpty();
 
         foreach (var account in command.Accounts)
         {
             account.Name.EnsureNotEmpty("Account name").EnsureNotLongerThan(Constants.MaxNameLength, "Account name");
-            account.Description?.EnsureNotLongerThan(Constants.MaxDescriptionLength, $"Description of {account.Name}");
+            account.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {account.Name}");
             account.InitialBalance.Amount.EnsureNonnegative($"InitialBalance of {account.Name}");
             account.InitialBalance.Currency.EnsureValidCurrency($"InitialBalance of {account.Name}");
         }
 
         command.Budget.Name.EnsureNotEmpty("Budget name").EnsureNotLongerThan(Constants.MaxNameLength, "Budget name");
-        command.Budget.Description?.EnsureNotLongerThan(Constants.MaxDescriptionLength, $"Description of {command.Budget.Name}");
+        command.Budget.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {command.Budget.Name}");
         command.Budget.Funds.EnsureNotEmpty();
 
         foreach (var fund in command.Budget.Funds)
         {
             fund.Name.EnsureNotEmpty("Fund name").EnsureNotLongerThan(Constants.MaxNameLength, "Fund name");
-            fund.Description?.EnsureNotLongerThan(Constants.MaxDescriptionLength, $"Description of {fund.Name}");
+            fund.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {fund.Name}");
             fund.AllocationTemplateSequence.EnsureNonnegative($"AllocationTemplateSequence of {fund.Name}");
         }
     }

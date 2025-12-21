@@ -11,5 +11,9 @@ public class DeallocationConfiguration : IEntityTypeConfiguration<Deallocation>
         builder.ToTable("Deallocations");
 
         builder.ConfigureBudgetTransactionEntity();
+
+        builder.HasOne(x => x.Fund)
+            .WithMany(x => x.Deallocations)
+            .HasForeignKey(x => x.FundId);
     }
 }

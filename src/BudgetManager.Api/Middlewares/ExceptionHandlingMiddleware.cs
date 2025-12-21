@@ -17,5 +17,11 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             await context.Response.WriteAsync(ex.Message);
         }
+        catch (AccessException ex)
+        {
+            context.Response.ContentType = "application/text";
+            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            await context.Response.WriteAsync(ex.Message);
+        }
     }
 }

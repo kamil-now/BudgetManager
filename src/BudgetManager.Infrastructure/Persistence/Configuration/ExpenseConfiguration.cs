@@ -11,5 +11,9 @@ public class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         builder.ToTable("Expenses");
 
         builder.ConfigureAccountTransactionEntity();
+
+        builder.HasOne(x => x.Account)
+            .WithMany(x => x.Expenses)
+            .HasForeignKey(x => x.AccountId);
     }
 }

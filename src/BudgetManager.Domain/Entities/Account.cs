@@ -1,8 +1,9 @@
 using BudgetManager.Common.Models;
+using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Domain.Entities;
 
-public class Account : Entity
+public class Account : Entity, IAccessControlled
 {
     public required Guid OwnerId { get; set; }
     public Guid? LedgerId { get; set; }
@@ -15,7 +16,7 @@ public class Account : Entity
     public virtual ICollection<Expense> Expenses { get; set; } = [];
     public virtual ICollection<Transfer> IncomingTransfers { get; set; } = [];
     public virtual ICollection<Transfer> OutgoingTransfers { get; set; } = [];
-    
+
 
     public Balance GetBalance()
     {
