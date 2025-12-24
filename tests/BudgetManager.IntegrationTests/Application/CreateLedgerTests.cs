@@ -81,7 +81,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         // Act & Assert
         var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
 
-        ex.Message.ShouldBeEquivalentTo($"InitialBalance of [account name] must be greater than or equal zero.");
+        ex.Message.ShouldBeEquivalentTo($"InitialBalance of [account name] amount must be greater than zero.");
     }
     // TODO
 }

@@ -11,16 +11,12 @@ public static class ValidationExtensions
 {
     public static async Task<Guid> EnsureAccessibleAsync<T>(this Guid id, ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity, IAccessControlled
     {
-        var ownerId = await service.GetOwnerIdAsync<T>(id, cancellationToken);
-
-        if (ownerId is null)
-        {
-            throw new ValidationException($"Entity with ID '{id}' does not exist.");
-        }
+        var ownerId = await service.GetOwnerIdAsync<T>(id, cancellationToken)
+            ?? throw new ValidationException($"Entity with ID '{id}' does not exist.");
 
         if (ownerId.ToString() != currentUser.Id)
         {
-            throw new AccessException($"{nameof(T)} with ID '{id}' cannot be accessed by user with ID '{currentUser.Id}'.");
+            throw new AccessException($"{typeof(T).Name} with ID '{id}' cannot be accessed by user with ID '{currentUser.Id}'.");
         }
         return id;
     }
@@ -29,7 +25,7 @@ public static class ValidationExtensions
     {
         var userId = currentUser.Id.EnsureValidId();
 
-        await userId.EnsureExists<User>(service, cancellationToken);
+        await userId.EnsureExistsAsync<User>(service, cancellationToken);
 
         return userId;
     }
@@ -45,16 +41,17 @@ public static class ValidationExtensions
 
     public static IEnumerable<string>? EnsureValidTags(this IEnumerable<string>? tags)
     {
-        if (tags != null)
+        if (tags == null)
         {
-            if (tags.Any(tag => string.IsNullOrWhiteSpace(tag)))
-            {
-                throw new ValidationException("Tags cannot contain null or whitespace values.");
-            }
-            if (string.Join(',', tags).Length > Constants.MaxTagsLength)
-            {
-                throw new ValidationException($"Tags value is too long. Max combined tags length is {Constants.MaxTagsLength}.");
-            }
+            return tags;
+        }
+        if (tags.Any(tag => string.IsNullOrWhiteSpace(tag)))
+        {
+            throw new ValidationException("Each tag must have a value.");
+        }
+        if (string.Join(',', tags).Length > Constants.MaxTagsLength)
+        {
+            throw new ValidationException($"Tags are too long. Max combined tags length is {Constants.MaxTagsLength}.");
         }
         return tags;
     }
@@ -98,32 +95,42 @@ public static class ValidationExtensions
         return val;
     }
 
-    public static async Task EnsureExists<T>(this Guid id, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity
+    public static async Task<Guid> EnsureExistsAsync<T>(this Guid id, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity
     {
         if (id == Guid.Empty)
         {
-            throw new ValidationException($"Entity ID cannot be empty.");
+            throw new ValidationException($"{typeof(T).Name} ID cannot be empty.");
         }
         if (!await service.ExistsAsync<T>(x => x.Id == id, cancellationToken))
         {
-            throw new ValidationException($"Entity with ID '{id}' does not exist.");
+            throw new ValidationException($"{typeof(T).Name} with ID '{id}' does not exist.");
         }
+        return id;
     }
 
-    public static string EnsureValidCurrency(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    public static Money EnsureValid(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        val.Amount.EnsurePositive($"{paramName?.TrimName()} amount");
+        val.Currency.EnsureValidCurrency($"{paramName?.TrimName()} currency");
+
+        return val;
+    }
+
+    private static decimal EnsurePositive(this decimal val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        if (val <= 0)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} must be greater than zero.");
+        }
+        return val;
+    }
+
+    private static string EnsureValidCurrency(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
     {
         if (val.Length != Constants.CurrencyCodeLength || val.Any(x => !char.IsLetter(x)))
         {
             throw new ValidationException($"{paramName?.TrimName()} value '{val}' is not a valid currency code.");
         }
-        return val;
-    }
-
-    public static Money EnsureValid(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
-    {
-        val.Currency.EnsureValidCurrency($"{paramName?.TrimName()} currency");
-        val.Amount.EnsureNonnegative($"{paramName?.TrimName()} amount");
-
         return val;
     }
 
