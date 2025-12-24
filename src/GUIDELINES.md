@@ -43,6 +43,18 @@ Only where it makes sense, no test fixtures, no database, no dependency injectio
 - test `ApplicationDbContext` only
 - `PersistenceFixture` (with local postgres instance)
 
+
+### Tests coverage report
+To get proper full coverage report delete old report files before running dotnet test `Get-ChildItem -Recurse -Filter "coverage.cobertura.xml" | Remove-Item`.
+
+Then run `dotnet test --settings coverlet.runsettings`
+
+Merged code coverage report can be generated using `dotnet-reportgenerator-globaltool`:
+- if not yet installed run `dotnet tool install -g dotnet-reportgenerator-globaltool`
+- to get merged report run `reportgenerator -reports:**/coverage.cobertura.xml -targetdir:./coveragereport -reporttypes:Html`
+- then full report should be available in `/coverage/index.html`
+
+
 ## Database
 - use code-first migrations (postgres with Npgsql)
 - create configuration file for each new entity

@@ -1,0 +1,12 @@
+<RunSettings>
+    <DataCollectionRunSettings>
+        <DataCollectors>
+            <DataCollector friendlyName="XPlat code coverage">
+                <Configuration>
+                    <Format>cobertura</Format>
+                    <Exclude>[*]Program,[*]*Initializer,[*]*Migrations*,[*]*Mock*,[*]*Example*,[*]*Options,[*]*Configuration,[*]*Controller,[*]*ServiceCollectionExtensions,</Exclude>
+                </Configuration>
+            </DataCollector>
+        </DataCollectors>
+    </DataCollectionRunSettings>
+</RunSettings>
