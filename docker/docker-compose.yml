@@ -1,0 +1,44 @@
+name: budget-manager
+
+services:
+  budget-manager-api:
+    env_file:
+      - .env
+    build:
+      context: ../src
+      dockerfile: Dockerfile
+    ports:
+      - "${API_EXTERNAL_PORT}:8080"
+    networks:
+      - network
+    environment:
+      RunAutoMigrations: true
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      ConnectionStrings__DefaultConnection: Host=budget-manager-db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+    depends_on:
+      budget-manager-db:
+        condition: service_healthy
+
+  budget-manager-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+    networks:
+      - network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  network:

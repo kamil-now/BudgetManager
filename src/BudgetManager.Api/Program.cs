@@ -4,7 +4,6 @@ using BudgetManager.Application.Configuration;
 using BudgetManager.Application.Services;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
@@ -18,7 +17,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Version = "v1",
         Title = "Budget API",
-        Description = File.ReadAllText("./assets/api-description.html"),
+        Description = File.ReadAllText("./Assets/api-description.html"),
         Contact = new OpenApiContact
         {
             Email = builder.Configuration["Contact"]
@@ -27,18 +26,11 @@ builder.Services.AddSwaggerGen(options =>
     options.EnableAnnotations();
 });
 
-// TODO
-
 builder.Services.AddAuthorization();
 builder.Services.UseBudgetManagerAuth(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, HttpContextUserService>();
-
-// TODO
-builder.Services.AddCors(
-    options => options.AddDefaultPolicy(
-    build => build.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
 builder.Services.UseMediator();
 builder.Services.UsePostgreSQL(builder.Configuration);
@@ -65,7 +57,7 @@ app.UseStaticFiles(
       FileProvider = new PhysicalFileProvider(
       Path.Combine(builder.Environment.ContentRootPath, "Assets")
       ),
-      RequestPath = "/assets"
+      RequestPath = "/Assets"
   }
 );
 
@@ -77,7 +69,7 @@ if (app.Environment.IsDevelopment())
         c.DocumentTitle = "Budget API";
         c.OAuthScopes($"{builder.Configuration["AzureAd:Audience"]}/full");
         c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{builder.Environment.ApplicationName} v1");
-        c.InjectStylesheet("/assets/swagger-dark.css");
+        c.InjectStylesheet("/Assets/swagger-dark.css");
         c.OAuthClientId(builder.Configuration["AzureAd:ClientId"]);
     });
 }
