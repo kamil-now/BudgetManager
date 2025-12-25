@@ -18,7 +18,7 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
-                    HashedPassword = table.Column<string>(type: "text", nullable: false),
+                    HashedPassword = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
@@ -118,8 +118,8 @@ namespace BudgetManager.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
@@ -144,8 +144,8 @@ namespace BudgetManager.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
@@ -171,8 +171,8 @@ namespace BudgetManager.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
@@ -228,18 +228,12 @@ namespace BudgetManager.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    BudgetId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Allocations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Allocations_Budgets_BudgetId",
-                        column: x => x.BudgetId,
-                        principalTable: "Budgets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Allocations_Funds_FundId",
                         column: x => x.FundId,
@@ -260,18 +254,12 @@ namespace BudgetManager.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    BudgetId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Deallocations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Deallocations_Budgets_BudgetId",
-                        column: x => x.BudgetId,
-                        principalTable: "Budgets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Deallocations_Expenses_ExpenseId",
                         column: x => x.ExpenseId,
@@ -297,18 +285,12 @@ namespace BudgetManager.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    BudgetId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reallocations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Reallocations_Budgets_BudgetId",
-                        column: x => x.BudgetId,
-                        principalTable: "Budgets",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Reallocations_Funds_FundId",
                         column: x => x.FundId,
@@ -340,11 +322,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Allocations_BudgetId",
-                table: "Allocations",
-                column: "BudgetId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Allocations_FundId",
                 table: "Allocations",
                 column: "FundId");
@@ -358,11 +335,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "IX_Budgets_OwnerId",
                 table: "Budgets",
                 column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Deallocations_BudgetId",
-                table: "Deallocations",
-                column: "BudgetId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Deallocations_ExpenseId",
@@ -393,11 +365,6 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "IX_Ledgers_OwnerId",
                 table: "Ledgers",
                 column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reallocations_BudgetId",
-                table: "Reallocations",
-                column: "BudgetId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reallocations_FundId",
