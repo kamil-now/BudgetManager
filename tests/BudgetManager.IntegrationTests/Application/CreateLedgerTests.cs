@@ -1,8 +1,6 @@
 using BudgetManager.Application.Commands;
-using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
 using BudgetManager.Common.Enums;
-using BudgetManager.Domain.Entities;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -11,17 +9,22 @@ namespace BudgetManager.IntegrationTests.Application;
 public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
     [Fact]
+    public async Task CreateLedger_WhenUserDoesNotExist_ShouldThrowException()
+    {
+        // Arrange
+        MockUnauthenticatedUser();
+        var command = new CreateLedgerCommand(string.Empty, null, new(string.Empty, []), []);
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<AuthenticationException>(() => Mediator.Send(command));
+        ex.Message.ShouldBe("User not authenticated.");
+    }
+
+    [Fact]
     public async Task CreateLedger_CreatesLedgerWithBudgetAndAccount()
     {
         // Arrange
-        await BudgetManagerService.CreateAsync(new User()
-        {
-            Id = Guid.Parse(MockCurrentUserService.MockUserId),
-            Name = MockCurrentUserService.MockUserName,
-            Email = MockCurrentUserService.MockUserEmail,
-            HashedPassword = "0x"
-        });
-        await BudgetManagerService.SaveChangesAsync();
+        var userId = await MockAuthenticatedUserAsync();
 
         var command = new CreateLedgerCommand(
           "[ledger name]",
@@ -35,7 +38,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         // Assert
         var ledger = await BudgetManagerService.GetLedgerAsync(x => x.Id == id, default);
         ledger.ShouldNotBeNull();
-        ledger.OwnerId.ToString().ShouldBe(MockCurrentUserService.MockUserId);
+        ledger.OwnerId.ShouldBe(userId);
         ledger.Name.ShouldBe(command.Name);
         ledger.Description.ShouldBe(command.Description);
 
@@ -43,7 +46,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
 
         var budget = ledger.Budgets.First();
         budget.ShouldNotBeNull();
-        budget.OwnerId.ToString().ShouldBe(MockCurrentUserService.MockUserId);
+        budget.OwnerId.ShouldBe(userId);
         budget.Name.ShouldBe(command.Budget.Name);
         budget.Description.ShouldBe(command.Budget.Description);
 
@@ -62,7 +65,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var commandAccount = command.Accounts.First();
         var account = ledger.Accounts.First();
         account.ShouldNotBeNull();
-        account.OwnerId.ToString().ShouldBe(MockCurrentUserService.MockUserId);
+        account.OwnerId.ShouldBe(userId);
         account.Name.ShouldBe(commandAccount.Name);
         account.Description.ShouldBe(commandAccount.Description);
 
@@ -76,6 +79,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
     public async Task CreateLedger_WhenAccountInitialBalanceIsNegative_ThrowsException()
     {
         // Arrange
+        var userId = await MockAuthenticatedUserAsync();
         var command = new CreateLedgerCommand("[ledger name]", null, new("[budget name]", []), [new(new(-1, ""), "[account name]")]);
 
         // Act & Assert

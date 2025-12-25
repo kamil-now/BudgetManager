@@ -11,8 +11,9 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
 {
     public async Task<Guid> Handle(CreateLedgerCommand command, CancellationToken cancellationToken)
     {
+        var userId = await currentUser.EnsureAuthenticatedAsync(budgetService, cancellationToken);
+
         Validate(command);
-        var userId = await currentUser.EnsureExistsAsync(budgetService, cancellationToken);
 
         var budgetId = Guid.NewGuid();
         var entity = await budgetService.CreateAsync(new Ledger

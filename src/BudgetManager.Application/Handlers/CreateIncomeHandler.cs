@@ -11,7 +11,9 @@ public sealed class CreateIncomeHandler(ICurrentUserService currentUser, IBudget
 {
     public async Task<Guid> Handle(CreateIncomeCommand command, CancellationToken cancellationToken)
     {
-        await ValidateCommandAsync(command, cancellationToken);
+        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
+
+        await ValidateCommandAsync(userId, command, cancellationToken);
 
         var entity = await service.CreateAsync(new Income
         {
@@ -32,9 +34,9 @@ public sealed class CreateIncomeHandler(ICurrentUserService currentUser, IBudget
         return entity.Id;
     }
 
-    private async Task ValidateCommandAsync(CreateIncomeCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(Guid userId, CreateIncomeCommand command, CancellationToken cancellationToken)
     {
-        await command.AccountId.EnsureNotEmpty().EnsureAccessibleAsync<Account>(currentUser, service, cancellationToken);
+        await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
 
         command.Amount.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);

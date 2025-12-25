@@ -17,13 +17,12 @@ public class ValidatorsTests
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        var currentUser = Substitute.For<ICurrentUserService>();
         var budgetManagerService = Substitute.For<IBudgetManagerService>();
         var accountId = Guid.NewGuid();
         budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns((Guid?)null);
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<ValidationException>(() => accountId.EnsureAccessibleAsync<Account>(currentUser, budgetManagerService, cancellationToken));
+        var ex = await Should.ThrowAsync<ValidationException>(() => accountId.EnsureAccessibleAsync<Account>(Guid.NewGuid(), budgetManagerService, cancellationToken));
         ex.Message.ShouldBeEquivalentTo($"Entity with ID '{accountId}' does not exist.");
     }
 
@@ -32,17 +31,15 @@ public class ValidatorsTests
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        var currentUser = Substitute.For<ICurrentUserService>();
         var budgetManagerService = Substitute.For<IBudgetManagerService>();
         var accountId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
         var currentUserId = Guid.NewGuid();
 
-        currentUser.Id.Returns(currentUserId.ToString());
         budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns(ownerId);
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<AccessException>(() => accountId.EnsureAccessibleAsync<Account>(currentUser, budgetManagerService, cancellationToken));
+        var ex = await Should.ThrowAsync<BudgetManager.Application.Validators.AuthorizationException>(() => accountId.EnsureAccessibleAsync<Account>(currentUserId, budgetManagerService, cancellationToken));
         ex.Message.ShouldBeEquivalentTo($"Account with ID '{accountId}' cannot be accessed by user with ID '{currentUserId}'.");
     }
 
@@ -51,44 +48,44 @@ public class ValidatorsTests
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        var currentUser = Substitute.For<ICurrentUserService>();
         var budgetManagerService = Substitute.For<IBudgetManagerService>();
         var accountId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
 
-        currentUser.Id.Returns(ownerId.ToString());
         budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns(ownerId);
 
         // Act 
-        var result = await accountId.EnsureAccessibleAsync<Account>(currentUser, budgetManagerService, cancellationToken);
+        var result = await accountId.EnsureAccessibleAsync<Account>(ownerId, budgetManagerService, cancellationToken);
 
         // Assert
         result.ShouldBeEquivalentTo(accountId);
     }
 
-    [Fact]
-    public async Task EnsureExistsAsync_WhenUserIdIsInvalid_ShouldThrowValidationException()
+    [Theory]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    [InlineData("not a valid guid")]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task EnsureExistsAsync_WhenUserIdIsInvalid_ShouldThrowUnauthenticatedException(string? userId)
     {
         // Arrange
         var currentUser = Substitute.For<ICurrentUserService>();
-        currentUser.Id.Returns("not a valid guid");
+        currentUser.Id.Returns(userId);
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<ValidationException>(() => currentUser.EnsureExistsAsync(Substitute.For<IBudgetManagerService>(), default));
-        ex.Message.ShouldBeEquivalentTo("Id value 'not a valid guid' is invalid.");
+        await Should.ThrowAsync<AuthenticationException>(() => currentUser.EnsureAuthenticatedAsync(Substitute.For<IBudgetManagerService>(), default));
     }
 
     [Fact]
-    public async Task EnsureExistsAsync_WhenUserDoesNotExist_ShouldThrowValidationException()
+    public async Task EnsureExistsAsync_WhenUserDoesNotExist_ShouldThrowUnauthenticatedException()
     {
         // Arrange
         var currentUser = Substitute.For<ICurrentUserService>();
-        var id = Guid.NewGuid();
-        currentUser.Id.Returns(id.ToString());
+        var id = Guid.NewGuid().ToString();
+        currentUser.Id.Returns(id);
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<ValidationException>(() => currentUser.EnsureExistsAsync(Substitute.For<IBudgetManagerService>(), default));
-        ex.Message.ShouldBeEquivalentTo($"User with ID '{id}' does not exist.");
+        await Should.ThrowAsync<AuthenticationException>(() => currentUser.EnsureAuthenticatedAsync(Substitute.For<IBudgetManagerService>(), default));
     }
 
     [Fact]
@@ -115,36 +112,10 @@ public class ValidatorsTests
         budgetManagerService.ExistsAsync(Arg.Any<Expression<Func<User, bool>>>(), cancellationToken).Returns(true);
 
         // Act 
-        var result = await currentUser.EnsureExistsAsync(budgetManagerService, cancellationToken);
+        var result = await currentUser.EnsureAuthenticatedAsync(budgetManagerService, cancellationToken);
 
         // Assert
         result.ShouldBeEquivalentTo(id);
-    }
-
-    [Theory]
-    [InlineData("00000000-0000-0000-0000-000000000000", "")]
-    [InlineData("not a valid guid", "some id")]
-    [InlineData("", null)]
-    [InlineData(null, "\n")]
-    public void EnsureValidId_WhenValueIsNotValidGuid_ShouldThrowValidationException(string? input, string? paramName)
-    {
-        // Act & Assert
-        var ex = Should.Throw<ValidationException>(() => input.EnsureValidId(paramName));
-        ex.Message.ShouldBeEquivalentTo($"{paramName} value '{input}' is invalid.");
-    }
-
-    [Fact]
-    public void EnsureValidId_WhenValueIsValidGuid_ShouldReturnGuid()
-    {
-        // Arrange
-        var input = Guid.NewGuid().ToString();
-
-        // Act 
-        var result = input.EnsureValidId();
-
-        // Assert
-        result.ShouldBeOfType<Guid>();
-        result.ToString().ShouldBeEquivalentTo(input);
     }
 
     [Fact]
@@ -261,30 +232,6 @@ public class ValidatorsTests
     {
         // Arrange
         var input = (string[])["1"];
-
-        // Act 
-        var result = input.EnsureNotEmpty();
-
-        // Assert
-        result.ShouldBeEquivalentTo(input);
-    }
-
-    [Fact]
-    public void EnsureNotEmpty_WhenGuidIsEmpty_ShouldReturnInput()
-    {
-        // Arrange
-        var input = Guid.Empty;
-
-        // Act & Assert
-        var ex = Should.Throw<ValidationException>(() => input.EnsureNotEmpty());
-        ex.Message.ShouldBeEquivalentTo("ID cannot be empty.");
-    }
-
-    [Fact]
-    public void EnsureNotEmpty_WhenGuidIsNotEmpty_ShouldReturnInput()
-    {
-        // Arrange
-        var input = Guid.NewGuid();
 
         // Act 
         var result = input.EnsureNotEmpty();

@@ -1,4 +1,6 @@
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Validators;
+using BudgetManager.Common.Models;
 using BudgetManager.Domain.Entities;
 using Shouldly;
 using Xunit.Abstractions;
@@ -8,50 +10,36 @@ namespace BudgetManager.IntegrationTests.Application;
 public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
     [Fact]
-    public async Task CreateAccount_WhenUserDoesNotExist_ThrowsException()
+    public async Task CreateAccount_WhenUserDoesNotExist_ShouldThrowException()
     {
         // Arrange
-        var command = new CreateAccountCommand(Guid.NewGuid(), null, new(0, "PLN"), "Test Account", "Test Account Description");
+        MockUnauthenticatedUser();
+        var command = new CreateAccountCommand(null, new(0, "PLN"), "Test Account", "Test Account Description");
 
         // Act & Assert
-        await Should.ThrowAsync<InvalidOperationException>(() => Mediator.Send(command));
+        var ex = await Should.ThrowAsync<AuthenticationException>(() => Mediator.Send(command));
+        ex.Message.ShouldBe("User not authenticated.");
     }
 
     [Fact]
-    public async Task CreateAccount_WhenLedgerDoesNotExist_ThrowsException()
+    public async Task CreateAccount_WhenLedgerDoesNotExist_ShouldThrowException()
     {
         // Arrange
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test User",
-            Email = $"test{Guid.NewGuid()}@email.com",
-            HashedPassword = "Test Hashed Password"
-        };
-        await BudgetManagerService.CreateAsync(user);
-        await BudgetManagerService.SaveChangesAsync();
+        await MockAuthenticatedUserAsync();
 
-        var command = new CreateAccountCommand(user.Id, Guid.NewGuid(), new(0, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account", "Test Account Description");
 
         // Act & Assert
-        await Should.ThrowAsync<InvalidOperationException>(() => Mediator.Send(command));
+        await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
     }
 
     [Fact]
-    public async Task CreateAccount_CreatesNewEntity()
+    public async Task CreateAccount_ShouldCreateNewEntity()
     {
         // Arrange
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test User",
-            Email = $"test{Guid.NewGuid()}@email.com",
-            HashedPassword = "Test Hashed Password"
-        };
-        await BudgetManagerService.CreateAsync(user);
-        await BudgetManagerService.SaveChangesAsync();
+        var userId = await MockAuthenticatedUserAsync();
 
-        var command = new CreateAccountCommand(user.Id, null, new(123, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(null, new(123, "PLN"), "Test Account", "Test Account Description");
 
         // Act
         var accountId = await Mediator.Send(command);
@@ -63,8 +51,8 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         account.Id.ShouldBe(accountId);
         account.Name.ShouldBe(command.Name);
         account.Description.ShouldBe(command.Description);
-        account.OwnerId.ShouldBe(user.Id);
+        account.OwnerId.ShouldBe(userId);
         account.LedgerId.ShouldBeNull();
-        // account.CurrentBalance.ShouldBe(new Money(0, "PLN"));
+        account.GetBalance().ShouldBeEquivalentTo(new Balance() { { command.InitialBalance.Currency, command.InitialBalance.Amount } });
     }
 }

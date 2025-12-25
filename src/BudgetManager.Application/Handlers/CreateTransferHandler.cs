@@ -11,7 +11,9 @@ public sealed class CreateTransferHandler(ICurrentUserService currentUser, IBudg
 {
     public async Task<Guid> Handle(CreateTransferCommand command, CancellationToken cancellationToken)
     {
-        await ValidateCommandAsync(command, cancellationToken);
+        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
+
+        await ValidateCommandAsync(userId, command, cancellationToken);
 
         var entity = await service.CreateAsync(new Transfer
         {
@@ -33,10 +35,10 @@ public sealed class CreateTransferHandler(ICurrentUserService currentUser, IBudg
         return entity.Id;
     }
 
-    private async Task ValidateCommandAsync(CreateTransferCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(Guid userId, CreateTransferCommand command, CancellationToken cancellationToken)
     {
-        await command.AccountId.EnsureNotEmpty().EnsureAccessibleAsync<Account>(currentUser, service, cancellationToken);
-        await command.TargetAccountId.EnsureNotEmpty().EnsureAccessibleAsync<Account>(currentUser, service, cancellationToken);
+        await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
+        await command.TargetAccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
 
         command.Amount.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);

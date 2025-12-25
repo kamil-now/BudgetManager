@@ -9,34 +9,29 @@ namespace BudgetManager.Application.Validators;
 
 public static class ValidationExtensions
 {
-    public static async Task<Guid> EnsureAccessibleAsync<T>(this Guid id, ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity, IAccessControlled
+    public static async Task<Guid> EnsureAccessibleAsync<T>(this Guid id, Guid userId, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity, IAccessControlled
     {
         var ownerId = await service.GetOwnerIdAsync<T>(id, cancellationToken)
             ?? throw new ValidationException($"Entity with ID '{id}' does not exist.");
 
-        if (ownerId.ToString() != currentUser.Id)
+        if (ownerId != userId)
         {
-            throw new AccessException($"{typeof(T).Name} with ID '{id}' cannot be accessed by user with ID '{currentUser.Id}'.");
+            throw new AuthorizationException($"{typeof(T).Name} with ID '{id}' cannot be accessed by user with ID '{userId}'.");
         }
         return id;
     }
 
-    public static async Task<Guid> EnsureExistsAsync(this ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken)
+    public static async Task<Guid> EnsureAuthenticatedAsync(this ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken)
     {
-        var userId = currentUser.Id.EnsureValidId();
-
-        await userId.EnsureExistsAsync<User>(service, cancellationToken);
-
-        return userId;
-    }
-
-    public static Guid EnsureValidId(this string? val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
-    {
-        if (val is null || !Guid.TryParse(val, out var userId) || userId == Guid.Empty)
+        if (Guid.TryParse(currentUser.Id, out var userId) && userId != Guid.Empty)
         {
-            throw new ValidationException($"{paramName?.TrimName()} value '{val}' is invalid.");
+            if (!await service.ExistsAsync<User>(x => x.Id == userId, cancellationToken))
+            {
+                throw new AuthenticationException($"User with ID '{userId}' does not exist.");
+            }
+            return userId;
         }
-        return userId;
+        throw new AuthenticationException();
     }
 
     public static IEnumerable<string>? EnsureValidTags(this IEnumerable<string>? tags)
@@ -82,15 +77,6 @@ public static class ValidationExtensions
         if (!val.Any())
         {
             throw new ValidationException($"{paramName?.TrimName()} cannot be empty.");
-        }
-        return val;
-    }
-
-    public static Guid EnsureNotEmpty(this Guid val)
-    {
-        if (val == Guid.Empty)
-        {
-            throw new ValidationException($"ID cannot be empty.");
         }
         return val;
     }

@@ -24,7 +24,9 @@ public class ApplicationFixture : TestBedFixture
             .EnableSensitiveDataLogging());
 
         services.AddSingleton<IBudgetManagerService, BudgetManagerService>();
-        services.AddSingleton<ICurrentUserService, MockCurrentUserService>();
+        services.AddSingleton<MockCurrentUserService>();
+        services.AddSingleton<ICurrentUserService>(s => s.GetService<MockCurrentUserService>()!);
+
         services.UseMediator();
     }
 
@@ -39,9 +41,9 @@ public class ApplicationFixture : TestBedFixture
 
 public class MockCurrentUserService : ICurrentUserService
 {
-    public const string MockUserId = "4ec3a3b3-a6f5-4720-9c57-ba0495dec583";
-    public const string MockUserEmail = "email@mock.com";
-    public const string MockUserName = "Mock User";
+    public string? MockUserId { get; set; }
+    public string? MockUserEmail { get; set; }
+    public string? MockUserName { get; set; }
     public string? Id => MockUserId;
     public string? Email => MockUserEmail;
     public string? Name => MockUserName;

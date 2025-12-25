@@ -11,7 +11,9 @@ public sealed class GetLedgerTransactionsHandler(ICurrentUserService currentUser
 {
     public async Task<LedgerTransactionsDTO?> Handle(GetLedgerTransactionsQuery query, CancellationToken cancellationToken)
     {
-        await query.LedgerId.EnsureAccessibleAsync<Ledger>(currentUser, service, cancellationToken);
+        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
+
+        await query.LedgerId.EnsureAccessibleAsync<Ledger>(userId, service, cancellationToken);
 
         var filters = query.Filters;
         filters.From ??= DateTimeOffset.MinValue;
