@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  coverage:
+  run:
     runs-on: ubuntu-latest
 
     services:
@@ -32,22 +32,19 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0'
-    
+
     - name: Run tests with coverage
       env:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=testdb;Username=postgres;Password=postgres"
       
       run: dotnet test --settings coverlet.runsettings
-    
+
     - name: Generate coverage report
       uses: danielpalme/ReportGenerator-GitHub-Action@5.5.1
       with:
         reports: '**/coverage.cobertura.xml'
         targetdir: './coveragereport'
-        reporttypes: 'Html'
-    
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: ./coveragereport
+        reporttypes: 'MarkdownSummaryGithub'
+
+    - name: Write to Job Summary
+      run: cat coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
