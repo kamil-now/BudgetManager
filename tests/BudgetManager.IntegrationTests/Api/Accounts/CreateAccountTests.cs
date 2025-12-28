@@ -4,9 +4,9 @@ using BudgetManager.Application.Commands;
 using Shouldly;
 using Xunit.Abstractions;
 
-namespace BudgetManager.IntegrationTests.Api;
+namespace BudgetManager.IntegrationTests.Api.Accounts;
 
-public class AccountsControllerTests(ITestOutputHelper testOutputHelper, ApiFixture fixture) : BaseTest(testOutputHelper, fixture)
+public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
     [Fact]
     public async Task CreateAccount_WhenUserIsUnauthorized_Fails()

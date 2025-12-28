@@ -6,7 +6,7 @@ using BudgetManager.Domain;
 using Shouldly;
 using Xunit.Abstractions;
 
-namespace BudgetManager.IntegrationTests.Api;
+namespace BudgetManager.IntegrationTests.Api.Ledgers;
 
 public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
