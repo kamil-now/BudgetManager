@@ -10,11 +10,4 @@ public record CreateTransferCommand(
   string? Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-) : CreateAccountTransactionCommand(
-  AccountId,
-  Amount,
-  Date,
-  Title,
-  Description,
-  Tags
-);
+) : IRequest<Guid>;

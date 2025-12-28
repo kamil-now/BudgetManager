@@ -37,6 +37,21 @@ public class AccountsController(IMediator mediator) : BaseController
         return CreatedAtAction(nameof(GetIncome), new { accountId, incomeId = id }, id);
     }
 
+    [HttpPut("{accountId}/income/{incomeId}")]
+    public async Task<ActionResult> CreateIncome([FromRoute] Guid accountId, [FromRoute] Guid incomeId, [FromBody] UpdateIncomeCommand request)
+    {
+        if (accountId != request.AccountId)
+        {
+            request = request with { AccountId = accountId };
+        }
+        if (incomeId != request.Id)
+        {
+            request = request with { Id = incomeId };
+        }
+        await mediator.Send(request);
+        return Ok();
+    }
+
     [HttpGet("{accountId}/expense/{expenseId}")]
     public async Task<ActionResult> GetExpense([FromRoute] Guid accountId, [FromRoute] Guid expenseId)
     {

@@ -20,6 +20,5 @@ public interface IBudgetManagerService
     Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;
     Task<T> CreateAsync<T>(T entity, CancellationToken cancellationToken = default) where T : Entity;
     Task<bool> ExistsAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;
-    Task UpdateAsync<T>(Guid id, IEnumerable<Expression<Func<T, object>>> updatedProperties, CancellationToken cancellationToken) where T : Entity;
     Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity;
 }

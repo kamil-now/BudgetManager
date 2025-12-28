@@ -11,12 +11,4 @@ public record CreateReallocationCommand(
   string Title,
   string? Description = null,
   IEnumerable<string>? Tags = null
-) : CreateBudgetTransactionCommand(
-  BudgetId,
-  FundId,
-  Amount,
-  Date,
-  Title,
-  Description,
-  Tags
-), IRequest<Guid>;
+) : IRequest<Guid>;

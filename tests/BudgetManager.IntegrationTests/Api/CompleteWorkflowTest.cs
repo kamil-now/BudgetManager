@@ -82,14 +82,14 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         id.ShouldNotBe(Guid.Empty);
         _testState.LedgerId = id;
-        _testState.ExpectedLedger = command;
+        _testState.CreatedLedger = command;
     }
 
     [Fact, TestPriority(4)]
     public async Task FetchLedgerSummary()
     {
         _testState.LedgerId.ShouldNotBeNull();
-        _testState.ExpectedLedger.ShouldNotBeNull();
+        _testState.CreatedLedger.ShouldNotBeNull();
 
         var response = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}");
 
@@ -99,18 +99,18 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         ledger.ShouldNotBeNull();
 
-        ledger.Name.ShouldBe(_testState.ExpectedLedger.Name);
-        ledger.Description.ShouldBe(_testState.ExpectedLedger.Description);
+        ledger.Name.ShouldBe(_testState.CreatedLedger.Name);
+        ledger.Description.ShouldBe(_testState.CreatedLedger.Description);
 
         ledger.Budgets.Count().ShouldBe(1);
         var budget = ledger.Budgets.First();
 
-        budget.Name.ShouldBe(_testState.ExpectedLedger.Budget.Name);
-        budget.Description.ShouldBe(_testState.ExpectedLedger.Budget.Description);
+        budget.Name.ShouldBe(_testState.CreatedLedger.Budget.Name);
+        budget.Description.ShouldBe(_testState.CreatedLedger.Budget.Description);
 
-        budget.Funds.Count().ShouldBe(_testState.ExpectedLedger.Budget.Funds.Count());
+        budget.Funds.Count().ShouldBe(_testState.CreatedLedger.Budget.Funds.Count());
 
-        foreach (var expectedFund in _testState.ExpectedLedger.Budget.Funds)
+        foreach (var expectedFund in _testState.CreatedLedger.Budget.Funds)
         {
             var fund = budget.Funds.FirstOrDefault(x => x.Name == expectedFund.Name);
             fund.ShouldNotBeNull($"Fund with name '{expectedFund.Name}' not found.");
@@ -118,9 +118,9 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             fund.Balance.Keys.ShouldBeEmpty();
         }
 
-        ledger.Accounts.Count().ShouldBe(_testState.ExpectedLedger.Accounts.Count());
+        ledger.Accounts.Count().ShouldBe(_testState.CreatedLedger.Accounts.Count());
 
-        foreach (var expectedAccount in _testState.ExpectedLedger.Accounts)
+        foreach (var expectedAccount in _testState.CreatedLedger.Accounts)
         {
             var account = ledger.Accounts.FirstOrDefault(x => x.Name == expectedAccount.Name);
             account.ShouldNotBeNull($"Account with name '{expectedAccount.Name}' not found.");
@@ -165,17 +165,17 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         await POST($"/api/accounts/{accounts[1].Id}/transfer", savingsTransfer);
         await POST($"/api/accounts/{accounts[1].Id}/expense", rent);
 
-        _testState.ExpectedIncomes = [cashGift, currencyExchangeIn, salary];
-        _testState.ExpectedExpenses = [currencyExchangeOut, rent];
-        _testState.ExpectedTransfers = [savingsTransfer];
+        _testState.CreatedIncomes = [cashGift, currencyExchangeIn, salary];
+        _testState.CreatedExpenses = [currencyExchangeOut, rent];
+        _testState.CreatedTransfers = [savingsTransfer];
     }
 
     [Fact, TestPriority(6)]
     public async Task FetchLedgerTransactions()
     {
-        _testState.ExpectedIncomes.ShouldNotBeNull();
-        _testState.ExpectedExpenses.ShouldNotBeNull();
-        _testState.ExpectedTransfers.ShouldNotBeNull();
+        _testState.CreatedIncomes.ShouldNotBeNull();
+        _testState.CreatedExpenses.ShouldNotBeNull();
+        _testState.CreatedTransfers.ShouldNotBeNull();
 
         var response = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/transactions");
 
@@ -185,7 +185,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         transactions.ShouldNotBeNull();
 
-        foreach (var expectedIncome in _testState.ExpectedIncomes)
+        foreach (var expectedIncome in _testState.CreatedIncomes)
         {
             var transaction = transactions.Incomes.FirstOrDefault(x => x.Title == expectedIncome.Title);
             transaction.ShouldNotBeNull($"Income with title '{expectedIncome.Title}' not found.");
@@ -194,7 +194,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             transaction.Amount.ShouldBe(expectedIncome.Amount);
         }
 
-        foreach (var expectedExpense in _testState.ExpectedExpenses)
+        foreach (var expectedExpense in _testState.CreatedExpenses)
         {
             var transaction = transactions.Expenses.FirstOrDefault(x => x.Title == expectedExpense.Title);
             transaction.ShouldNotBeNull($"Expense with title '{expectedExpense.Title}' not found.");
@@ -203,7 +203,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             transaction.Amount.ShouldBe(expectedExpense.Amount);
         }
 
-        foreach (var expectedTransfer in _testState.ExpectedTransfers)
+        foreach (var expectedTransfer in _testState.CreatedTransfers)
         {
             var transaction = transactions.Transfers.FirstOrDefault(x => x.Title == expectedTransfer.Title);
             transaction.ShouldNotBeNull($"Transfer with title '{expectedTransfer.Title}' not found.");
@@ -211,14 +211,47 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             transaction.Title.ShouldBe(expectedTransfer.Title);
             transaction.Amount.ShouldBe(expectedTransfer.Amount);
         }
+        _testState.LedgerTransactions = transactions;
+    }
+
+    [Fact, TestPriority(7)]
+    public async Task UpdateIncome()
+    {
+        _testState.LedgerTransactions.ShouldNotBeNull();
+        var income = _testState.LedgerTransactions.Incomes.First(x => x.Title == "Salary");
+        var request = new UpdateIncomeCommand(
+            income.Id,
+            income.AccountId,
+            new Money(3000, income.Amount.Currency),
+            income.Date.AddDays(-1),
+            income.Title,
+            "invoice XYZ",
+            [.. income.Tags ?? [], "taxed"]);
+
+        var response = await Client.PutAsJsonAsync($"/api/accounts/{income.AccountId}/income/{income.Id}", request);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+
+        var transactionsResponse = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/transactions");
+        transactionsResponse.StatusCode.ShouldBe(HttpStatusCode.OK, await transactionsResponse.Content.ReadAsStringAsync());
+
+        var transactions = await transactionsResponse.Content.ReadFromJsonAsync<LedgerTransactionsDTO>();
+
+        transactions.ShouldNotBeNull();
+
+        var updated = transactions.Incomes.FirstOrDefault(x => x.Id == income.Id);
+
+        updated.ShouldNotBeNull();
+        updated.AccountId.ShouldBe(request.AccountId);
+        updated.Amount.ShouldBe(request.Amount);
+        updated.Date.ShouldBe(request.Date);
+        updated.Title.ShouldBe(request.Title);
+        updated.Description.ShouldBe(request.Description);
+        updated.Tags.ShouldBe(request.Tags);
+
+        _testState.LedgerTransactions = transactions;
     }
 
 #pragma warning disable CS1998, CA1822
-
-    private async Task UpdateTransactions()
-    {
-        // TODO
-    }
 
     private async Task Logout()
     {
@@ -402,9 +435,11 @@ public class TestState
 
     public Guid? UserId { get; set; }
     public Guid? LedgerId { get; set; }
-    public CreateLedgerCommand? ExpectedLedger { get; set; }
+    public CreateLedgerCommand? CreatedLedger { get; set; }
     public LedgerDTO? Ledger { get; set; }
-    public CreateIncomeCommand[]? ExpectedIncomes { get; set; }
-    public CreateExpenseCommand[]? ExpectedExpenses { get; set; }
-    public CreateTransferCommand[]? ExpectedTransfers { get; set; }
+    public LedgerTransactionsDTO? LedgerTransactions { get; set; }
+
+    public CreateIncomeCommand[]? CreatedIncomes { get; set; }
+    public CreateExpenseCommand[]? CreatedExpenses { get; set; }
+    public CreateTransferCommand[]? CreatedTransfers { get; set; }
 }

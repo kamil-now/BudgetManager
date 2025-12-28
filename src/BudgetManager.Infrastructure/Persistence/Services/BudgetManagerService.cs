@@ -127,7 +127,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
         }
 
         return await dbContext.Set<T>().FindAsync([id], cancellationToken)
-          ?? throw new KeyNotFoundException($"Entity of type {typeof(T).Name} with ID {id} not found.");
+          ?? throw new KeyNotFoundException($"Entity of type '{typeof(T).Name}' with ID '{id}' not found.");
     }
 
     public async Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
@@ -153,29 +153,6 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
         ArgumentNullException.ThrowIfNull(predicate);
 
         return await dbContext.Set<T>().AnyAsync(predicate, cancellationToken);
-    }
-
-    public async Task UpdateAsync<T>(Guid id, IEnumerable<Expression<Func<T, object>>> updatedProperties, CancellationToken cancellationToken) where T : Entity
-    {
-        if (id == Guid.Empty)
-        {
-            throw new ArgumentException("ID cannot be empty", nameof(id));
-        }
-
-        if (updatedProperties is null || !updatedProperties.Any())
-        {
-            throw new ArgumentException("At least one property must be specified for update", nameof(updatedProperties));
-        }
-
-        var entity = await GetAsync<T>(id, cancellationToken);
-
-        var dbEntity = dbContext.Entry(entity);
-        dbEntity.State = EntityState.Unchanged;
-
-        foreach (var property in updatedProperties)
-        {
-            dbEntity.Property(property).IsModified = true;
-        }
     }
 
     public async Task DeleteAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity
