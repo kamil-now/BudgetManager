@@ -113,7 +113,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
         var response = await Client.PostAsJsonAsync(_baseUrl, command);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableContent);
 
         var error = await response.Content.ReadAsStringAsync();
         error.ShouldBeEquivalentTo(expectedError);

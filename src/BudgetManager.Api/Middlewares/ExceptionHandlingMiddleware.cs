@@ -11,23 +11,28 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
         {
             await next(context);
         }
+        catch (NotFoundException ex)
+        {
+            await Set(context, ex.Message, HttpStatusCode.NotFound);
+        }
         catch (ValidationException ex)
         {
-            context.Response.ContentType = "application/text";
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            await context.Response.WriteAsync(ex.Message);
+            await Set(context, ex.Message, HttpStatusCode.UnprocessableEntity);
         }
         catch (AuthenticationException ex)
         {
-            context.Response.ContentType = "application/text";
-            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            await context.Response.WriteAsync(ex.Message);
+            await Set(context, ex.Message, HttpStatusCode.Unauthorized);
         }
         catch (AuthorizationException ex)
         {
-            context.Response.ContentType = "application/text";
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            await context.Response.WriteAsync(ex.Message);
+            await Set(context, ex.Message, HttpStatusCode.Forbidden);
         }
+    }
+
+    private static async Task Set(HttpContext context, string message, HttpStatusCode status)
+    {
+        context.Response.ContentType = "application/text";
+        context.Response.StatusCode = (int)status;
+        await context.Response.WriteAsync(message);
     }
 }

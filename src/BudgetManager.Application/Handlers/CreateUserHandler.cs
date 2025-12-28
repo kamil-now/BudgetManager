@@ -41,7 +41,7 @@ public sealed class CreateUserHandler(IBudgetManagerService budgetService, IPass
 
         if (await budgetService.ExistsAsync<User>(x => x.Email == command.Email, cancellationToken))
         {
-            throw new ValidationException($"User with email '{command.Email}' already exists.");
+            throw new ConflictException($"User with email '{command.Email}' already exists.");
         }
     }
 }

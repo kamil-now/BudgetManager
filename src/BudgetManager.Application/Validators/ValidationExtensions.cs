@@ -12,7 +12,7 @@ public static class ValidationExtensions
     public static async Task<Guid> EnsureAccessibleAsync<T>(this Guid id, Guid userId, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity, IAccessControlled
     {
         var ownerId = await service.GetOwnerIdAsync<T>(id, cancellationToken)
-            ?? throw new ValidationException($"Entity with ID '{id}' does not exist.");
+            ?? throw new AuthenticationException($"User with ID '{id}' does not exist.");
 
         if (ownerId != userId)
         {
@@ -31,7 +31,7 @@ public static class ValidationExtensions
             }
             return userId;
         }
-        throw new AuthenticationException();
+        throw new AuthenticationException($"User ID '{userId}' is invalid.");
     }
 
     public static IEnumerable<string>? EnsureValidTags(this IEnumerable<string>? tags)

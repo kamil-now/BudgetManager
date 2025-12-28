@@ -18,7 +18,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
 
         // Act & Assert
         var ex = await Should.ThrowAsync<AuthenticationException>(() => Mediator.Send(command));
-        ex.Message.ShouldBe("User not authenticated.");
+        ex.Message.ShouldBe("User ID '00000000-0000-0000-0000-000000000000' is invalid.");
     }
 
     [Fact]

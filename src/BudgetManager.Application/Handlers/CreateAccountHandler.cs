@@ -39,7 +39,7 @@ public sealed class CreateAccountHandler(ICurrentUserService currentUser, IBudge
     {
         if (await service.ExistsAsync<Account>(x => x.Name == command.Name && x.OwnerId == userId, cancellationToken))
         {
-            throw new ValidationException($"Account with name {command.Name} already exists for user {userId}.");
+            throw new ConflictException($"Account with name {command.Name} already exists for user {userId}.");
         }
         if (command.LedgerId is Guid ledgerId)
         {

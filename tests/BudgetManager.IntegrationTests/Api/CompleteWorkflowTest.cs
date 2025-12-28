@@ -143,7 +143,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         async Task POST<T>(string url, T payload)
         {
             var response = await Client.PostAsJsonAsync(url, payload);
-            response.StatusCode.ShouldBe(HttpStatusCode.OK, response.Content.ReadAsStringAsync().Result);
+            response.StatusCode.ShouldBe(HttpStatusCode.Created, response.Content.ReadAsStringAsync().Result);
             var id = await response.Content.ReadFromJsonAsync<Guid>();
             id.ShouldNotBe(Guid.Empty);
         }

@@ -13,7 +13,7 @@ namespace BudgetManager.UnitTests.Application;
 public class ValidatorsTests
 {
     [Fact]
-    public async Task EnsureAccessibleAsync_WhenEntityDoesNotExists_ShouldThrowValidationException()
+    public async Task EnsureAccessibleAsync_WhenEntityDoesNotExists_ShouldThrowAuthenticationException()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
@@ -22,8 +22,8 @@ public class ValidatorsTests
         budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns((Guid?)null);
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<ValidationException>(() => accountId.EnsureAccessibleAsync<Account>(Guid.NewGuid(), budgetManagerService, cancellationToken));
-        ex.Message.ShouldBeEquivalentTo($"Entity with ID '{accountId}' does not exist.");
+        var ex = await Should.ThrowAsync<AuthenticationException>(() => accountId.EnsureAccessibleAsync<Account>(Guid.NewGuid(), budgetManagerService, cancellationToken));
+        ex.Message.ShouldBeEquivalentTo($"User with ID '{accountId}' does not exist.");
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class ValidatorsTests
     [InlineData("not a valid guid")]
     [InlineData("")]
     [InlineData(null)]
-    public async Task EnsureExistsAsync_WhenUserIdIsInvalid_ShouldThrowUnauthenticatedException(string? userId)
+    public async Task EnsureExistsAsync_WhenUserIdIsInvalid_ShouldThrowAuthenticationException(string? userId)
     {
         // Arrange
         var currentUser = Substitute.For<ICurrentUserService>();

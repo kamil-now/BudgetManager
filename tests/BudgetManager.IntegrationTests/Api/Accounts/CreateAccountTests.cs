@@ -8,11 +8,12 @@ namespace BudgetManager.IntegrationTests.Api.Accounts;
 
 public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
+    private readonly string _url = "/api/accounts";
     [Fact]
     public async Task CreateAccount_WhenUserIsUnauthorized_Fails()
     {
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", new { });
+        var response = await Client.PostAsJsonAsync(_url, new { });
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -25,7 +26,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture f
         Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "invalid_token");
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", new { });
+        var response = await Client.PostAsJsonAsync(_url, new { });
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -40,7 +41,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture f
         Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", GetValidToken());
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", new { });
+        var response = await Client.PostAsJsonAsync(_url, new { });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -59,9 +60,11 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture f
           "Test Account Description");
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", request);
+        var response = await Client.PostAsJsonAsync(_url, request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var responseContent = await response.Content.ReadFromJsonAsync<Guid>();
+        responseContent.ShouldNotBe(Guid.Empty);
     }
 }
