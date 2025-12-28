@@ -15,16 +15,10 @@ namespace BudgetManager.IntegrationTests.Api;
 
 public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fixture) : TestBed<ApiFixture>(testOutputHelper, fixture)
 {
-    protected HttpClient Client => _fixture.GetService<HttpClient>(_testOutputHelper) ?? throw new InvalidOperationException($"{nameof(HttpClient)} is not registered in the service collection.");
-    protected ApplicationDbContext GetContext()
-    {
-        var dbContext = GetServiceProvider().GetService<ApplicationDbContext>()
-          ?? throw new InvalidOperationException($"{nameof(ApplicationDbContext)} is not registered in the service collection.");
-
-        dbContext.Database.EnsureCreated();
-
-        return dbContext;
-    }
+    protected HttpClient Client => _fixture.GetService<HttpClient>(_testOutputHelper)
+     ?? throw new InvalidOperationException($"{nameof(HttpClient)} is not registered in the service collection.");
+    protected ApplicationDbContext DbContext => _fixture.GetService<ApplicationDbContext>(_testOutputHelper)
+     ?? throw new InvalidOperationException($"{nameof(ApplicationDbContext)} is not registered in the service collection.");
 
     protected async Task AssertPostFailsWhenUnauthorized(string endpoint)
     {
@@ -32,7 +26,8 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fi
         var response = await Client.PostAsJsonAsync(endpoint, new { });
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
-    public async Task AssertUnauthorizedWhenTokenIsInvalid(string endpoint)
+
+    protected async Task AssertUnauthorizedWhenTokenIsInvalid(string endpoint)
     {
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "invalid_token");
         var response = await Client.PostAsJsonAsync(endpoint, new { });
@@ -49,23 +44,25 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fi
         return tokenGenerator.GenerateToken(new(Guid.NewGuid(), "Test User", $"test@email{Guid.NewGuid()}"));
     }
 
-    protected async Task RegisterAndLogin()
+    protected async Task<Guid> RegisterAndLogin()
     {
         var user = new CreateUserCommand($"test@email{Guid.NewGuid()}", "password", "Test User");
-        await Register(user);
+        var userId = await Register(user);
         await Login(new(user.Email, user.Password));
+        return userId;
     }
 
-    private async Task Register(CreateUserCommand command)
+    private async Task<Guid> Register(CreateUserCommand command)
     {
         var response = await Client.PostAsJsonAsync("/api/auth/register", command);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var id = await response.Content.ReadAsStringAsync();
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
 
-        id.ShouldNotBeEmpty();
-        id.ShouldNotBe(Guid.Empty.ToString());
+        id.ShouldNotBe(Guid.Empty);
+
+        return id;
     }
 
     private async Task Login(LoginCommand command)
