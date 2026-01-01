@@ -78,7 +78,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Accounts = [validAccount with { Description = tooLongDescription }] }, $"Description of {validAccount.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
-            Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(-1, "USD") }] }, $"InitialBalance of {validAccount.Name} amount must be greater than zero.");
+            Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(0, "USD") }] }, $"InitialBalance of {validAccount.Name} amount cannot be zero.");
 
             Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(1, "USDD") }] }, $"InitialBalance of {validAccount.Name} currency value 'USDD' is not a valid currency code.");
 

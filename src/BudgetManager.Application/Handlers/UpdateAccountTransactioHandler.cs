@@ -7,34 +7,34 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class UpdateIncomeHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<UpdateIncomeCommand>
+public sealed class UpdateAccountTransactioHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<UpdateAccountTransactionCommand>
 {
-    public async Task Handle(UpdateIncomeCommand command, CancellationToken cancellationToken)
+    public async Task Handle(UpdateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
         var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
 
         await ValidateCommandAsync(userId, command, cancellationToken);
 
-        var income = await service.GetAsync<Income>(command.Id, cancellationToken);
+        var income = await service.GetAsync<AccountTransaction>(command.Id, cancellationToken);
 
         income.AccountId = command.AccountId;
         income.Title = command.Title;
         income.Tags = command.Tags?.ToList();
-        income.Amount = command.Amount;
-        income.Comment = command.Description;
+        income.Value = command.Amount;
+        income.Comment = command.Comment;
         income.Date = command.Date;
 
         await service.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task ValidateCommandAsync(Guid userId, UpdateIncomeCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(Guid userId, UpdateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
         await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
-        await command.Id.EnsureExistsAsync<Income>(service, cancellationToken);
+        await command.Id.EnsureExistsAsync<AccountTransaction>(service, cancellationToken);
 
         command.Amount.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
-        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
+        command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
         command.Tags.EnsureValidTags();
     }
 }

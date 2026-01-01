@@ -96,18 +96,12 @@ public static class ValidationExtensions
 
     public static Money EnsureValid(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
     {
-        val.Amount.EnsurePositive($"{paramName?.TrimName()} amount");
+        if(val.Amount == 0)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} amount cannot be zero.");
+        }
         val.Currency.EnsureValidCurrency($"{paramName?.TrimName()} currency");
 
-        return val;
-    }
-
-    private static decimal EnsurePositive(this decimal val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
-    {
-        if (val <= 0)
-        {
-            throw new ValidationException($"{paramName?.TrimName()} must be greater than zero.");
-        }
         return val;
     }
 

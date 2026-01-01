@@ -4,15 +4,13 @@ namespace BudgetManager.Domain.Models;
 
 public record LedgerTransactions
 {
-  public required IEnumerable<Income> Incomes { get; init; }
-  public required IEnumerable<Expense> Expenses { get; init; }
-  public required IEnumerable<Transfer> Transfers { get; init; }
+  public required IEnumerable<AccountTransaction> AccountTransactions { get; init; }
+  public required IEnumerable<AccountTransfer> AccountTransfers { get; init; }
   public required Dictionary<Guid, string> Accounts { get; init; }
 
-  public required IEnumerable<Allocation> Allocations { get; init; }
-  public required IEnumerable<Deallocation> Deallocations { get; init; }
-  public required IEnumerable<Reallocation> Reallocations { get; init; }
+  public required IEnumerable<FundTransaction> FundTransactions { get; init; }
+  public required IEnumerable<FundTransfer> FundTransfers { get; init; }
+  public required Dictionary<Guid, (Guid, string)> Funds { get; init; }
 
   public required Dictionary<Guid, string> Budgets { get; init; }
-  public required Dictionary<Guid, (Guid, string)> Funds { get; init; }
 }

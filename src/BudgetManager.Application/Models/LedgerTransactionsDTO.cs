@@ -7,34 +7,37 @@ public record LedgerTransactionsDTO
     public required IEnumerable<AccountTransaction> Incomes { get; init; }
     public required IEnumerable<AccountTransaction> Expenses { get; init; }
     public required IEnumerable<AccountTransaction> Transfers { get; init; }
+    public required IEnumerable<AccountTransaction> CurrencyExchanges { get; init; }
 
-    public required IEnumerable<BudgetTransaction> Allocations { get; init; }
-    public required IEnumerable<BudgetTransaction> Deallocations { get; init; }
-    public required IEnumerable<BudgetTransaction> Reallocations { get; init; }
+    public required IEnumerable<FundTransaction> Allocations { get; init; }
+    public required IEnumerable<FundTransaction> Deallocations { get; init; }
+    public required IEnumerable<FundTransaction> Reallocations { get; init; }
 
     public record AccountTransaction(
         Guid Id,
         Guid AccountId,
         string AccountName,
-        Money Amount,
+        Money Value,
+        Money? Received,
         DateTimeOffset Date,
         Guid? TargetAccountId,
         string? TargetAccountName,
         string? Title,
-        string? Description,
+        string? Comment,
         IEnumerable<string>? Tags);
 
-    public record BudgetTransaction(
+    public record FundTransaction(
         Guid Id,
         Guid BudgetId,
         string BudgetName,
         Guid FundId,
         string FundName,
-        Money Amount,
+        Money Value,
+        Money? Received,
         DateTimeOffset Date,
         Guid? TargetFundId,
         string? TargetFundName,
         string? Title,
-        string? Description);
+        string? Comment);
 
 }

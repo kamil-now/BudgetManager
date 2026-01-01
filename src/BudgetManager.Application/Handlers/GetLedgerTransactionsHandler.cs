@@ -19,86 +19,148 @@ public sealed class GetLedgerTransactionsHandler(ICurrentUserService currentUser
         filters.From ??= DateTimeOffset.MinValue;
         filters.To ??= DateTimeOffset.MaxValue;
 
-        var transactions = await service.GetLedgerTransactionsAsync(query.LedgerId, filters, cancellationToken);
+        var ledgerTransactions = await service.GetLedgerTransactionsAsync(query.LedgerId, filters, cancellationToken);
+
+        var accountTransfers = ledgerTransactions.AccountTransfers
+                .Select(transfer => new
+                {
+                    Transfer = transfer,
+                    Income = ledgerTransactions.AccountTransactions.First(x => x.Id == transfer.IncomeId),
+                    Expense = ledgerTransactions.AccountTransactions.First(x => x.Id == transfer.ExpenseId)
+                }).Where(x => x.Income.Value.Currency == x.Expense.Value.Currency && x.Income.AccountId != x.Expense.AccountId)
+                .ToArray();
+
+        var currencyExchanges = ledgerTransactions.AccountTransfers
+                .Select(transfer => new
+                {
+                    Transfer = transfer,
+                    Income = ledgerTransactions.AccountTransactions.First(x => x.Id == transfer.IncomeId),
+                    Expense = ledgerTransactions.AccountTransactions.First(x => x.Id == transfer.ExpenseId)
+                }).Where(x => x.Income.Value.Currency != x.Expense.Value.Currency)
+                .ToArray();
+
+        var reallocations = ledgerTransactions.FundTransfers
+                .Select(transfer => new
+                {
+                    Transfer = transfer,
+                    Allocation = ledgerTransactions.FundTransactions.First(x => x.Id == transfer.AllocationId),
+                    Deallocation = ledgerTransactions.FundTransactions.First(x => x.Id == transfer.DeallocationId)
+                }).Where(x => x.Allocation.Value.Currency == x.Deallocation.Value.Currency && x.Allocation.FundId != x.Deallocation.FundId)
+                .ToArray();
 
         return new LedgerTransactionsDTO()
         {
-            Incomes = [.. transactions.Incomes.Select(x => new LedgerTransactionsDTO.AccountTransaction(
-                x.Id,
-                x.AccountId,
-                transactions.Accounts[x.AccountId],
-                x.Amount,
-                x.Date,
-                null,
-                null,
-                x.Title,
-                x.Comment,
-                x.Tags
-            ))],
-            Expenses = [..transactions.Expenses.Select(x => new LedgerTransactionsDTO.AccountTransaction(
-                x.Id,
-                x.AccountId,
-                transactions.Accounts[x.AccountId],
-                x.Amount,
-                x.Date,
-                null,
-                null,
-                x.Title,
-                x.Comment,
-                x.Tags
-            ))],
-            Transfers = [..transactions.Transfers.Select(x => new LedgerTransactionsDTO.AccountTransaction(
-                x.Id,
-                x.AccountId,
-                transactions.Accounts[x.AccountId],
-                x.Amount,
-                x.Date,
-                x.TargetAccountId,
-                transactions.Accounts[x.TargetAccountId],
-                x.Title,
-                x.Comment,
-                x.Tags
+            Incomes = [.. ledgerTransactions.AccountTransactions
+                .Where(x => x.Value.Amount > 0 && x.InTransfer == null && x.OutTransfer == null)
+                .Select(x => new LedgerTransactionsDTO.AccountTransaction(
+                    x.Id,
+                    x.AccountId,
+                    ledgerTransactions.Accounts[x.AccountId],
+                    x.Value,
+                    null,
+                    x.Date,
+                    null,
+                    null,
+                    x.Title,
+                    x.Comment,
+                    x.Tags
             ))],
 
-            Allocations = [..transactions.Allocations.Select(x => new LedgerTransactionsDTO.BudgetTransaction(
-                x.Id,
-                transactions.Funds[x.FundId].Item1,
-                transactions.Budgets[transactions.Funds[x.FundId].Item1],
-                x.FundId,
-                transactions.Funds[x.FundId].Item2,
-                x.Amount,
-                x.Date,
-                null,
-                null,
-                x.Title,
-                x.Comment
+            Expenses = [.. ledgerTransactions.AccountTransactions
+                .Where(x => x.Value.Amount < 0 && x.InTransfer == null && x.OutTransfer == null)
+                .Select(x => new LedgerTransactionsDTO.AccountTransaction(
+                    x.Id,
+                    x.AccountId,
+                    ledgerTransactions.Accounts[x.AccountId],
+                    x.Value,
+                    null,
+                    x.Date,
+                    null,
+                    null,
+                    x.Title,
+                    x.Comment,
+                    x.Tags
             ))],
-            Deallocations = [.. transactions.Deallocations.Select(x => new LedgerTransactionsDTO.BudgetTransaction(
-                x.Id,
-                transactions.Funds[x.FundId].Item1,
-                transactions.Budgets[transactions.Funds[x.FundId].Item1],
-                x.FundId,
-                transactions.Funds[x.FundId].Item2,
-                x.Amount,
-                x.Date,
-                null,
-                null,
-                x.Title,
-                x.Comment
+
+            Transfers = [.. accountTransfers
+                .Select(x => new LedgerTransactionsDTO.AccountTransaction(
+                    x.Transfer.Id,
+                    x.Expense.AccountId,
+                    ledgerTransactions.Accounts[x.Expense.AccountId],
+                    x.Income.Value,
+                    null,
+                    x.Income.Date,
+                    x.Income.AccountId,
+                    ledgerTransactions.Accounts[x.Income.AccountId],
+                    x.Income.Title,
+                    x.Income.Comment,
+                    x.Income.Tags
             ))],
-            Reallocations = [.. transactions.Reallocations.Select(x => new LedgerTransactionsDTO.BudgetTransaction(
-                x.Id,
-                transactions.Funds[x.FundId].Item1,
-                transactions.Budgets[transactions.Funds[x.FundId].Item1],
-                x.FundId,
-                transactions.Funds[x.FundId].Item2,
-                x.Amount,
-                x.Date,
-                transactions.Funds[x.TargetFundId].Item1,
-                transactions.Budgets[transactions.Funds[x.TargetFundId].Item1],
-                x.Title,
-                x.Comment
-            ))]
+
+            CurrencyExchanges = [.. currencyExchanges
+                .Select(x => new LedgerTransactionsDTO.AccountTransaction(
+                    x.Transfer.Id,
+                    x.Expense.AccountId,
+                    ledgerTransactions.Accounts[x.Expense.AccountId],
+                    x.Expense.Value,
+                    x.Income.Value,
+                    x.Income.Date,
+                    x.Income.AccountId,
+                    ledgerTransactions.Accounts[x.Income.AccountId],
+                    x.Income.Title,
+                    x.Income.Comment,
+                    x.Income.Tags
+            ))],
+
+            Allocations = [.. ledgerTransactions.FundTransactions
+                .Where(x => x.Value.Amount > 0 && x.InTransfer == null && x.OutTransfer == null)
+                .Select(x => new LedgerTransactionsDTO.FundTransaction(
+                    x.Id,
+                    ledgerTransactions.Funds[x.FundId].Item1,
+                    ledgerTransactions.Budgets[ledgerTransactions.Funds[x.FundId].Item1],
+                    x.FundId,
+                    ledgerTransactions.Funds[x.FundId].Item2,
+                    x.Value,
+                    null,
+                    x.Date,
+                    null,
+                    null,
+                    x.Title,
+                    x.Comment
+            ))],
+
+            Deallocations = [.. ledgerTransactions.FundTransactions
+                .Where(x => x.Value.Amount < 0 && x.InTransfer == null && x.OutTransfer == null)
+                .Select(x => new LedgerTransactionsDTO.FundTransaction(
+                    x.Id,
+                    ledgerTransactions.Funds[x.FundId].Item1,
+                    ledgerTransactions.Budgets[ledgerTransactions.Funds[x.FundId].Item1],
+                    x.FundId,
+                    ledgerTransactions.Funds[x.FundId].Item2,
+                    x.Value,
+                    null,
+                    x.Date,
+                    null,
+                    null,
+                    x.Title,
+                    x.Comment
+            ))],
+
+            Reallocations = [.. reallocations
+                .Select(x => new LedgerTransactionsDTO.FundTransaction(
+                    x.Transfer.Id,
+                    ledgerTransactions.Funds[x.Deallocation.FundId].Item1,
+                    ledgerTransactions.Budgets[ledgerTransactions.Funds[x.Deallocation.FundId].Item1],
+                    x.Deallocation.FundId,
+                    ledgerTransactions.Funds[x.Deallocation.FundId].Item2,
+                    x.Allocation.Value,
+                    null,
+                    x.Allocation.Date,
+                    x.Allocation.FundId,
+                    ledgerTransactions.Funds[x.Allocation.FundId].Item2,
+                    x.Allocation.Title,
+                    x.Allocation.Comment
+            ))],
         };
     }
 }

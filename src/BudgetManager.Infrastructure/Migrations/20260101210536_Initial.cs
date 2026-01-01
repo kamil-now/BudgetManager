@@ -108,85 +108,26 @@ namespace BudgetManager.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Expenses",
+                name: "AccountTransactions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     AccountId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Expenses", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Expenses_Accounts_AccountId",
-                        column: x => x.AccountId,
-                        principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Incomes",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    AccountId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Incomes", x => x.Id);
+                    table.PrimaryKey("PK_AccountTransactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Incomes_Accounts_AccountId",
+                        name: "FK_AccountTransactions_Accounts_AccountId",
                         column: x => x.AccountId,
-                        principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Transfers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TargetAccountId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    AccountId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Transfers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Transfers_Accounts_AccountId",
-                        column: x => x.AccountId,
-                        principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Transfers_Accounts_TargetAccountId",
-                        column: x => x.TargetAccountId,
                         principalTable: "Accounts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -218,55 +159,51 @@ namespace BudgetManager.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Allocations",
+                name: "AccountTransfers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    IncomeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExpenseId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    FundId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Allocations", x => x.Id);
+                    table.PrimaryKey("PK_AccountTransfers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Allocations_Funds_FundId",
-                        column: x => x.FundId,
-                        principalTable: "Funds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Deallocations",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ExpenseId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    FundId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Deallocations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Deallocations_Expenses_ExpenseId",
+                        name: "FK_AccountTransfers_AccountTransactions_ExpenseId",
                         column: x => x.ExpenseId,
-                        principalTable: "Expenses",
-                        principalColumn: "Id");
+                        principalTable: "AccountTransactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Deallocations_Funds_FundId",
+                        name: "FK_AccountTransfers_AccountTransactions_IncomeId",
+                        column: x => x.IncomeId,
+                        principalTable: "AccountTransactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FundTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    FundId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FundTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FundTransactions_Funds_FundId",
                         column: x => x.FundId,
                         principalTable: "Funds",
                         principalColumn: "Id",
@@ -274,33 +211,28 @@ namespace BudgetManager.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reallocations",
+                name: "FundTransfers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TargetFundId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AllocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DeallocationId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    FundId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reallocations", x => x.Id);
+                    table.PrimaryKey("PK_FundTransfers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reallocations_Funds_FundId",
-                        column: x => x.FundId,
-                        principalTable: "Funds",
+                        name: "FK_FundTransfers_FundTransactions_AllocationId",
+                        column: x => x.AllocationId,
+                        principalTable: "FundTransactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Reallocations_Funds_TargetFundId",
-                        column: x => x.TargetFundId,
-                        principalTable: "Funds",
+                        name: "FK_FundTransfers_FundTransactions_DeallocationId",
+                        column: x => x.DeallocationId,
+                        principalTable: "FundTransactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -322,9 +254,21 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Allocations_FundId",
-                table: "Allocations",
-                column: "FundId");
+                name: "IX_AccountTransactions_AccountId",
+                table: "AccountTransactions",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccountTransfers_ExpenseId",
+                table: "AccountTransfers",
+                column: "ExpenseId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccountTransfers_IncomeId",
+                table: "AccountTransfers",
+                column: "IncomeId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Budgets_LedgerId",
@@ -337,54 +281,31 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Deallocations_ExpenseId",
-                table: "Deallocations",
-                column: "ExpenseId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Deallocations_FundId",
-                table: "Deallocations",
-                column: "FundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Expenses_AccountId",
-                table: "Expenses",
-                column: "AccountId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Funds_BudgetId",
                 table: "Funds",
                 column: "BudgetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Incomes_AccountId",
-                table: "Incomes",
-                column: "AccountId");
+                name: "IX_FundTransactions_FundId",
+                table: "FundTransactions",
+                column: "FundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FundTransfers_AllocationId",
+                table: "FundTransfers",
+                column: "AllocationId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FundTransfers_DeallocationId",
+                table: "FundTransfers",
+                column: "DeallocationId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ledgers_OwnerId",
                 table: "Ledgers",
                 column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reallocations_FundId",
-                table: "Reallocations",
-                column: "FundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reallocations_TargetFundId",
-                table: "Reallocations",
-                column: "TargetFundId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Transfers_AccountId",
-                table: "Transfers",
-                column: "AccountId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Transfers_TargetAccountId",
-                table: "Transfers",
-                column: "TargetAccountId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
@@ -397,28 +318,22 @@ namespace BudgetManager.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Allocations");
+                name: "AccountTransfers");
 
             migrationBuilder.DropTable(
-                name: "Deallocations");
+                name: "FundTransfers");
 
             migrationBuilder.DropTable(
-                name: "Incomes");
+                name: "AccountTransactions");
 
             migrationBuilder.DropTable(
-                name: "Reallocations");
-
-            migrationBuilder.DropTable(
-                name: "Transfers");
-
-            migrationBuilder.DropTable(
-                name: "Expenses");
-
-            migrationBuilder.DropTable(
-                name: "Funds");
+                name: "FundTransactions");
 
             migrationBuilder.DropTable(
                 name: "Accounts");
+
+            migrationBuilder.DropTable(
+                name: "Funds");
 
             migrationBuilder.DropTable(
                 name: "Budgets");

@@ -14,29 +14,18 @@ public class Fund : Entity
 
     public Budget Budget { get; set; } = null!;
 
-    public virtual ICollection<Allocation> Allocations { get; set; } = [];
-    public virtual ICollection<Deallocation> Deallocations { get; set; } = [];
-    public virtual ICollection<Reallocation> IncomingReallocations { get; set; } = [];
-    public virtual ICollection<Reallocation> OutgoingReallocations { get; set; } = [];
+    public virtual ICollection<FundTransaction> Transactions { get; set; } = [];
 
     public Balance GetBalance()
     {
         Balance balance = [];
-        foreach (var x in Allocations)
+        foreach (var x in Transactions)
         {
-            balance.Add(x.Amount);
+            balance.Add(x.Value);
         }
-        foreach (var x in Deallocations)
+        foreach (var key in balance.Where(x => x.Value == 0).Select(x => x.Key).ToList())
         {
-            balance.Deduct(x.Amount);
-        }
-        foreach (var x in IncomingReallocations)
-        {
-            balance.Add(x.Amount);
-        }
-        foreach (var x in OutgoingReallocations)
-        {
-            balance.Deduct(x.Amount);
+            balance.Remove(key);
         }
         return balance;
     }

@@ -243,8 +243,8 @@ public class ValidatorsTests
     [Theory]
     [InlineData(0.000000000000000001, "US", "input currency value 'US' is not a valid currency code.")]
     [InlineData(1, "usds", "input currency value 'usds' is not a valid currency code.")]
-    [InlineData(0, "u", "input amount must be greater than zero.")]
-    [InlineData(-1, "?", "input amount must be greater than zero.")]
+    [InlineData(0, "u", "input amount cannot be zero.")]
+    [InlineData(-1, "?", "input currency value '?' is not a valid currency code.")]
     public void EnsureValid_WhenMoneyIsInvalid_ShouldThrowValidationException(decimal amount, string currency, string expectedException)
     {
         // Arrange

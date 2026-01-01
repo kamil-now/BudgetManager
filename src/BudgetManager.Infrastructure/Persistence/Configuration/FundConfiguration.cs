@@ -22,19 +22,9 @@ public class FundConfiguration : IEntityTypeConfiguration<Fund>
 
         builder.HasIndex(x => x.BudgetId);
 
-        builder.HasMany(x => x.Allocations)
+        builder.HasMany(x => x.Transactions)
             .WithOne(x => x.Fund)
             .HasForeignKey(x => x.FundId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(x => x.Deallocations)
-            .WithOne(x => x.Fund)
-            .HasForeignKey(x => x.FundId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(x => x.IncomingReallocations)
-            .WithOne(x => x.TargetFund)
-            .HasForeignKey(x => x.TargetFundId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

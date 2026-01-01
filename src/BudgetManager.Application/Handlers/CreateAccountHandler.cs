@@ -23,7 +23,7 @@ public sealed class CreateAccountHandler(ICurrentUserService currentUser, IBudge
             LedgerId = command.LedgerId,
             Name = command.Name,
             Description = command.Description,
-            Incomes = [new() { Title = "Initial balance", Amount = command.InitialBalance, AccountId = accountId }]
+            Transactions = [new() { Title = "Initial balance", Value = command.InitialBalance, AccountId = accountId }]
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create account.");
 
         await service.SaveChangesAsync(cancellationToken);

@@ -2,13 +2,11 @@ using BudgetManager.Common.Models;
 
 namespace BudgetManager.Application.Commands;
 
-public record CreateReallocationCommand(
-  Guid BudgetId,
-  Guid FundId,
-  Guid TargetFundId,
-  Money Amount,
+public record CreateAccountTransactionCommand(
+  Guid AccountId,
+  Money Value,
   DateTimeOffset Date,
-  string Title,
-  string? Description = null,
+  string? Title,
+  string? Comment = null,
   IEnumerable<string>? Tags = null
 ) : IRequest<Guid>;

@@ -2,11 +2,13 @@ using BudgetManager.Common.Models;
 
 namespace BudgetManager.Application.Commands;
 
-public record CreateExpenseCommand(
+public record CreateCurrencyExchangeCommand(
   Guid AccountId,
-  Money Amount,
+  Guid? TargetAccountId,
+  Money Buy,
+  Money Sell,
   DateTimeOffset Date,
   string? Title,
-  string? Description = null,
+  string? Comment = null,
   IEnumerable<string>? Tags = null
 ) : IRequest<Guid>;

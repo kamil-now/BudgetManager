@@ -30,10 +30,10 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
                     OwnerId = userId,
                     Name = x.Name,
                     Description = x.Description,
-                    Incomes = [new Income()
+                    Transactions = [new AccountTransaction()
                     {
                         Title = "Initial balance",
-                        Amount = x.InitialBalance,
+                        Value = x.InitialBalance,
                         AccountId = accountId
                     }]
                 };

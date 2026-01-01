@@ -10,14 +10,19 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 {
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default) => await dbContext.SaveChangesAsync(cancellationToken);
 
-    public async Task RunInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+    public async Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
     {
+        if (dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+        {
+            return await action();
+        }
         var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            await action();
+            var result = await action();
             await transaction.CommitAsync(cancellationToken);
+            return result;
         }
         catch
         {
@@ -40,56 +45,55 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
              .Select(x => new { x.Id, x.Name })
              .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
 
+        var accountTransactions = await dbContext.AccountTransactions
+                .AsNoTracking()
+                .Include(x => x.InTransfer)
+                .Include(x => x.OutTransfer)
+                .Where(x => accounts.Keys.Contains(x.AccountId))
+                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
+                .ToArrayAsync(cancellationToken);
+
+        var accountTransactionsIds = accountTransactions.Select(x => x.Id).ToArray();
+
+        var accountTransfers = await dbContext.AccountTransfers
+                .AsNoTracking()
+                .Where(x => accountTransactionsIds.Contains(x.IncomeId))
+                .ToArrayAsync(cancellationToken);
+
         var funds = await dbContext.Funds
              .AsNoTracking()
              .Where(x => (filters.FundId != null && x.Id == filters.FundId) || budgets.Keys.Contains(x.Id))
              .Select(x => new { x.Id, x.BudgetId, x.Name })
              .ToDictionaryAsync(x => x.Id, x => (x.BudgetId, x.Name), cancellationToken);
 
-        return new()
-        {
-            Incomes = await dbContext.Incomes
+        var fundTransactions = await dbContext.FundTransactions
                 .AsNoTracking()
-                .Where(x => accounts.Keys.Contains(x.AccountId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
-                .ToArrayAsync(cancellationToken),
-
-            Expenses = await dbContext.Expenses
-                .AsNoTracking()
-                .Where(x => accounts.Keys.Contains(x.AccountId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
-                .ToArrayAsync(cancellationToken),
-
-            Transfers = await dbContext.Transfers
-                .AsNoTracking()
-                .Where(x => accounts.Keys.Contains(x.AccountId) || accounts.Keys.Contains(x.TargetAccountId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
-                .ToArrayAsync(cancellationToken),
-
-            Allocations = await dbContext.Allocations
+                .Include(x => x.InTransfer)
+                .Include(x => x.OutTransfer)
                 .Include(x => x.Fund)
                 .ThenInclude(x => x.Budget)
-                .AsNoTracking()
                 .Where(x => funds.Keys.Contains(x.FundId))
                 .Where(x => x.Date >= filters.From && x.Date <= filters.To)
-                .ToArrayAsync(cancellationToken),
+                .ToArrayAsync(cancellationToken);
 
-            Deallocations = await dbContext.Deallocations
+        var fundTransactionsIds = fundTransactions.Select(x => x.Id).ToArray();
+
+        var fundTransfers = await dbContext.FundTransfers
                 .AsNoTracking()
-                .Where(x => funds.Keys.Contains(x.FundId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
-                .ToArrayAsync(cancellationToken),
+                .Where(x => fundTransactionsIds.Contains(x.AllocationId))
+                .ToArrayAsync(cancellationToken);
 
-            Reallocations = await dbContext.Reallocations
-                .AsNoTracking()
-                .Where(x => funds.Keys.Contains(x.FundId) || funds.Keys.Contains(x.TargetFundId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
-                .ToArrayAsync(cancellationToken),
-
+        return new()
+        {
             Accounts = accounts,
-            Budgets = budgets,
-            Funds = funds
+            AccountTransactions = accountTransactions,
+            AccountTransfers = accountTransfers,
 
+            Funds = funds,
+            FundTransactions = fundTransactions,
+            FundTransfers = fundTransfers,
+
+            Budgets = budgets,
         };
     }
 
@@ -115,7 +119,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
             .Include(x => x.Budgets)
             .ThenInclude(x => x.Funds)
             .Include(x => x.Accounts)
-            .ThenInclude(x => x.Incomes)
+            .ThenInclude(x => x.Transactions)
             .SingleOrDefaultAsync(predicate, cancellationToken);
     }
 

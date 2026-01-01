@@ -12,30 +12,18 @@ public class Account : Entity, IAccessControlled
 
     public User Owner { get; set; } = null!;
     public Ledger? Ledger { get; set; }
-    public virtual ICollection<Income> Incomes { get; set; } = [];
-    public virtual ICollection<Expense> Expenses { get; set; } = [];
-    public virtual ICollection<Transfer> IncomingTransfers { get; set; } = [];
-    public virtual ICollection<Transfer> OutgoingTransfers { get; set; } = [];
-
+    public virtual ICollection<AccountTransaction> Transactions { get; set; } = [];
 
     public Balance GetBalance()
     {
         Balance balance = [];
-        foreach (var x in Incomes)
+        foreach (var x in Transactions)
         {
-            balance.Add(x.Amount);
+            balance.Add(x.Value);
         }
-        foreach (var x in Expenses)
+        foreach (var key in balance.Where(x => x.Value == 0).Select(x => x.Key).ToList())
         {
-            balance.Deduct(x.Amount);
-        }
-        foreach (var x in IncomingTransfers)
-        {
-            balance.Add(x.Amount);
-        }
-        foreach (var x in OutgoingTransfers)
-        {
-            balance.Deduct(x.Amount);
+            balance.Remove(key);
         }
         return balance;
     }

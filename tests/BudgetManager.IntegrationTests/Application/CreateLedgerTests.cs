@@ -69,10 +69,10 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         account.Name.ShouldBe(commandAccount.Name);
         account.Description.ShouldBe(commandAccount.Description);
 
-        account.Incomes.Count.ShouldBe(1);
-        var income = account.Incomes.First();
+        account.Transactions.Count.ShouldBe(1);
+        var income = account.Transactions.First();
         income.Title.ShouldBe("Initial balance");
-        income.Amount.ShouldBeEquivalentTo(commandAccount.InitialBalance);
+        income.Value.ShouldBeEquivalentTo(commandAccount.InitialBalance);
     }
 
     [Fact]
@@ -80,12 +80,12 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
     {
         // Arrange
         var userId = await MockAuthenticatedUserAsync();
-        var command = new CreateLedgerCommand("[ledger name]", null, new("[budget name]", []), [new(new(-1, ""), "[account name]")]);
+        var command = new CreateLedgerCommand("[ledger name]", null, new("[budget name]", []), [new(new(0, ""), "[account name]")]);
 
         // Act & Assert
         var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
 
-        ex.Message.ShouldBeEquivalentTo($"InitialBalance of [account name] amount must be greater than zero.");
+        ex.Message.ShouldBeEquivalentTo($"InitialBalance of [account name] amount cannot be zero.");
     }
     // TODO
 }

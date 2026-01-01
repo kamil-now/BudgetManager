@@ -21,12 +21,24 @@ public class AccountTests
     }
 
     [Fact]
-    public void GetBalance_WhenOnlyIncomes_ShouldReturnIncomeSum()
+    public void GetBalance_WhenEmptyTransactions_ShouldNotThrow()
     {
         // Arrange
         var account = CreateAccount();
-        account.Incomes.Add(new Income { AccountId = account.Id, Amount = new Money(100, "USD") });
-        account.Incomes.Add(new Income { AccountId = account.Id, Amount = new Money(50, "USD") });
+        account.Transactions = [];
+
+        // Act & Assert
+        Should.NotThrow(() => account.GetBalance());
+    }
+
+    [Fact]
+    public void GetBalance_ShouldCalculateCorrectBalance()
+    {
+        // Arrange
+        var account = CreateAccount();
+
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(200, "USD") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(-50, "USD") });
 
         // Act
         var balance = account.GetBalance();
@@ -37,105 +49,15 @@ public class AccountTests
     }
 
     [Fact]
-    public void GetBalance_WhenOnlyExpenses_ShouldReturnNegativeBalance()
-    {
-        // Arrange
-        var account = CreateAccount();
-        account.Expenses.Add(new Expense { AccountId = account.Id, Amount = new Money(100, "USD") });
-        account.Expenses.Add(new Expense { AccountId = account.Id, Amount = new Money(50, "USD") });
-
-        // Act
-        var balance = account.GetBalance();
-
-        // Assert
-        balance.ShouldContainKey("USD");
-        balance["USD"].ShouldBe(-150);
-    }
-
-    [Fact]
-    public void GetBalance_WhenIncomingTransfer_ShouldAddAmount()
-    {
-        // Arrange
-        var account = CreateAccount();
-        var sourceAccount = CreateAccount();
-
-        account.IncomingTransfers.Add(new Transfer
-        {
-            AccountId = sourceAccount.Id,
-            TargetAccountId = account.Id,
-            Amount = new Money(100, "USD")
-        });
-
-        // Act
-        var balance = account.GetBalance();
-
-        // Assert
-        balance.ShouldContainKey("USD");
-        balance["USD"].ShouldBe(100);
-    }
-
-    [Fact]
-    public void GetBalance_WhenOutgoingTransfer_ShouldDeductAmount()
-    {
-        // Arrange
-        var account = CreateAccount();
-        var targetAccount = CreateAccount();
-
-        account.OutgoingTransfers.Add(new Transfer
-        {
-            AccountId = account.Id,
-            TargetAccountId = targetAccount.Id,
-            Amount = new Money(100, "USD")
-        });
-
-        // Act
-        var balance = account.GetBalance();
-
-        // Assert
-        balance.ShouldContainKey("USD");
-        balance["USD"].ShouldBe(-100);
-    }
-
-    [Fact]
-    public void GetBalance_WhenMixedTransactions_ShouldCalculateCorrectBalance()
-    {
-        // Arrange
-        var account = CreateAccount();
-        var targetAccount = CreateAccount();
-
-        account.Incomes.Add(new Income { AccountId = account.Id, Amount = new Money(200, "USD") });
-        account.Expenses.Add(new Expense { AccountId = account.Id, Amount = new Money(50, "USD") });
-        account.OutgoingTransfers.Add(new Transfer
-        {
-            AccountId = account.Id,
-            TargetAccountId = targetAccount.Id,
-            Amount = new Money(30, "USD")
-        });
-        account.IncomingTransfers.Add(new Transfer
-        {
-            AccountId = targetAccount.Id,
-            TargetAccountId = account.Id,
-            Amount = new Money(20, "USD")
-        });
-
-        // Act
-        var balance = account.GetBalance();
-
-        // Assert
-        balance.ShouldContainKey("USD");
-        balance["USD"].ShouldBe(140); // 200 - 50 - 30 + 20
-    }
-
-    [Fact]
     public void GetBalance_WhenMultipleCurrencies_ShouldCalculateCorrectBalanceForEach()
     {
         // Arrange
         var account = CreateAccount();
 
-        account.Incomes.Add(new Income { AccountId = account.Id, Amount = new Money(100, "USD") });
-        account.Incomes.Add(new Income { AccountId = account.Id, Amount = new Money(200, "EUR") });
-        account.Expenses.Add(new Expense { AccountId = account.Id, Amount = new Money(25, "USD") });
-        account.Expenses.Add(new Expense { AccountId = account.Id, Amount = new Money(50, "EUR") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(100, "USD") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(200, "EUR") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(-25, "USD") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(-50, "EUR") });
 
         // Act
         var balance = account.GetBalance();
@@ -148,32 +70,19 @@ public class AccountTests
     }
 
     [Fact]
-    public void GetBalance_WhenZeroNetBalance_ShouldNotIncludeCurrency()
+    public void GetBalance_WhenZeroNetBalance_ShouldIncludeCurrency()
     {
         // Arrange
         var account = CreateAccount();
 
-        account.Incomes.Add(new Income { AccountId = account.Id, Amount = new Money(100, "USD") });
-        account.Expenses.Add(new Expense { AccountId = account.Id, Amount = new Money(100, "USD") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(100, "USD") });
+        account.Transactions.Add(new() { AccountId = account.Id, Value = new Money(-100, "USD") });
 
         // Act
         var balance = account.GetBalance();
 
         // Assert
         balance.ShouldNotContainKey("USD");
-    }
-
-    [Fact]
-    public void GetBalance_WhenEmptyCollections_ShouldNotThrow()
-    {
-        // Arrange
-        var account = CreateAccount();
-        account.Incomes = [];
-        account.Expenses = [];
-        account.IncomingTransfers = [];
-
-        // Act & Assert
-        Should.NotThrow(() => account.GetBalance());
     }
 
     private static Account CreateAccount()

@@ -7,40 +7,40 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateIncomeHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<CreateIncomeCommand, Guid>
+public sealed class CreateAccountTransactionHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<CreateAccountTransactionCommand, Guid>
 {
-    public async Task<Guid> Handle(CreateIncomeCommand command, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(CreateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
         var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
 
         await ValidateCommandAsync(userId, command, cancellationToken);
 
-        var entity = await service.CreateAsync(new Income
+        var entity = await service.CreateAsync(new AccountTransaction
         {
             AccountId = command.AccountId,
             Title = command.Title,
             Tags = command.Tags?.ToList(),
-            Amount = command.Amount,
-            Comment = command.Description,
+            Value = command.Value,
+            Comment = command.Comment,
             Date = command.Date,
-        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create income.");
+        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create AccountOperation.");
 
         await service.SaveChangesAsync(cancellationToken);
 
         if (entity.Id == Guid.Empty)
         {
-            throw new InvalidOperationException("Income ID cannot be empty.");
+            throw new InvalidOperationException("AccountOperation ID cannot be empty.");
         }
         return entity.Id;
     }
 
-    private async Task ValidateCommandAsync(Guid userId, CreateIncomeCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(Guid userId, CreateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
         await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
 
-        command.Amount.EnsureValid();
+        command.Value.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
-        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
+        command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
         command.Tags.EnsureValidTags();
     }
 }
