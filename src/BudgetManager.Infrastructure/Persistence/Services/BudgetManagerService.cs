@@ -97,6 +97,25 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
         };
     }
 
+    public async Task<IEnumerable<AccountTransaction>> GetLedgerIncomesExpensesAsync(Guid ledgerId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
+    {
+        var accounts = await dbContext.Accounts
+             .AsNoTracking()
+             .Where(x => x.LedgerId == ledgerId)
+             .Select(x => new { x.Id, x.Name })
+             .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
+
+        var accountTransactions = await dbContext.AccountTransactions
+                .AsNoTracking()
+                .Include(x => x.InTransfer)
+                .Include(x => x.OutTransfer)
+                .Where(x => x.InTransfer == null && x.OutTransfer == null && accounts.Keys.Contains(x.AccountId))
+                .Where(x => x.Date >= from && x.Date <= to)
+                .ToArrayAsync(cancellationToken);
+
+        return accountTransactions;
+    }
+
     public async Task<T> CreateAsync<T>(T entity, CancellationToken cancellationToken) where T : Entity
     {
         if (entity is null)

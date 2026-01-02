@@ -300,19 +300,10 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
 #pragma warning disable CS1998, CA1822
 
-    private async Task Logout()
-    {
-        // TODO
-    }
 
-    private async Task FetchSpendingReports()
+    private async Task FetchLedgerStatistics()
     {
         // TODO
-        /*
-            last 30 days, last 90 days, last 365 days
-            total spending, total income
-            sum of expenses for each tag
-        */
     }
 
     private async Task GenerateBudgetProposal()
@@ -441,6 +432,11 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
     }
 
     private async Task FetchBudgetSummary()
+    {
+        // TODO
+    }
+
+    private async Task Logout()
     {
         // TODO
     }

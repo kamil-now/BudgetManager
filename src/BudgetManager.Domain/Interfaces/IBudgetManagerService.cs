@@ -11,6 +11,7 @@ public interface IBudgetManagerService
     Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default);
 
     Task<LedgerTransactions> GetLedgerTransactionsAsync(Guid ledgerId, LedgerTransactionsFilters filters, CancellationToken cancellationToken);
+    Task<IEnumerable<AccountTransaction>> GetLedgerIncomesExpensesAsync(Guid ledgerId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken);
 
     Task<Ledger?> GetLedgerAsync(Expression<Func<Ledger, bool>> predicate, CancellationToken cancellationToken);
 
