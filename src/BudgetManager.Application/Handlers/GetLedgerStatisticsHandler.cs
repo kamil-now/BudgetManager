@@ -1,6 +1,7 @@
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
 using BudgetManager.Common.Models;
+using BudgetManager.Domain;
 using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
@@ -14,15 +15,21 @@ public sealed class GetLedgerStatisticsHandler(IBudgetManagerService service) : 
         {
             return null;
         }
-        var transactions = await service.GetLedgerIncomesExpensesAsync(query.LedgerId, query.From, query.To, cancellationToken);
+        var transactions = await service.GetLedgerIncomesExpensesAsync(query.LedgerId, query.Filters.From, query.Filters.To, cancellationToken);
 
         var incomes = transactions.Where(x => x.Value.Amount > 0);
         var expenses = transactions.Where(x => x.Value.Amount < 0);
 
+        if (!query.Filters.IncludeInitialBalance)
+        {
+            incomes = incomes.Where(x => x.Title != Constants.InitialBalanceTransactionTitle);
+            expenses = expenses.Where(x => x.Title != Constants.InitialBalanceTransactionTitle);
+        }
+
         return new LedgerStatisticsDTO()
         {
-            From = query.From,
-            To = query.To,
+            From = query.Filters.From,
+            To = query.Filters.To,
             TotalIncome = CreateStatistics(incomes.Select(x => x.Value)),
             TotalExpense = CreateStatistics(expenses.Select(x => x.Value)),
             Accounts = [.. ledger.Accounts.Select(account =>
@@ -54,7 +61,6 @@ public sealed class GetLedgerStatisticsHandler(IBudgetManagerService service) : 
             .ToDictionary(
                 g => g.Key,
                 g => new LedgerStatisticsDTO.Statistics(
-
                     Total: g.Sum(m => m.Amount),
                     Average: g.Average(m => m.Amount),
                     Min: g.Min(m => m.Amount),

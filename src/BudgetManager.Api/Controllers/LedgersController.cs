@@ -24,9 +24,16 @@ public class LedgersController(IMediator mediator) : BaseController
     }
 
     [HttpGet("{id}/transactions")]
-    public async Task<ActionResult> GetLedgerTransactions([FromRoute] Guid id, [FromQuery] LedgerTransactionsFilters request)
+    public async Task<ActionResult> GetLedgerTransactions([FromRoute] Guid id, [FromQuery] LedgerTransactionsFilters filters)
     {
-        var transactions = await mediator.Send(new GetLedgerTransactionsQuery(id, request));
+        var transactions = await mediator.Send(new GetLedgerTransactionsQuery(id, filters));
         return Ok(transactions);
+    }
+
+    [HttpGet("{id}/statistics")]
+    public async Task<ActionResult> GetLedgerStatistics([FromRoute] Guid id, [FromQuery] LedgerStatisticsFilters filters)
+    {
+        var statistics = await mediator.Send(new GetLedgerStatisticsQuery(id, filters));
+        return Ok(statistics);
     }
 }

@@ -287,25 +287,136 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         var updated = transactions.Incomes.FirstOrDefault(x => x.Id == income.Id);
 
-        updated.ShouldNotBeNull();
-        updated.AccountId.ShouldBe(request.AccountId);
-        updated.Value.ShouldBe(request.Amount);
-        updated.Date.ShouldBe(request.Date);
-        updated.Title.ShouldBe(request.Title);
-        updated.Comment.ShouldBe(request.Comment);
-        updated.Tags.ShouldBe(request.Tags);
+        updated.ShouldNotBeNull()
+            .ShouldSatisfyAllConditions(
+                x => x.AccountId.ShouldBe(request.AccountId),
+                x => x.Value.ShouldBe(request.Amount),
+                x => x.Date.ShouldBe(request.Date),
+                x => x.Title.ShouldBe(request.Title),
+                x => x.Comment.ShouldBe(request.Comment),
+                x => x.Tags.ShouldBe(request.Tags));
 
         _testState.LedgerTransactions = transactions;
     }
 
-#pragma warning disable CS1998, CA1822
-
-
-    private async Task FetchLedgerStatistics()
+    [Fact, TestPriority(8)]
+    public async Task FetchLedgerStatistics()
     {
-        // TODO
+        var statisticsResponse = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/statistics");
+        statisticsResponse.StatusCode.ShouldBe(HttpStatusCode.OK, await statisticsResponse.Content.ReadAsStringAsync());
+
+        var statistics = await statisticsResponse.Content.ReadFromJsonAsync<LedgerStatisticsDTO>();
+
+        statistics.ShouldNotBeNull()
+            .ShouldSatisfyAllConditions(
+                x => x.From.ShouldBeNull(),
+                x => x.To.ShouldBeNull(),
+                x => x.TotalIncome.ShouldSatisfyAllConditions(
+                    totalIncome => totalIncome.Keys.Count.ShouldBe(2),
+                    totalIncome => totalIncome.GetValueOrDefault("USD")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 100,
+                            Average: 100,
+                            Min: 100,
+                            Max: 100
+                        )),
+                    totalIncome => totalIncome.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 3000,
+                            Average: 3000,
+                            Min: 3000,
+                            Max: 3000
+                        ))
+                ),
+                x => x.TotalExpense.ShouldSatisfyAllConditions(
+                    totalExpense => totalExpense.Keys.Count.ShouldBe(1),
+                    totalExpense => totalExpense.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: -1000,
+                            Average: -1000,
+                            Min: -1000,
+                            Max: -1000
+                        ))
+                ),
+                x => x.Accounts.Count().ShouldBe(3),
+                x => x.Accounts.FirstOrDefault(x => x.Name == "Cash").ShouldNotBeNull().ShouldSatisfyAllConditions(
+                    account => account.Income.Keys.Count.ShouldBe(1),
+                    account => account.Income.GetValueOrDefault("USD")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 100,
+                            Average: 100,
+                            Min: 100,
+                            Max: 100
+                        )),
+                    account => account.Expense.Keys.ShouldBeEmpty()
+                ),
+                x => x.Accounts.FirstOrDefault(x => x.Name == "Main Account").ShouldNotBeNull().ShouldSatisfyAllConditions(
+                    account => account.Income.Keys.Count.ShouldBe(1),
+                    account => account.Income.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 3000,
+                            Average: 3000,
+                            Min: 3000,
+                            Max: 3000
+                        )),
+                    account => account.Expense.Keys.Count.ShouldBe(1),
+                    account => account.Expense.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: -1000,
+                            Average: -1000,
+                            Min: -1000,
+                            Max: -1000
+                        ))
+                ),
+                x => x.Accounts.FirstOrDefault(x => x.Name == "Savings Account").ShouldNotBeNull().ShouldSatisfyAllConditions(
+                    account => account.Income.Keys.ShouldBeEmpty(),
+                    account => account.Expense.Keys.ShouldBeEmpty()
+                ),
+                x => x.Tags.Count().ShouldBe(3),
+                x => x.Tags.FirstOrDefault(x => x.Name == "extra").ShouldNotBeNull().ShouldSatisfyAllConditions(
+                    tag => tag.Income.Keys.Count.ShouldBe(1),
+                    tag => tag.Income.GetValueOrDefault("USD")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 100,
+                            Average: 100,
+                            Min: 100,
+                            Max: 100
+                        )),
+                    tag => tag.Expense.Keys.ShouldBeEmpty()
+                ),
+                x => x.Tags.FirstOrDefault(x => x.Name == "regular").ShouldNotBeNull().ShouldSatisfyAllConditions(
+                    tag => tag.Income.Keys.Count.ShouldBe(1),
+                    tag => tag.Income.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 3000,
+                            Average: 3000,
+                            Min: 3000,
+                            Max: 3000
+                        )),
+                    tag => tag.Expense.Keys.Count.ShouldBe(1),
+                    tag => tag.Expense.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: -1000,
+                            Average: -1000,
+                            Min: -1000,
+                            Max: -1000
+                        ))
+                ),
+                x => x.Tags.FirstOrDefault(x => x.Name == "taxed").ShouldNotBeNull().ShouldSatisfyAllConditions(
+                    tag => tag.Income.Keys.Count.ShouldBe(1),
+                    tag => tag.Income.GetValueOrDefault("EUR")
+                        .ShouldNotBeNull().ShouldEqual(new(
+                            Total: 3000,
+                            Average: 3000,
+                            Min: 3000,
+                            Max: 3000
+                        )),
+                    tag => tag.Expense.Keys.ShouldBeEmpty()
+                )
+            );
     }
 
+#pragma warning disable CS1998, CA1822
     private async Task GenerateBudgetProposal()
     {
         // TODO
@@ -496,4 +607,18 @@ public class TestState
     public CreateAccountTransactionCommand[]? CreatedExpenses { get; set; }
     public CreateAccountTransferCommand[]? CreatedTransfers { get; set; }
     public CreateCurrencyExchangeCommand[]? CreatedCurrencyExchanges { get; set; }
+}
+
+public static class Extensions
+{
+    extension(LedgerStatisticsDTO.Statistics statistics)
+    {
+        public void ShouldEqual(LedgerStatisticsDTO.Statistics expected) =>
+            statistics.ShouldSatisfyAllConditions(
+                usd => usd.Total.ShouldBe(expected.Total),
+                usd => usd.Average.ShouldBe(expected.Average),
+                usd => usd.Min.ShouldBe(expected.Min),
+                usd => usd.Max.ShouldBe(expected.Max)
+            );
+    }
 }

@@ -110,7 +110,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
                 .Include(x => x.InTransfer)
                 .Include(x => x.OutTransfer)
                 .Where(x => x.InTransfer == null && x.OutTransfer == null && accounts.Keys.Contains(x.AccountId))
-                .Where(x => x.Date >= from && x.Date <= to)
+                .Where(x => (from == null || x.Date >= from) && (to == null || x.Date <= to))
                 .ToArrayAsync(cancellationToken);
 
         return accountTransactions;

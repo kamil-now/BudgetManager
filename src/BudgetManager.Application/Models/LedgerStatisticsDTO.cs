@@ -1,5 +1,3 @@
-using BudgetManager.Common.Models;
-
 namespace BudgetManager.Application.Models;
 
 public record LedgerStatisticsDTO
