@@ -96,7 +96,7 @@ public static class ValidationExtensions
 
     public static Money EnsureValid(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
     {
-        if(val.Amount == 0)
+        if (val.Amount == 0)
         {
             throw new ValidationException($"{paramName?.TrimName()} amount cannot be zero.");
         }
@@ -105,7 +105,7 @@ public static class ValidationExtensions
         return val;
     }
 
-    private static string EnsureValidCurrency(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    public static string EnsureValidCurrency(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
     {
         if (val.Length != Constants.CurrencyCodeLength || val.Any(x => !char.IsLetter(x)))
         {

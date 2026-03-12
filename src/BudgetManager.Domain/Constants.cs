@@ -2,6 +2,7 @@ namespace BudgetManager.Domain;
 
 public static class Constants
 {
+    public const string InitialBalanceTransactionTitle = "Initial balance";
     public const string EmailRegexp = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
     public const int HashedPasswordLength = 60;
     public const int CurrencyCodeLength = 3;

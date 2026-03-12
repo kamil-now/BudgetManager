@@ -1,6 +1,7 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Validators;
 using BudgetManager.Common.Enums;
+using BudgetManager.Domain;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -21,7 +22,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
     }
 
     [Fact]
-    public async Task CreateLedger_CreatesLedgerWithBudgetAndAccount()
+    public async Task CreateLedger_CreatesLedgerWithBudgetAndAccounts()
     {
         // Arrange
         var userId = await MockAuthenticatedUserAsync();
@@ -30,7 +31,11 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
           "[ledger name]",
           "[ledger description]",
           new("[budget name]", [new("[fund name]", 42, 20, AllocationType.Percent, "[fund description]")], "[budget description]"),
-          [new(new(123, "EUR"), "[account name]", "[account description]")]);
+          [
+            new(new(123, "EUR"), "[account name 1]", "[account description 1]"),
+            new(new(0, "EUR"), "[account name 2]", "[account description 2]"),
+            new(new(-123, "EUR"), "[account name 3]", "[account description 3]")
+          ]);
 
         // Act
         var id = await Mediator.Send(command);
@@ -61,31 +66,22 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         fund.AllocationTemplateType.ShouldBe(commandFund.AllocationTemplateType);
         fund.AllocationTemplateValue.ShouldBe(commandFund.AllocationTemplateValue);
 
-        ledger.Accounts.Count.ShouldBe(1);
-        var commandAccount = command.Accounts.First();
-        var account = ledger.Accounts.First();
-        account.ShouldNotBeNull();
-        account.OwnerId.ShouldBe(userId);
-        account.Name.ShouldBe(commandAccount.Name);
-        account.Description.ShouldBe(commandAccount.Description);
+        ledger.Accounts.Count.ShouldBe(3);
 
-        account.Transactions.Count.ShouldBe(1);
-        var income = account.Transactions.First();
-        income.Title.ShouldBe("Initial balance");
-        income.Value.ShouldBeEquivalentTo(commandAccount.InitialBalance);
+        for (var i = 0; i < 3; i++)
+        {
+            var account = ledger.Accounts.ElementAt(1);
+            var commandAccount = command.Accounts.FirstOrDefault(x => x.Name == account.Name);
+            commandAccount.ShouldNotBeNull();
+            account.ShouldNotBeNull();
+            account.OwnerId.ShouldBe(userId);
+            account.Name.ShouldBe(commandAccount.Name);
+            account.Description.ShouldBe(commandAccount.Description);
+
+            account.Transactions.Count.ShouldBe(1);
+            var income = account.Transactions.First();
+            income.Title.ShouldBe(Constants.InitialBalanceTransactionTitle);
+            income.Value.ShouldBeEquivalentTo(commandAccount.InitialBalance);
+        }
     }
-
-    [Fact]
-    public async Task CreateLedger_WhenAccountInitialBalanceIsNegative_ThrowsException()
-    {
-        // Arrange
-        var userId = await MockAuthenticatedUserAsync();
-        var command = new CreateLedgerCommand("[ledger name]", null, new("[budget name]", []), [new(new(0, ""), "[account name]")]);
-
-        // Act & Assert
-        var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
-
-        ex.Message.ShouldBeEquivalentTo($"InitialBalance of [account name] amount cannot be zero.");
-    }
-    // TODO
 }
