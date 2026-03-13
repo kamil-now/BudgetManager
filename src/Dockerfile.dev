@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /src
+EXPOSE 8080
+COPY ["BudgetManager.Api/BudgetManager.Api.csproj", "BudgetManager.Api/"]
+RUN dotnet restore "BudgetManager.Api/BudgetManager.Api.csproj"
+COPY . .
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "BudgetManager.Api/BudgetManager.Api.csproj", "--urls", "http://+:8080"]
