@@ -7,23 +7,37 @@ using BudgetManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddOpenApi(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.AddDocumentTransformer((document, context, ct) =>
     {
-        Version = "v1",
-        Title = "Budget API",
-        Description = File.ReadAllText("./Assets/api-description.html"),
-        Contact = new OpenApiContact
+        document.Info = new()
         {
-            Email = builder.Configuration["Contact"]
-        },
+            Version = "v1",
+            Title = "Budget API",
+            Description = File.Exists("./Assets/api-description.html") ? File.ReadAllText("./Assets/api-description.html") : "",
+            Contact = new OpenApiContact
+            {
+                Email = builder.Configuration["Contact"]
+            }
+        };
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
+        {
+            ["Bearer"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                In = ParameterLocation.Header,
+                BearerFormat = "JWT"
+            }
+        };
+        return Task.CompletedTask;
     });
-    options.EnableAnnotations();
 });
 
 builder.Services.AddAuthorization();
@@ -61,17 +75,10 @@ app.UseStaticFiles(
   }
 );
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.DocumentTitle = "Budget API";
-        c.OAuthScopes($"{builder.Configuration["AzureAd:Audience"]}/full");
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", $"{builder.Environment.ApplicationName} v1");
-        c.InjectStylesheet("/Assets/swagger-dark.css");
-        c.OAuthClientId(builder.Configuration["AzureAd:ClientId"]);
-    });
+    app.MapOpenApi();
+    app.MapScalarApiReference(options => options.AddPreferredSecuritySchemes("Bearer").EnablePersistentAuthentication());
 }
 
 app.UseHttpsRedirection();
@@ -80,7 +87,7 @@ app.MapControllers().RequireAuthorization();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.MapGet("/", (HttpContext context) => context.Response.Redirect("/swagger", true)).ExcludeFromDescription();
+app.MapGet("/", (HttpContext context) => context.Response.Redirect("/scalar", true)).ExcludeFromDescription();
 
 app.Run();
 
