@@ -12,45 +12,49 @@ namespace BudgetManager.IntegrationTests.Api;
 
 public class ApiFixture : TestBedFixture
 {
+    public static HttpClient? SharedClient { get; private set; }
+
     private WebApplicationFactory<Program>? Factory { get; set; }
     private HttpClient? Client { get; set; }
 
-    protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
+    public ApiFixture()
     {
-        // Configure test web application
         Factory = new WebApplicationFactory<Program>()
-         .WithWebHostBuilder(builder =>
-         {
-             builder.ConfigureServices(services =>
-         {
-             // Remove existing DbContext registration
-               var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-               if (descriptor != null)
-                   services.Remove(descriptor);
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    // Remove existing DbContext registration
+                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                    if (descriptor != null)
+                        services.Remove(descriptor);
 
-               var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-               .UseInMemoryDatabase($"BudgetManagerTestDb_{Guid.NewGuid()}")
-               .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
-               .EnableSensitiveDataLogging()
-               .Options;
+                    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                    .UseInMemoryDatabase($"BudgetManagerTestDb_{Guid.NewGuid()}")
+                    .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
+                    .EnableSensitiveDataLogging()
+                    .Options;
 
-               var sharedDbContext = new ApplicationDbContext(options);
+                    var sharedDbContext = new ApplicationDbContext(options);
+                    services.AddSingleton(sharedDbContext);
+                });
 
-               services.AddSingleton(sharedDbContext);
-           });
-
-             // Configure test environment
-             builder.UseEnvironment("Test");
-         });
+                builder.UseEnvironment("Test");
+            });
 
         Client = Factory.CreateClient();
-        // Add services for DI testing
-        services.AddSingleton(Factory);
-        services.AddSingleton(Client);
+        SharedClient = Client;
+    }
+
+    protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
+    {
+        services.AddSingleton(Factory!);
+        services.AddSingleton(Client!);
     }
 
     protected override async ValueTask DisposeAsyncCore()
     {
+        SharedClient = null;
         Client?.Dispose();
         if (Factory != null)
             await Factory.DisposeAsync();

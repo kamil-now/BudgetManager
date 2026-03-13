@@ -4,6 +4,7 @@ using BudgetManager.Application.Configuration;
 using BudgetManager.Application.Services;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
@@ -13,6 +14,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi(options =>
 {
+    options.AddOperationTransformer((operation, context, ct) =>
+    {
+        var hasAuthorize = context.Description.ActionDescriptor.EndpointMetadata
+            .OfType<IAuthorizeData>()
+            .Any();
+
+        if (hasAuthorize && operation.Responses is not null)
+        {
+            operation.Responses["401"] = new OpenApiResponse { Description = "Unauthorized" };
+        }
+
+        return Task.CompletedTask;
+    });
     options.AddDocumentTransformer((document, context, ct) =>
     {
         document.Info = new()
