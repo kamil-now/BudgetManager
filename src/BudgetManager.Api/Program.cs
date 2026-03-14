@@ -9,100 +9,120 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-builder.Services.AddOpenApi(options =>
+try
 {
-    options.AddOperationTransformer((operation, context, ct) =>
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((ctx, config) => config.ReadFrom.Configuration(ctx.Configuration));
+
+    builder.Services.AddOpenApi(options =>
     {
-        var hasAuthorize = context.Description.ActionDescriptor.EndpointMetadata
-            .OfType<IAuthorizeData>()
-            .Any();
-
-        if (hasAuthorize && operation.Responses is not null)
+        options.AddOperationTransformer((operation, context, ct) =>
         {
-            operation.Responses["401"] = new OpenApiResponse { Description = "Unauthorized" };
-        }
+            var hasAuthorize = context.Description.ActionDescriptor.EndpointMetadata
+                .OfType<IAuthorizeData>()
+                .Any();
 
-        return Task.CompletedTask;
+            if (hasAuthorize && operation.Responses is not null)
+            {
+                operation.Responses["401"] = new OpenApiResponse { Description = "Unauthorized" };
+            }
+
+            return Task.CompletedTask;
+        });
+        options.AddDocumentTransformer((document, context, ct) =>
+        {
+            document.Info = new()
+            {
+                Version = "v1",
+                Title = "Budget API",
+                Description = File.Exists("./Assets/api-description.html") ? File.ReadAllText("./Assets/api-description.html") : "",
+                Contact = new OpenApiContact
+                {
+                    Email = builder.Configuration["Contact"]
+                }
+            };
+            document.Components ??= new OpenApiComponents();
+            document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
+            {
+                ["Bearer"] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    In = ParameterLocation.Header,
+                    BearerFormat = "JWT"
+                }
+            };
+            return Task.CompletedTask;
+        });
     });
-    options.AddDocumentTransformer((document, context, ct) =>
+
+    builder.Services.AddAuthorization();
+    builder.Services.UseBudgetManagerAuth(builder.Configuration);
+
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICurrentUserService, HttpContextUserService>();
+
+    builder.Services.UseMediator();
+    builder.Services.UsePostgreSQL(builder.Configuration);
+
+    builder.Services.AddControllers();
+
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    if (!app.Environment.IsEnvironment("Test"))
     {
-        document.Info = new()
-        {
-            Version = "v1",
-            Title = "Budget API",
-            Description = File.Exists("./Assets/api-description.html") ? File.ReadAllText("./Assets/api-description.html") : "",
-            Contact = new OpenApiContact
-            {
-                Email = builder.Configuration["Contact"]
-            }
-        };
-        document.Components ??= new OpenApiComponents();
-        document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
-        {
-            ["Bearer"] = new OpenApiSecurityScheme
-            {
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                In = ParameterLocation.Header,
-                BearerFormat = "JWT"
-            }
-        };
-        return Task.CompletedTask;
-    });
-});
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
 
-builder.Services.AddAuthorization();
-builder.Services.UseBudgetManagerAuth(builder.Configuration);
+    app.UseCors();
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, HttpContextUserService>();
+    app.UseStaticFiles(
+      new StaticFileOptions
+      {
+          FileProvider = new PhysicalFileProvider(
+          Path.Combine(builder.Environment.ContentRootPath, "Assets")
+          ),
+          RequestPath = "/Assets"
+      }
+    );
 
-builder.Services.UseMediator();
-builder.Services.UsePostgreSQL(builder.Configuration);
+    if (!app.Environment.IsProduction())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference(options => options.AddPreferredSecuritySchemes("Bearer").EnablePersistentAuthentication());
+    }
 
-builder.Services.AddControllers();
+    app.UseHttpsRedirection();
 
-var app = builder.Build();
+    app.MapControllers().RequireAuthorization();
 
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (!app.Environment.IsEnvironment("Test"))
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    app.MapGet("/", (HttpContext context) => context.Response.Redirect("/scalar", true)).ExcludeFromDescription();
+
+    app.Run();
+
 }
-
-app.UseCors();
-
-app.UseStaticFiles(
-  new StaticFileOptions
-  {
-      FileProvider = new PhysicalFileProvider(
-      Path.Combine(builder.Environment.ContentRootPath, "Assets")
-      ),
-      RequestPath = "/Assets"
-  }
-);
-
-if (!app.Environment.IsProduction())
+catch (Exception ex)
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options => options.AddPreferredSecuritySchemes("Bearer").EnablePersistentAuthentication());
+    Log.Fatal(ex, "Application failed to start");
 }
-
-app.UseHttpsRedirection();
-
-app.MapControllers().RequireAuthorization();
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-app.MapGet("/", (HttpContext context) => context.Response.Redirect("/scalar", true)).ExcludeFromDescription();
-
-app.Run();
-
+finally
+{
+    await Log.CloseAndFlushAsync();
+}
 public partial class Program { } // for testing purposes
