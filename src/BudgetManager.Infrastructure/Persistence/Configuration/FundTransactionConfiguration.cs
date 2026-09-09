@@ -17,7 +17,7 @@ public class FundTransactionConfiguration : IEntityTypeConfiguration<FundTransac
         {
             money.Property(m => m.Amount)
                .HasColumnName("Amount")
-               .HasPrecision(18, 2)
+               .HasPrecision(Constants.MoneyPrecision, Constants.MoneyDecimalPlaces)
                .IsRequired();
             money.Property(m => m.Currency)
                .HasColumnName("Currency")

@@ -6,6 +6,8 @@ public static class Constants
     public const string EmailRegexp = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
     public const int HashedPasswordLength = 60;
     public const int CurrencyCodeLength = 3;
+    public const int MoneyPrecision = 18;
+    public const int MoneyDecimalPlaces = 2;
     public const int MaxNameLength = 100;
     public const int MaxEmailLength = 254;  // RFC 5321 limit
     public const int MaxTitleLength = 200;

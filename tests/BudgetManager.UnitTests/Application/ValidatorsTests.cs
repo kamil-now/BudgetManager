@@ -245,6 +245,7 @@ public class ValidatorsTests
     [InlineData(1, "usds", "input currency value 'usds' is not a valid currency code.")]
     [InlineData(0, "u", "input amount cannot be zero.")]
     [InlineData(-1, "?", "input currency value '?' is not a valid currency code.")]
+    [InlineData(1.234, "USD", "input amount value '1.234' cannot have more than 2 decimal places.")]
     public void EnsureValid_WhenMoneyIsInvalid_ShouldThrowValidationException(decimal amount, string currency, string expectedException)
     {
         // Arrange
@@ -256,8 +257,8 @@ public class ValidatorsTests
     }
 
     [Theory]
-    [InlineData(123456789.123456789, "USD")]
-    [InlineData(0.0000000000000000000001, "usd")]
+    [InlineData(123456789.12, "USD")]
+    [InlineData(0.01, "usd")]
     [InlineData(1, "eur")]
     [InlineData(1, "XCD")]
     public void EnsureValid_WhenMoneyIsValid_ShouldReturnInput(decimal amount, string currency)

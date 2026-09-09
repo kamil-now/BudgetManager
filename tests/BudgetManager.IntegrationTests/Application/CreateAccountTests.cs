@@ -1,6 +1,7 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Validators;
 using BudgetManager.Common.Models;
+using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using Shouldly;
 using Xunit.Abstractions;
@@ -31,6 +32,19 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
 
         // Act & Assert
         await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
+    }
+
+    [Fact]
+    public async Task CreateAccount_WhenInitialBalanceHasTooManyDecimalPlaces_ShouldThrowException()
+    {
+        // Arrange
+        await MockAuthenticatedUserAsync();
+
+        var command = new CreateAccountCommand(null, new(123.456m, "PLN"), "Test Account", "Test Account Description");
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
+        ex.Message.ShouldBe($"InitialBalance amount value '123.456' cannot have more than {Constants.MoneyDecimalPlaces} decimal places.");
     }
 
     [Fact]

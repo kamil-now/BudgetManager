@@ -168,7 +168,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         var salary = new CreateAccountTransactionCommand(
             AccountId: accounts[1].Id,
-            Value: new Money(3000.01234567890123456789m, "EUR"),
+            Value: new Money(3000.01m, "EUR"),
             Date: DateTimeOffset.UtcNow,
             Title: "salary",
             Comment: null,

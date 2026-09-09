@@ -74,6 +74,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
         {
             account.Name.EnsureNotEmpty("Account name").EnsureNotLongerThan(Constants.MaxNameLength, "Account name");
             account.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {account.Name}");
+            account.InitialBalance.Amount.EnsureValidAmount($"InitialBalance of {account.Name}");
             account.InitialBalance.Currency.EnsureValidCurrency($"InitialBalance of {account.Name}");
         }
 

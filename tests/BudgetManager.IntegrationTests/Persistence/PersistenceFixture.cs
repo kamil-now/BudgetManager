@@ -10,26 +10,15 @@ namespace BudgetManager.IntegrationTests.Persistence;
 
 public class PersistenceFixture : TestBedFixture
 {
-    private IServiceProvider? _serviceProvider;
-
     protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
     {
-        var connectionString = configuration!.GetConnectionString("DefaultConnection");
+        var connectionString = TestDatabase.CreateMigratedDatabase();
         services.AddDbContext<ApplicationDbContext>(options =>
           options.UseNpgsql(connectionString).LogTo(Console.WriteLine, LogLevel.Warning));
-
-        _serviceProvider = services.BuildServiceProvider();
     }
 
-    protected override async ValueTask DisposeAsyncCore()
-    {
-        if (_serviceProvider != null)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            await context.Database.EnsureDeletedAsync();
-        }
-    }
+    protected override ValueTask DisposeAsyncCore()
+        => new();
 
     protected override IEnumerable<TestAppSettings> GetTestAppSettings()
     {

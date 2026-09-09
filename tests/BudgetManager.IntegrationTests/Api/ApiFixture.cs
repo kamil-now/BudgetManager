@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit.Microsoft.DependencyInjection;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
@@ -12,6 +12,8 @@ namespace BudgetManager.IntegrationTests.Api;
 
 public class ApiFixture : TestBedFixture
 {
+    private static readonly Lock FactoryLock = new();
+
     public static HttpClient? SharedClient { get; private set; }
 
     private WebApplicationFactory<Program>? Factory { get; set; }
@@ -19,30 +21,26 @@ public class ApiFixture : TestBedFixture
 
     public ApiFixture()
     {
-        Factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureServices(services =>
+        var connectionString = TestDatabase.CreateMigratedDatabase();
+
+        lock (FactoryLock)
+        {
+            Factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
                 {
-                    // Remove existing DbContext registration
-                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                    if (descriptor != null)
-                        services.Remove(descriptor);
+                    builder.ConfigureServices(services =>
+                    {
+                        services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
+                        services.RemoveAll<DbContextOptions>();
+                        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+                    });
 
-                    var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseInMemoryDatabase($"BudgetManagerTestDb_{Guid.NewGuid()}")
-                    .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
-                    .EnableSensitiveDataLogging()
-                    .Options;
-
-                    var sharedDbContext = new ApplicationDbContext(options);
-                    services.AddSingleton(sharedDbContext);
+                    builder.UseEnvironment("Test");
                 });
 
-                builder.UseEnvironment("Test");
-            });
+            Client = Factory.CreateClient();
+        }
 
-        Client = Factory.CreateClient();
         SharedClient = Client;
     }
 

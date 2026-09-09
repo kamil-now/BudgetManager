@@ -12,10 +12,6 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 
     public async Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
     {
-        if (dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
-        {
-            return await action();
-        }
         var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
@@ -137,7 +133,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
             .AsSplitQuery()
             .Include(x => x.Budgets)
             .ThenInclude(x => x.Funds)
-            .Include(x => x.Accounts)
+            .Include(x => x.Accounts.OrderBy(a => a.Name))
             .ThenInclude(x => x.Transactions)
             .SingleOrDefaultAsync(predicate, cancellationToken);
     }

@@ -101,7 +101,17 @@ public static class ValidationExtensions
             throw new ValidationException($"{paramName?.TrimName()} amount cannot be zero.");
         }
         val.Currency.EnsureValidCurrency($"{paramName?.TrimName()} currency");
+        val.Amount.EnsureValidAmount($"{paramName?.TrimName()} amount");
 
+        return val;
+    }
+
+    public static decimal EnsureValidAmount(this decimal val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        if (decimal.Round(val, Constants.MoneyDecimalPlaces) != val)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} value '{val}' cannot have more than {Constants.MoneyDecimalPlaces} decimal places.");
+        }
         return val;
     }
 

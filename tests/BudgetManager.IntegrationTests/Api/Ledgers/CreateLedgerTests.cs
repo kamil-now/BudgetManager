@@ -82,6 +82,8 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(1, "USD1") }] }, $"InitialBalance of {validAccount.Name} value 'USD1' is not a valid currency code.");
 
+            Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(1.234m, "USD") }] }, $"InitialBalance of {validAccount.Name} value '1.234' cannot have more than {Constants.MoneyDecimalPlaces} decimal places.");
+
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Name = string.Empty } }, "Budget name cannot be empty.");
 
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Name = tooLongName } }, $"Budget name value is too long. Max length is {Constants.MaxNameLength}.");

@@ -17,9 +17,10 @@ public class ApplicationFixture : TestBedFixture
 {
     protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
     {
+        var connectionString = TestDatabase.CreateMigratedDatabase();
         services.AddDbContext<ApplicationDbContext>(options =>
           options
-            .UseInMemoryDatabase("BudgetManagerTestDb")
+            .UseNpgsql(connectionString)
             .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
             .EnableSensitiveDataLogging());
 
