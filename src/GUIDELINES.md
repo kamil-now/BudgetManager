@@ -14,8 +14,7 @@
 
 ## Tests
 To run tests go to `/tests` and run `dotnet test -l "console;verbosity=detailed"`
-To run peristance integration tests download and install postgreSQL, use the default port, and after it's installed create user `dev` with password `kmwtw` and  priviledges `create database` and `login`.
-If you wish to make changes to your postgresql install remember to update `ConnectionStrings__DefaultConnection` in appsettings.
+Integration tests need Docker running - they start a `postgres:17` container (`TestDatabase`) and give each fixture its own migrated database on it.
 
 `xUnit` with `Shouldly` and `NSubstitute`
 
@@ -30,18 +29,18 @@ Only where it makes sense, no test fixtures, no database, no dependency injectio
 
 ### Application integration tests
 - **test all commands and queries - should provide the most coverage**
-- `ApplicationFixture` (in-memory database, mediator, limited DI)
+- `ApplicationFixture` (containerised postgres, mediator, limited DI)
   
 ### API integration tests
 - **test all endpoints**
 - authorization and authentication
 - response codes
-- `ApiFixture` (`Program.cs` setup with overriden in-memory database, full DI),
+- `ApiFixture` (`Program.cs` setup with the `ApplicationDbContext` pointed at a containerised postgres, full DI),
 
 ### Persistence integration tests
 - **test the most important entities dependencies and constraints**,
 - test `ApplicationDbContext` only
-- `PersistenceFixture` (with local postgres instance)
+- `PersistenceFixture` (containerised postgres)
 
 
 ### Tests coverage report
