@@ -158,13 +158,15 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Guid?> GetOwnerIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity, IAccessControlled
+    public async Task<Guid?> GetOwnerIdAsync<T>(Guid id, Expression<Func<T, Guid>> ownerSelector, CancellationToken cancellationToken = default) where T : Entity
     {
-        return await dbContext.Set<T>()
+        var ownerIds = await dbContext.Set<T>()
             .AsNoTracking()
             .Where(x => x.Id == id)
-            .Select(x => x.OwnerId)
-            .SingleOrDefaultAsync(cancellationToken);
+            .Select(ownerSelector)
+            .ToArrayAsync(cancellationToken);
+
+        return ownerIds.Cast<Guid?>().SingleOrDefault();
     }
 
     public async Task<bool> ExistsAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity

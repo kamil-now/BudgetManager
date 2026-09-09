@@ -53,8 +53,12 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture f
         // Arrange
         await RegisterAndLogin();
 
+        var ledgerResponse = await Client.PostAsJsonAsync("/api/ledgers", Ledgers.LedgersControllerTests.ValidCommand);
+        ledgerResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var ledgerId = await ledgerResponse.Content.ReadFromJsonAsync<Guid>();
+
         var request = new CreateAccountCommand(
-          null,
+          ledgerId,
           new(100, "PLN"),
           "Test Account",
           "Test Account Description");

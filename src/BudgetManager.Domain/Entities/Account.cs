@@ -1,18 +1,19 @@
+using System.Linq.Expressions;
 using BudgetManager.Common.Models;
 using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Domain.Entities;
 
-public class Account : Entity, IAccessControlled
+public class Account : Entity, IAccessControlled<Account>
 {
-    public required Guid OwnerId { get; set; }
-    public Guid? LedgerId { get; set; }
+    public required Guid LedgerId { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
 
-    public User Owner { get; set; } = null!;
-    public Ledger? Ledger { get; set; }
+    public Ledger Ledger { get; set; } = null!;
     public virtual ICollection<AccountTransaction> Transactions { get; set; } = [];
+
+    public static Expression<Func<Account, Guid>> OwnerId => x => x.Ledger.OwnerId;
 
     public Balance GetBalance()
     {

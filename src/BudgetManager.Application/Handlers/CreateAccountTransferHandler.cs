@@ -1,5 +1,4 @@
 using BudgetManager.Application.Commands;
-using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
@@ -7,13 +6,11 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateAccountTransferHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<CreateAccountTransferCommand, Guid>
+public sealed class CreateAccountTransferHandler(IBudgetManagerService service) : IRequestHandler<CreateAccountTransferCommand, Guid>
 {
     public async Task<Guid> Handle(CreateAccountTransferCommand command, CancellationToken cancellationToken)
     {
-        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
-
-        await ValidateCommandAsync(userId, command, cancellationToken);
+        ValidateCommand(command);
         return await service.RunInTransactionAsync(async () =>
         {
             var expense = await service.CreateAsync(new AccountTransaction
@@ -48,11 +45,8 @@ public sealed class CreateAccountTransferHandler(ICurrentUserService currentUser
         }, cancellationToken);
     }
 
-    private async Task ValidateCommandAsync(Guid userId, CreateAccountTransferCommand command, CancellationToken cancellationToken)
+    private static void ValidateCommand(CreateAccountTransferCommand command)
     {
-        await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
-        await command.TargetAccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
-
         command.Value.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
         command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);

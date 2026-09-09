@@ -47,6 +47,23 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
     }
 
     [Fact]
+    public async Task GetLedger_WhenLedgerBelongsToAnotherUser_403()
+    {
+        // Arrange
+        await RegisterAndLogin();
+        var response = await Client.PostAsJsonAsync(_baseUrl, ValidCommand);
+        var ledgerId = await response.Content.ReadFromJsonAsync<Guid>();
+
+        await RegisterAndLogin();
+
+        // Act
+        var foreignResponse = await Client.GetAsync($"{_baseUrl}/{ledgerId}");
+
+        // Assert
+        foreignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task CreateLedger_WhenRequestIsInvalid_400()
     {
         // Arrange

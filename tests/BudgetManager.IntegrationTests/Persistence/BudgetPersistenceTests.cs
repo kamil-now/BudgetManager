@@ -19,7 +19,7 @@ public class BudgetPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
             HashedPassword = "Test Hashed Password"
         };
         var ledger = new Ledger { OwnerId = user.Id, Name = $"Ledger {Guid.NewGuid()}" };
-        var budget = new Budget { OwnerId = user.Id, LedgerId = ledger.Id, Name = $"Budget {Guid.NewGuid()}" };
+        var budget = new Budget { LedgerId = ledger.Id, Name = $"Budget {Guid.NewGuid()}" };
         var fund = new Fund
         {
             BudgetId = budget.Id,

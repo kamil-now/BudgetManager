@@ -1,5 +1,4 @@
 using BudgetManager.Application.Commands;
-using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
@@ -7,13 +6,11 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateCurrencyExchangeHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<CreateCurrencyExchangeCommand, Guid>
+public sealed class CreateCurrencyExchangeHandler(IBudgetManagerService service) : IRequestHandler<CreateCurrencyExchangeCommand, Guid>
 {
     public async Task<Guid> Handle(CreateCurrencyExchangeCommand command, CancellationToken cancellationToken)
     {
-        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
-
-        await ValidateCommandAsync(userId, command, cancellationToken);
+        ValidateCommand(command);
         return await service.RunInTransactionAsync(async () =>
         {
             var expense = await service.CreateAsync(new AccountTransaction
@@ -48,14 +45,8 @@ public sealed class CreateCurrencyExchangeHandler(ICurrentUserService currentUse
         }, cancellationToken);
     }
 
-    private async Task ValidateCommandAsync(Guid userId, CreateCurrencyExchangeCommand command, CancellationToken cancellationToken)
+    private static void ValidateCommand(CreateCurrencyExchangeCommand command)
     {
-        await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
-        if (command.TargetAccountId is Guid targetAcountId)
-        {
-            await targetAcountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
-        }
-
         command.Buy.EnsureValid();
         command.Sell.EnsureValid();
 

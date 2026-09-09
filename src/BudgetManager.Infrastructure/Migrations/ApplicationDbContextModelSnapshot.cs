@@ -35,16 +35,13 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid?>("LedgerId")
+                    b.Property<Guid>("LedgerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -53,9 +50,7 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasIndex("LedgerId");
 
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("Name", "OwnerId")
+                    b.HasIndex("Name", "LedgerId")
                         .IsUnique();
 
                     b.ToTable("Accounts", (string)null);
@@ -140,7 +135,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid?>("LedgerId")
+                    b.Property<Guid>("LedgerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -148,17 +143,12 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LedgerId");
-
-                    b.HasIndex("OwnerId");
 
                     b.ToTable("Budgets", (string)null);
                 });
@@ -337,17 +327,10 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
                         .WithMany("Accounts")
                         .HasForeignKey("LedgerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("BudgetManager.Domain.Entities.User", "Owner")
-                        .WithMany("Accounts")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Ledger");
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.AccountTransaction", b =>
@@ -412,17 +395,10 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
                         .WithMany("Budgets")
                         .HasForeignKey("LedgerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("BudgetManager.Domain.Entities.User", "Owner")
-                        .WithMany("Budgets")
-                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Ledger");
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Fund", b =>
@@ -542,10 +518,6 @@ namespace BudgetManager.Infrastructure.Migrations
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Accounts");
-
-                    b.Navigation("Budgets");
-
                     b.Navigation("Ledgers");
                 });
 #pragma warning restore 612, 618

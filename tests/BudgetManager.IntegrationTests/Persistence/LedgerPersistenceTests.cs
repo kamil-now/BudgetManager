@@ -13,7 +13,7 @@ public class LedgerPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
         // Arrange
         var user = NewUser();
         var ledger = new Ledger { OwnerId = user.Id, Name = $"Ledger {Guid.NewGuid()}" };
-        var account = new Account { OwnerId = user.Id, LedgerId = ledger.Id, Name = $"Account {Guid.NewGuid()}" };
+        var account = new Account { LedgerId = ledger.Id, Name = $"Account {Guid.NewGuid()}" };
         var dbContext = GetContext();
         dbContext.Users.Add(user);
         dbContext.Ledgers.Add(ledger);
@@ -32,7 +32,7 @@ public class LedgerPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
         // Arrange
         var user = NewUser();
         var ledger = new Ledger { OwnerId = user.Id, Name = $"Ledger {Guid.NewGuid()}" };
-        var budget = new Budget { OwnerId = user.Id, LedgerId = ledger.Id, Name = $"Budget {Guid.NewGuid()}" };
+        var budget = new Budget { LedgerId = ledger.Id, Name = $"Budget {Guid.NewGuid()}" };
         var dbContext = GetContext();
         dbContext.Users.Add(user);
         dbContext.Ledgers.Add(ledger);

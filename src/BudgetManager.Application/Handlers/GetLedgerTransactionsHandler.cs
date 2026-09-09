@@ -1,20 +1,13 @@
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
-using BudgetManager.Application.Services;
-using BudgetManager.Application.Validators;
-using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetLedgerTransactionsHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<GetLedgerTransactionsQuery, LedgerTransactionsDTO?>
+public sealed class GetLedgerTransactionsHandler(IBudgetManagerService service) : IRequestHandler<GetLedgerTransactionsQuery, LedgerTransactionsDTO?>
 {
     public async Task<LedgerTransactionsDTO?> Handle(GetLedgerTransactionsQuery query, CancellationToken cancellationToken)
     {
-        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
-
-        await query.LedgerId.EnsureAccessibleAsync<Ledger>(userId, service, cancellationToken);
-
         var filters = query.Filters;
         filters.From ??= DateTimeOffset.MinValue;
         filters.To ??= DateTimeOffset.MaxValue;

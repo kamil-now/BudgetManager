@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using BudgetManager.Application.Services;
 using BudgetManager.Common.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
@@ -9,31 +8,6 @@ namespace BudgetManager.Application.Validators;
 
 public static class ValidationExtensions
 {
-    public static async Task<Guid> EnsureAccessibleAsync<T>(this Guid id, Guid userId, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity, IAccessControlled
-    {
-        var ownerId = await service.GetOwnerIdAsync<T>(id, cancellationToken)
-            ?? throw new AuthenticationException($"User with ID '{id}' does not exist.");
-
-        if (ownerId != userId)
-        {
-            throw new AuthorizationException($"{typeof(T).Name} with ID '{id}' cannot be accessed by user with ID '{userId}'.");
-        }
-        return id;
-    }
-
-    public static async Task<Guid> EnsureAuthenticatedAsync(this ICurrentUserService currentUser, IBudgetManagerService service, CancellationToken cancellationToken)
-    {
-        if (Guid.TryParse(currentUser.Id, out var userId) && userId != Guid.Empty)
-        {
-            if (!await service.ExistsAsync<User>(x => x.Id == userId, cancellationToken))
-            {
-                throw new AuthenticationException($"User with ID '{userId}' does not exist.");
-            }
-            return userId;
-        }
-        throw new AuthenticationException($"User ID '{userId}' is invalid.");
-    }
-
     public static IEnumerable<string>? EnsureValidTags(this IEnumerable<string>? tags)
     {
         if (tags == null)
@@ -72,6 +46,15 @@ public static class ValidationExtensions
         return val;
     }
 
+    public static Guid EnsureNotEmpty(this Guid val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        if (val == Guid.Empty)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} cannot be empty.");
+        }
+        return val;
+    }
+
     public static IEnumerable<T> EnsureNotEmpty<T>(this IEnumerable<T> val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
     {
         if (!val.Any())
@@ -79,19 +62,6 @@ public static class ValidationExtensions
             throw new ValidationException($"{paramName?.TrimName()} cannot be empty.");
         }
         return val;
-    }
-
-    public static async Task<Guid> EnsureExistsAsync<T>(this Guid id, IBudgetManagerService service, CancellationToken cancellationToken) where T : Entity
-    {
-        if (id == Guid.Empty)
-        {
-            throw new ValidationException($"{typeof(T).Name} ID cannot be empty.");
-        }
-        if (!await service.ExistsAsync<T>(x => x.Id == id, cancellationToken))
-        {
-            throw new ValidationException($"{typeof(T).Name} with ID '{id}' does not exist.");
-        }
-        return id;
     }
 
     public static Money EnsureValid(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)

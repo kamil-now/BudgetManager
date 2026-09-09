@@ -51,7 +51,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
 
         var budget = ledger.Budgets.First();
         budget.ShouldNotBeNull();
-        budget.OwnerId.ShouldBe(userId);
+        budget.LedgerId.ShouldBe(id);
         budget.Name.ShouldBe(command.Budget.Name);
         budget.Description.ShouldBe(command.Budget.Description);
 
@@ -74,7 +74,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
             var commandAccount = command.Accounts.FirstOrDefault(x => x.Name == account.Name);
             commandAccount.ShouldNotBeNull();
             account.ShouldNotBeNull();
-            account.OwnerId.ShouldBe(userId);
+            account.LedgerId.ShouldBe(id);
             account.Name.ShouldBe(commandAccount.Name);
             account.Description.ShouldBe(commandAccount.Description);
 

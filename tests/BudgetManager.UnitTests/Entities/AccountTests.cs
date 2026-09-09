@@ -90,7 +90,7 @@ public class AccountTests
         return new Account
         {
             Id = Guid.NewGuid(),
-            OwnerId = Guid.NewGuid(),
+            LedgerId = Guid.NewGuid(),
             Name = "Test Account",
             Description = "Test Description"
         };

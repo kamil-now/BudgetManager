@@ -76,3 +76,12 @@ Merged code coverage report can be generated using `dotnet-reportgenerator-globa
 - avoid request validation in controllers 
 - validate all commands/queries in handlers
 - use `ValidationException` with `ValidationExtensions`
+
+### Authentication and authorization
+- never authenticate or authorize in handlers - `RequestAuthorizer` does both for every request sent through the mediator
+- every request needs a signed in user unless it implements `IAnonymousRequest`
+- to guard a resource implement `IRequiresAccess` and list its `Resources`:
+  - `Resource.Of<Ledger>(LedgerId)` - every entity declares where its owner is as `IAccessControlled<T>.OwnerPath`, so the call is the same for a ledger and for anything owned through a parent
+- a resource owned by somebody else and a resource that does not exist both give `AuthorizationException`
+- handlers that need the current user read `ICurrentUserService.UserId`
+- a request that declares neither is refused by `RequestAuthorizer`, and `RequestAccessDeclarationTests` fails on it; a create with no parent to check declares `IRequiresAccess` with an empty list

@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
 using BudgetManager.Common.Models;
 using BudgetManager.Domain;
@@ -13,109 +12,27 @@ namespace BudgetManager.UnitTests.Application;
 public class ValidatorsTests
 {
     [Fact]
-    public async Task EnsureAccessibleAsync_WhenEntityDoesNotExists_ShouldThrowAuthenticationException()
+    public void EnsureNotEmpty_WhenIdIsEmptyGuid_ShouldThrowValidationException()
     {
         // Arrange
-        var cancellationToken = new CancellationToken();
-        var budgetManagerService = Substitute.For<IBudgetManagerService>();
-        var accountId = Guid.NewGuid();
-        budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns((Guid?)null);
+        var ledgerId = Guid.Empty;
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<AuthenticationException>(() => accountId.EnsureAccessibleAsync<Account>(Guid.NewGuid(), budgetManagerService, cancellationToken));
-        ex.Message.ShouldBeEquivalentTo($"User with ID '{accountId}' does not exist.");
+        var ex = Should.Throw<ValidationException>(() => ledgerId.EnsureNotEmpty());
+        ex.Message.ShouldBeEquivalentTo("ledgerId cannot be empty.");
     }
 
     [Fact]
-    public async Task EnsureAccessibleAsync_WhenEntityIsNotAccessible_ShouldThrowAccessException()
+    public void EnsureNotEmpty_WhenIdIsSet_ShouldReturnIt()
     {
         // Arrange
-        var cancellationToken = new CancellationToken();
-        var budgetManagerService = Substitute.For<IBudgetManagerService>();
-        var accountId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-        var currentUserId = Guid.NewGuid();
+        var ledgerId = Guid.NewGuid();
 
-        budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns(ownerId);
-
-        // Act & Assert
-        var ex = await Should.ThrowAsync<BudgetManager.Application.Validators.AuthorizationException>(() => accountId.EnsureAccessibleAsync<Account>(currentUserId, budgetManagerService, cancellationToken));
-        ex.Message.ShouldBeEquivalentTo($"Account with ID '{accountId}' cannot be accessed by user with ID '{currentUserId}'.");
-    }
-
-    [Fact]
-    public async Task EnsureAccessibleAsync_WhenEntityIsAccessible_ShouldReturnId()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        var budgetManagerService = Substitute.For<IBudgetManagerService>();
-        var accountId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-
-        budgetManagerService.GetOwnerIdAsync<Account>(accountId, cancellationToken).Returns(ownerId);
-
-        // Act 
-        var result = await accountId.EnsureAccessibleAsync<Account>(ownerId, budgetManagerService, cancellationToken);
+        // Act
+        var result = ledgerId.EnsureNotEmpty();
 
         // Assert
-        result.ShouldBeEquivalentTo(accountId);
-    }
-
-    [Theory]
-    [InlineData("00000000-0000-0000-0000-000000000000")]
-    [InlineData("not a valid guid")]
-    [InlineData("")]
-    [InlineData(null)]
-    public async Task EnsureExistsAsync_WhenUserIdIsInvalid_ShouldThrowAuthenticationException(string? userId)
-    {
-        // Arrange
-        var currentUser = Substitute.For<ICurrentUserService>();
-        currentUser.Id.Returns(userId);
-
-        // Act & Assert
-        await Should.ThrowAsync<AuthenticationException>(() => currentUser.EnsureAuthenticatedAsync(Substitute.For<IBudgetManagerService>(), default));
-    }
-
-    [Fact]
-    public async Task EnsureExistsAsync_WhenUserDoesNotExist_ShouldThrowUnauthenticatedException()
-    {
-        // Arrange
-        var currentUser = Substitute.For<ICurrentUserService>();
-        var id = Guid.NewGuid().ToString();
-        currentUser.Id.Returns(id);
-
-        // Act & Assert
-        await Should.ThrowAsync<AuthenticationException>(() => currentUser.EnsureAuthenticatedAsync(Substitute.For<IBudgetManagerService>(), default));
-    }
-
-    [Fact]
-    public async Task EnsureExistsAsync_WhenIdIsEmptyGuid_ShouldThrowValidationException()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        var id = Guid.Empty;
-
-        // Act & Assert
-        var ex = await Should.ThrowAsync<ValidationException>(() => id.EnsureExistsAsync<Budget>(Substitute.For<IBudgetManagerService>(), cancellationToken));
-        ex.Message.ShouldBeEquivalentTo($"Budget ID cannot be empty.");
-    }
-
-    [Fact]
-    public async Task EnsureExistsAsync_WhenUserExists_ShouldReturnUserId()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        var currentUser = Substitute.For<ICurrentUserService>();
-        var budgetManagerService = Substitute.For<IBudgetManagerService>();
-        var id = Guid.NewGuid();
-        currentUser.Id.Returns(id.ToString());
-        budgetManagerService.ExistsAsync(Arg.Any<Expression<Func<User, bool>>>(), cancellationToken).Returns(true);
-
-        // Act 
-        var result = await currentUser.EnsureAuthenticatedAsync(budgetManagerService, cancellationToken);
-
-        // Assert
-        result.ShouldBeEquivalentTo(id);
+        result.ShouldBe(ledgerId);
     }
 
     [Fact]

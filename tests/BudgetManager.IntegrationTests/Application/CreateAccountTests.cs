@@ -15,7 +15,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
     {
         // Arrange
         MockUnauthenticatedUser();
-        var command = new CreateAccountCommand(null, new(0, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account", "Test Account Description");
 
         // Act & Assert
         var ex = await Should.ThrowAsync<AuthenticationException>(() => Mediator.Send(command));
@@ -31,16 +31,31 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account", "Test Account Description");
 
         // Act & Assert
-        await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
+        await Should.ThrowAsync<AuthorizationException>(() => Mediator.Send(command));
+    }
+
+    [Fact]
+    public async Task CreateAccount_WhenLedgerBelongsToAnotherUser_ShouldThrowException()
+    {
+        // Arrange
+        var otherUserId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(otherUserId);
+
+        await MockAuthenticatedUserAsync();
+        var command = new CreateAccountCommand(ledger.Id, new(0, "PLN"), "Test Account", "Test Account Description");
+
+        // Act & Assert
+        await Should.ThrowAsync<AuthorizationException>(() => Mediator.Send(command));
     }
 
     [Fact]
     public async Task CreateAccount_WhenInitialBalanceHasTooManyDecimalPlaces_ShouldThrowException()
     {
         // Arrange
-        await MockAuthenticatedUserAsync();
+        var userId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(userId);
 
-        var command = new CreateAccountCommand(null, new(123.456m, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(ledger.Id, new(123.456m, "PLN"), "Test Account", "Test Account Description");
 
         // Act & Assert
         var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
@@ -52,8 +67,9 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
     {
         // Arrange
         var userId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(userId);
 
-        var command = new CreateAccountCommand(null, new(123, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(ledger.Id, new(123, "PLN"), "Test Account", "Test Account Description");
 
         // Act
         var accountId = await Mediator.Send(command);
@@ -65,8 +81,14 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         account.Id.ShouldBe(accountId);
         account.Name.ShouldBe(command.Name);
         account.Description.ShouldBe(command.Description);
-        account.OwnerId.ShouldBe(userId);
-        account.LedgerId.ShouldBeNull();
+        account.LedgerId.ShouldBe(ledger.Id);
         account.GetBalance().ShouldBeEquivalentTo(new Balance() { { command.InitialBalance.Currency, command.InitialBalance.Amount } });
+    }
+
+    private async Task<Ledger> CreateLedgerAsync(Guid ownerId)
+    {
+        var ledger = await BudgetManagerService.CreateAsync(new Ledger { OwnerId = ownerId, Name = $"Ledger {Guid.NewGuid()}" });
+        await BudgetManagerService.SaveChangesAsync();
+        return ledger;
     }
 }

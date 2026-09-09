@@ -1,7 +1,9 @@
+using System.Linq.Expressions;
+using BudgetManager.Domain.Entities;
+
 namespace BudgetManager.Domain.Interfaces;
 
-public interface IAccessControlled
+public interface IAccessControlled<TSelf> where TSelf : Entity
 {
-  public Guid Id { get; set; }
-  public Guid OwnerId { get; set; }
+    static abstract Expression<Func<TSelf, Guid>> OwnerId { get; }
 }

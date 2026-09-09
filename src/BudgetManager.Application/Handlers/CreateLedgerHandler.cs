@@ -11,13 +11,15 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
 {
     public async Task<Guid> Handle(CreateLedgerCommand command, CancellationToken cancellationToken)
     {
-        var userId = await currentUser.EnsureAuthenticatedAsync(budgetService, cancellationToken);
+        var userId = currentUser.UserId;
 
         Validate(command);
 
+        var ledgerId = Guid.NewGuid();
         var budgetId = Guid.NewGuid();
         var entity = await budgetService.CreateAsync(new Ledger
         {
+            Id = ledgerId,
             OwnerId = userId,
             Name = command.Name,
             Description = command.Description,
@@ -27,7 +29,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
                 return new Account()
                 {
                     Id = accountId,
-                    OwnerId = userId,
+                    LedgerId = ledgerId,
                     Name = x.Name,
                     Description = x.Description,
                     Transactions = [new AccountTransaction()
@@ -41,7 +43,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
             Budgets = [new Budget()
             {
                 Id = budgetId,
-                OwnerId = userId,
+                LedgerId = ledgerId,
                 Name = command.Budget.Name,
                 Description = command.Budget.Description,
                 Funds = [.. command.Budget.Funds.Select(x => new Fund()

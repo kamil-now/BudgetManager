@@ -15,7 +15,7 @@ public interface IBudgetManagerService
 
     Task<Ledger?> GetLedgerAsync(Expression<Func<Ledger, bool>> predicate, CancellationToken cancellationToken);
 
-    Task<Guid?> GetOwnerIdAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity, IAccessControlled;
+    Task<Guid?> GetOwnerIdAsync<T>(Guid id, Expression<Func<T, Guid>> ownerSelector, CancellationToken cancellationToken = default) where T : Entity;
 
     Task<T> GetAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity;
     Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;

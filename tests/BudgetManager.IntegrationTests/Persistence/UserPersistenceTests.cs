@@ -53,27 +53,6 @@ public class UserPersistenceTests(ITestOutputHelper testOutputHelper, Persistenc
         await Should.ThrowAsync<DbUpdateException>(() => other.SaveChangesAsync(CancellationToken.None));
     }
 
-    [Fact]
-    public async Task Delete_WhenUserHasAccounts_DeletesAccounts()
-    {
-        // Arrange
-        var user = NewUser($"test@email{Guid.NewGuid()}");
-        var account = new Account { OwnerId = user.Id, Name = $"Account {Guid.NewGuid()}" };
-        var dbContext = GetContext();
-        dbContext.Users.Add(user);
-        dbContext.Accounts.Add(account);
-        await dbContext.SaveChangesAsync(CancellationToken.None);
-
-        // Act
-        var other = GetContext();
-        other.Users.Remove(await other.Users.SingleAsync(x => x.Id == user.Id));
-        await other.SaveChangesAsync(CancellationToken.None);
-
-        // Assert
-        var result = GetContext();
-        (await result.Accounts.AnyAsync(x => x.Id == account.Id)).ShouldBeFalse();
-    }
-
     private static User NewUser(string email) => new()
     {
         Name = "Test User",

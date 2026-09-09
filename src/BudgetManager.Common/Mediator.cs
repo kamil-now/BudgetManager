@@ -20,12 +20,19 @@ public interface IRequestHandler<TRequest> where TRequest : IRequest
     Task Handle(TRequest request, CancellationToken cancellationToken);
 }
 
+public interface IRequestAuthorizer
+{
+    Task AuthorizeAsync(object request, CancellationToken cancellationToken);
+}
+
 public class Mediator(IServiceProvider serviceProvider) : IMediator
 {
     private readonly IServiceProvider serviceProvider = serviceProvider;
 
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
+        await AuthorizeAsync(request, cancellationToken);
+
         var requestType = request.GetType();
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
 
@@ -43,6 +50,8 @@ public class Mediator(IServiceProvider serviceProvider) : IMediator
 
     public async Task Send(IRequest request, CancellationToken cancellationToken = default)
     {
+        await AuthorizeAsync(request, cancellationToken);
+
         var requestType = request.GetType();
         var handlerType = typeof(IRequestHandler<>).MakeGenericType(requestType);
 
@@ -56,5 +65,13 @@ public class Mediator(IServiceProvider serviceProvider) : IMediator
           ?? throw new InvalidOperationException($"Handler {handlerType} did not return a valid task.");
 
         await task;
+    }
+
+    private async Task AuthorizeAsync(object request, CancellationToken cancellationToken)
+    {
+        var authorizer = serviceProvider.GetService(typeof(IRequestAuthorizer)) as IRequestAuthorizer
+            ?? throw new InvalidOperationException($"No {nameof(IRequestAuthorizer)} registered.");
+
+        await authorizer.AuthorizeAsync(request, cancellationToken);
     }
 }

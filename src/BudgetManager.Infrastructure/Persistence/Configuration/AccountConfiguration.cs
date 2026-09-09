@@ -18,7 +18,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasMaxLength(Constants.MaxNameLength);
 
         builder
-            .HasIndex(a => new { a.Name, a.OwnerId })
+            .HasIndex(a => new { a.Name, a.LedgerId })
             .IsUnique();
 
         builder.Property(x => x.Description)

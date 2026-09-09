@@ -1,5 +1,4 @@
 using BudgetManager.Application.Commands;
-using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
@@ -7,13 +6,11 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class UpdateAccountTransactioHandler(ICurrentUserService currentUser, IBudgetManagerService service) : IRequestHandler<UpdateAccountTransactionCommand>
+public sealed class UpdateAccountTransactioHandler(IBudgetManagerService service) : IRequestHandler<UpdateAccountTransactionCommand>
 {
     public async Task Handle(UpdateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
-        var userId = await currentUser.EnsureAuthenticatedAsync(service, cancellationToken);
-
-        await ValidateCommandAsync(userId, command, cancellationToken);
+        ValidateCommand(command);
 
         var income = await service.GetAsync<AccountTransaction>(command.Id, cancellationToken);
 
@@ -27,11 +24,8 @@ public sealed class UpdateAccountTransactioHandler(ICurrentUserService currentUs
         await service.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task ValidateCommandAsync(Guid userId, UpdateAccountTransactionCommand command, CancellationToken cancellationToken)
+    private static void ValidateCommand(UpdateAccountTransactionCommand command)
     {
-        await command.AccountId.EnsureAccessibleAsync<Account>(userId, service, cancellationToken);
-        await command.Id.EnsureExistsAsync<AccountTransaction>(service, cancellationToken);
-
         command.Amount.EnsureValid();
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
         command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);

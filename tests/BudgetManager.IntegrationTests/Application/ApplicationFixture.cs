@@ -1,5 +1,6 @@
 using BudgetManager.Application.Configuration;
 using BudgetManager.Application.Services;
+using BudgetManager.Application.Validators;
 using BudgetManager.Common;
 using BudgetManager.Domain.Interfaces;
 using BudgetManager.Infrastructure.Persistence;
@@ -48,4 +49,16 @@ public class MockCurrentUserService : ICurrentUserService
     public string? Id => MockUserId;
     public string? Email => MockUserEmail;
     public string? Name => MockUserName;
+
+    public Guid UserId
+    {
+        get
+        {
+            if (!Guid.TryParse(Id, out var userId) || userId == Guid.Empty)
+            {
+                throw new AuthenticationException($"User ID '{userId}' is invalid.");
+            }
+            return userId;
+        }
+    }
 }

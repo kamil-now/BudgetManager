@@ -10,43 +10,15 @@ namespace BudgetManager.IntegrationTests.Persistence;
 public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, PersistenceFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
     [Fact]
-    public async Task Add_WhenUserDoesNotExist_ThrowsException()
-    {
-        // Arrange
-        var account = new Account
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Account",
-            OwnerId = Guid.NewGuid()
-        };
-        var dbContext = GetContext();
-        using var transaction = await dbContext.Database.BeginTransactionAsync();
-
-        // Act & Assert
-        await Should.ThrowAsync<DbUpdateException>(() =>
-        {
-            dbContext.Accounts.Add(account);
-            return dbContext.SaveChangesAsync(CancellationToken.None);
-        });
-    }
-
-    [Fact]
     public async Task Add_WhenLedgerDoesNotExist_ThrowsException()
     {
         // Arrange
-        var user = new User()
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test User",
-            Email = $"test@email{Guid.NewGuid()}",
-            HashedPassword = "Test Hashed Password",
-        };
+        var user = NewUser();
 
         var account = new Account
         {
             Name = "Test Account",
             Description = "Test Account Description",
-            OwnerId = user.Id,
             LedgerId = Guid.NewGuid()
         };
         var dbContext = GetContext();
@@ -67,26 +39,13 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         // Arrange
         var timestamp = DateTimeOffset.UtcNow;
 
-        var user = new User()
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test User",
-            Email = $"test@email{Guid.NewGuid()}",
-            HashedPassword = "Test Hashed Password",
-        };
-
-        var ledger = new Ledger()
-        {
-            Id = Guid.NewGuid(),
-            OwnerId = user.Id,
-            Name = "Test Ledger"
-        };
+        var user = NewUser();
+        var ledger = NewLedger(user);
 
         var account = new Account
         {
             Name = "Test Account",
             Description = "Test Account Description",
-            OwnerId = user.Id,
             LedgerId = ledger.Id
         };
 
@@ -105,71 +64,40 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
     }
 
     [Fact]
-    public async Task Add_WhenLedgerIdIsNull_SavesAccount()
-    {
-        // Arrange
-        var timestamp = DateTimeOffset.UtcNow;
-
-        var user = new User()
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test User",
-            Email = $"test@email{Guid.NewGuid()}",
-            HashedPassword = "Test Hashed Password",
-        };
-
-        var account = new Account
-        {
-            Name = "Test Account",
-            Description = "Test Account Description",
-            OwnerId = user.Id,
-            LedgerId = null,
-        };
-
-        var dbContext = GetContext();
-        using var transaction = await dbContext.Database.BeginTransactionAsync();
-
-        // Act
-        dbContext.Users.Add(user);
-        dbContext.Accounts.Add(account);
-        await dbContext.SaveChangesAsync(CancellationToken.None);
-
-        // Assert
-        var result = dbContext.Accounts.FirstOrDefault(a => a.Id == account.Id);
-        AssertAccount(result, account, timestamp);
-    }
-
-    [Fact]
-    public async Task Add_WhenOwnerAlreadyHasAccountWithTheSameName_ThrowsException()
+    public async Task Add_WhenLedgerAlreadyHasAccountWithTheSameName_ThrowsException()
     {
         // Arrange
         var user = NewUser();
+        var ledger = NewLedger(user);
         var name = $"Test Account {Guid.NewGuid()}";
         var dbContext = GetContext();
         dbContext.Users.Add(user);
-        dbContext.Accounts.Add(new Account { OwnerId = user.Id, Name = name });
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Accounts.Add(new Account { LedgerId = ledger.Id, Name = name });
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Act & Assert
         var other = GetContext();
-        other.Accounts.Add(new Account { OwnerId = user.Id, Name = name });
+        other.Accounts.Add(new Account { LedgerId = ledger.Id, Name = name });
         await Should.ThrowAsync<DbUpdateException>(() => other.SaveChangesAsync(CancellationToken.None));
     }
 
     [Fact]
-    public async Task Add_WhenAnotherOwnerHasAccountWithTheSameName_SavesAccount()
+    public async Task Add_WhenAnotherLedgerHasAccountWithTheSameName_SavesAccount()
     {
         // Arrange
-        var owner = NewUser();
-        var otherOwner = NewUser();
+        var user = NewUser();
+        var ledger = NewLedger(user);
+        var otherLedger = NewLedger(user);
         var name = $"Test Account {Guid.NewGuid()}";
         var dbContext = GetContext();
-        dbContext.Users.AddRange(owner, otherOwner);
-        dbContext.Accounts.Add(new Account { OwnerId = owner.Id, Name = name });
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.AddRange(ledger, otherLedger);
+        dbContext.Accounts.Add(new Account { LedgerId = ledger.Id, Name = name });
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Act
-        var account = new Account { OwnerId = otherOwner.Id, Name = name };
+        var account = new Account { LedgerId = otherLedger.Id, Name = name };
         var other = GetContext();
         other.Accounts.Add(account);
         await other.SaveChangesAsync(CancellationToken.None);
@@ -184,7 +112,8 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
     {
         // Arrange
         var user = NewUser();
-        var account = new Account { OwnerId = user.Id, Name = $"Test Account {Guid.NewGuid()}" };
+        var ledger = NewLedger(user);
+        var account = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
         var transaction = new AccountTransaction
         {
             AccountId = account.Id,
@@ -193,6 +122,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         };
         var dbContext = GetContext();
         dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
         dbContext.Accounts.Add(account);
         dbContext.AccountTransactions.Add(transaction);
         await dbContext.SaveChangesAsync(CancellationToken.None);
@@ -212,9 +142,11 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
     {
         // Arrange
         var user = NewUser();
-        var account = new Account { OwnerId = user.Id, Name = $"Test Account {Guid.NewGuid()}" };
+        var ledger = NewLedger(user);
+        var account = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
         var dbContext = GetContext();
         dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
         dbContext.Accounts.Add(account);
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
@@ -236,9 +168,11 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
     {
         // Arrange
         var user = NewUser();
-        var account = new Account { OwnerId = user.Id, Name = $"Test Account {Guid.NewGuid()}" };
+        var ledger = NewLedger(user);
+        var account = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
         var dbContext = GetContext();
         dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
         dbContext.Accounts.Add(account);
         dbContext.SaveChanges();
 
@@ -258,13 +192,18 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         HashedPassword = "Test Hashed Password"
     };
 
+    private static Ledger NewLedger(User user) => new()
+    {
+        OwnerId = user.Id,
+        Name = $"Test Ledger {Guid.NewGuid()}"
+    };
+
     private static void AssertAccount(Account? result, Account expected, DateTimeOffset timestamp)
     {
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(Guid.Empty);
         result.Name.ShouldBe(expected.Name);
         result.Description.ShouldBe(expected.Description);
-        result.OwnerId.ShouldBe(expected.OwnerId);
         result.LedgerId.ShouldBe(expected.LedgerId);
         result.CreatedAt.ShouldBeGreaterThanOrEqualTo(timestamp);
         result.UpdatedAt.ShouldBeNull();
