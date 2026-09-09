@@ -12,7 +12,7 @@ services:
     networks:
       - network
     environment:
-      RunAutoMigrations: true
+      RunDatabaseMigrationsOnStartup: true # TODO
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
       ConnectionStrings__DefaultConnection: Host=budget-manager-db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
     depends_on:

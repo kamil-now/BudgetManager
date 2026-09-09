@@ -81,7 +81,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    if (!app.Environment.IsEnvironment("Test"))
+    if (builder.Configuration.GetValue<bool>("RunDatabaseMigrationsOnStartup"))
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
