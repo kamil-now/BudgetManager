@@ -27,6 +27,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
         {
             await Set(context, ex.Message, HttpStatusCode.Forbidden);
         }
+        catch (ConflictException ex)
+        {
+            await Set(context, ex.Message, HttpStatusCode.Conflict);
+        }
     }
 
     private static async Task Set(HttpContext context, string message, HttpStatusCode status)

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using BudgetManager.Application.Validators;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 using BudgetManager.Domain.Models;
@@ -8,7 +9,27 @@ namespace BudgetManager.Infrastructure.Persistence.Services;
 
 public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManagerService
 {
-    public async Task SaveChangesAsync(CancellationToken cancellationToken = default) => await dbContext.SaveChangesAsync(cancellationToken);
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConflictException(ConcurrencyMessage(ex));
+        }
+    }
+
+    private static string ConcurrencyMessage(DbUpdateConcurrencyException ex)
+    {
+        var entry = ex.Entries.FirstOrDefault();
+
+        if (entry?.Entity is not Entity entity)
+            return "The record was modified by another request.";
+
+        return $"{entry.Entity.GetType().Name} {entity.Id} was modified by another request.";
+    }
 
     public async Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
     {

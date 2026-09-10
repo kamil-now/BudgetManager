@@ -1,4 +1,5 @@
 using BudgetManager.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BudgetManager.Infrastructure.Persistence.Configuration;
@@ -13,5 +14,7 @@ public static class EntityBuilderExtensions
         builder.Property(x => x.Id)
             .ValueGeneratedOnAdd()
             .IsRequired();
+
+        builder.Property<uint>("xmin").IsRowVersion();
     }
 }
