@@ -48,6 +48,12 @@ public sealed class CreateAccountTransferHandler(IBudgetManagerService service) 
     private static void ValidateCommand(CreateAccountTransferCommand command)
     {
         command.Value.EnsureValid();
+
+        if (command.AccountId == command.TargetAccountId)
+        {
+            throw new ValidationException("Transfer target account must be different from the source account.");
+        }
+
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
         command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
     }

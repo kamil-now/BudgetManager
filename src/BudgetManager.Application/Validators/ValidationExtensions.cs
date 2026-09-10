@@ -70,6 +70,11 @@ public static class ValidationExtensions
         {
             throw new ValidationException($"{paramName?.TrimName()} amount cannot be zero.");
         }
+        return val.EnsureValidInitialBalance(paramName?.TrimName());
+    }
+
+    public static Money EnsureValidInitialBalance(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
         val.Currency.EnsureValidCurrency($"{paramName?.TrimName()} currency");
         val.Amount.EnsureValidAmount($"{paramName?.TrimName()} amount");
 

@@ -39,7 +39,7 @@ public sealed class CreateAccountHandler(IBudgetManagerService service) : IReque
         }
         command.LedgerId.EnsureNotEmpty();
         command.Name.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxNameLength);
-        command.InitialBalance.EnsureValid();
+        command.InitialBalance.EnsureValidInitialBalance();
         command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
     }
 }
