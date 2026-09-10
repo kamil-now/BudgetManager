@@ -33,7 +33,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 
     public async Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
     {
-        var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
