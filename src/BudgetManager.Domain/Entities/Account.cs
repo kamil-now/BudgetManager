@@ -22,10 +22,6 @@ public class Account : Entity, IAccessControlled<Account>
         {
             balance.Add(x.Value);
         }
-        foreach (var key in balance.Where(x => x.Value == 0).Select(x => x.Key).ToList())
-        {
-            balance.Remove(key);
-        }
         return balance;
     }
 }

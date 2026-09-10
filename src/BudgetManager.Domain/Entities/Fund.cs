@@ -23,10 +23,6 @@ public class Fund : Entity
         {
             balance.Add(x.Value);
         }
-        foreach (var key in balance.Where(x => x.Value == 0).Select(x => x.Key).ToList())
-        {
-            balance.Remove(key);
-        }
         return balance;
     }
 }

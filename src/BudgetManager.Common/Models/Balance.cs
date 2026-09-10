@@ -40,6 +40,10 @@ public class Balance : Dictionary<string, decimal>
         {
             Add(money.Currency, money.Amount);
         }
+        if (this[money.Currency] == 0)
+        {
+            Remove(money.Currency);
+        }
     }
     public void Deduct(Money money)
     {
