@@ -14,6 +14,17 @@ public sealed class UpdateAccountTransactioHandler(IBudgetManagerService service
 
         var income = await service.GetAsync<AccountTransaction>(command.Id, cancellationToken);
 
+        if (income.AccountId != command.AccountId)
+        {
+            var currentAccount = await service.GetAsync<Account>(income.AccountId, cancellationToken);
+            var targetAccount = await service.GetAsync<Account>(command.AccountId, cancellationToken);
+
+            if (currentAccount.LedgerId != targetAccount.LedgerId)
+            {
+                throw new ValidationException("Transaction target account must belong to the same ledger as the current account.");
+            }
+        }
+
         income.AccountId = command.AccountId;
         income.Title = command.Title;
         income.Tags = command.Tags?.ToList();
