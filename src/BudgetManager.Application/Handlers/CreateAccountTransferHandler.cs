@@ -11,38 +11,19 @@ public sealed class CreateAccountTransferHandler(IEntityStore store) : IRequestH
     public async Task<Guid> Handle(CreateAccountTransferCommand command, CancellationToken cancellationToken)
     {
         ValidateCommand(command);
-        return await store.RunInTransactionAsync(async () =>
-        {
-            var expense = await store.CreateAsync(new AccountTransaction
-            {
-                AccountId = command.AccountId,
-                Title = command.Title,
-                Value = command.Value with { Amount = -command.Value.Amount },
-                Comment = command.Comment,
-                Date = command.Date,
-            }, cancellationToken) ?? throw new InvalidOperationException("Failed to create expense.");
 
-            var income = await store.CreateAsync(new AccountTransaction
-            {
-                AccountId = command.TargetAccountId,
-                Title = command.Title,
-                Value = command.Value,
-                Comment = command.Comment,
-                Date = command.Date,
-            }, cancellationToken) ?? throw new InvalidOperationException("Failed to create income.");
+        var transfer = AccountTransfer.Transfer(
+            command.AccountId,
+            command.TargetAccountId,
+            command.Value,
+            command.Date,
+            command.Title,
+            command.Comment);
 
-            await store.SaveChangesAsync(cancellationToken);
+        await store.CreateAsync(transfer, cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
 
-            var transfer = await store.CreateAsync(new AccountTransfer()
-            {
-                IncomeId = income.Id,
-                ExpenseId = expense.Id
-            });
-
-            await store.SaveChangesAsync(cancellationToken);
-            return transfer.Id;
-
-        }, cancellationToken);
+        return transfer.Id;
     }
 
     private static void ValidateCommand(CreateAccountTransferCommand command)

@@ -11,38 +11,20 @@ public sealed class CreateCurrencyExchangeHandler(IEntityStore store) : IRequest
     public async Task<Guid> Handle(CreateCurrencyExchangeCommand command, CancellationToken cancellationToken)
     {
         ValidateCommand(command);
-        return await store.RunInTransactionAsync(async () =>
-        {
-            var expense = await store.CreateAsync(new AccountTransaction
-            {
-                AccountId = command.AccountId,
-                Title = command.Title,
-                Value = command.Sell,
-                Comment = command.Comment,
-                Date = command.Date,
-            }, cancellationToken) ?? throw new InvalidOperationException("Failed to create expense.");
 
-            var income = await store.CreateAsync(new AccountTransaction
-            {
-                AccountId = command.TargetAccountId ?? command.AccountId,
-                Title = command.Title,
-                Value = command.Buy,
-                Comment = command.Comment,
-                Date = command.Date,
-            }, cancellationToken) ?? throw new InvalidOperationException("Failed to create income.");
+        var transfer = AccountTransfer.Exchange(
+            command.AccountId,
+            command.TargetAccountId ?? command.AccountId,
+            command.Sell,
+            command.Buy,
+            command.Date,
+            command.Title,
+            command.Comment);
 
-            await store.SaveChangesAsync(cancellationToken);
+        await store.CreateAsync(transfer, cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
 
-            var transfer = await store.CreateAsync(new AccountTransfer()
-            {
-                IncomeId = income.Id,
-                ExpenseId = expense.Id
-            });
-
-            await store.SaveChangesAsync(cancellationToken);
-            return transfer.Id;
-
-        }, cancellationToken);
+        return transfer.Id;
     }
 
     private static void ValidateCommand(CreateCurrencyExchangeCommand command)
