@@ -1,4 +1,5 @@
 using BudgetManager.Application.Interfaces;
+using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,12 +21,10 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
              .Select(x => new { x.Id, x.Name })
              .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
 
-        var accountTransactions = await dbContext.AccountTransactions
+        var accountTransactions = await Project(dbContext.AccountTransactions
                 .AsNoTracking()
-                .Include(x => x.InTransfer)
-                .Include(x => x.OutTransfer)
                 .Where(x => accounts.Keys.Contains(x.AccountId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
+                .Where(x => x.Date >= filters.From && x.Date <= filters.To))
                 .ToArrayAsync(cancellationToken);
 
         var accountTransactionsIds = accountTransactions.Select(x => x.Id).ToArray();
@@ -33,6 +32,7 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
         var accountTransfers = await dbContext.AccountTransfers
                 .AsNoTracking()
                 .Where(x => accountTransactionsIds.Contains(x.IncomeId) || accountTransactionsIds.Contains(x.ExpenseId))
+                .Select(x => new LedgerTransactions.AccountTransfer(x.Id, x.IncomeId, x.ExpenseId))
                 .ToArrayAsync(cancellationToken);
 
         var missingAccountTransactionsIds = accountTransfers
@@ -42,11 +42,9 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
 
         if (missingAccountTransactionsIds.Length > 0)
         {
-            accountTransactions = [.. accountTransactions, .. await dbContext.AccountTransactions
+            accountTransactions = [.. accountTransactions, .. await Project(dbContext.AccountTransactions
                 .AsNoTracking()
-                .Include(x => x.InTransfer)
-                .Include(x => x.OutTransfer)
-                .Where(x => missingAccountTransactionsIds.Contains(x.Id))
+                .Where(x => missingAccountTransactionsIds.Contains(x.Id)))
                 .ToArrayAsync(cancellationToken)];
         }
 
@@ -72,14 +70,10 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
              .Select(x => new { x.Id, x.BudgetId, x.Name })
              .ToDictionaryAsync(x => x.Id, x => (x.BudgetId, x.Name), cancellationToken);
 
-        var fundTransactions = await dbContext.FundTransactions
+        var fundTransactions = await Project(dbContext.FundTransactions
                 .AsNoTracking()
-                .Include(x => x.InTransfer)
-                .Include(x => x.OutTransfer)
-                .Include(x => x.Fund)
-                .ThenInclude(x => x.Budget)
                 .Where(x => funds.Keys.Contains(x.FundId))
-                .Where(x => x.Date >= filters.From && x.Date <= filters.To)
+                .Where(x => x.Date >= filters.From && x.Date <= filters.To))
                 .ToArrayAsync(cancellationToken);
 
         var fundTransactionsIds = fundTransactions.Select(x => x.Id).ToArray();
@@ -87,6 +81,7 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
         var fundTransfers = await dbContext.FundTransfers
                 .AsNoTracking()
                 .Where(x => fundTransactionsIds.Contains(x.AllocationId) || fundTransactionsIds.Contains(x.DeallocationId))
+                .Select(x => new LedgerTransactions.FundTransfer(x.Id, x.AllocationId, x.DeallocationId))
                 .ToArrayAsync(cancellationToken);
 
         var missingFundTransactionsIds = fundTransfers
@@ -96,13 +91,9 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
 
         if (missingFundTransactionsIds.Length > 0)
         {
-            fundTransactions = [.. fundTransactions, .. await dbContext.FundTransactions
+            fundTransactions = [.. fundTransactions, .. await Project(dbContext.FundTransactions
                 .AsNoTracking()
-                .Include(x => x.InTransfer)
-                .Include(x => x.OutTransfer)
-                .Include(x => x.Fund)
-                .ThenInclude(x => x.Budget)
-                .Where(x => missingFundTransactionsIds.Contains(x.Id))
+                .Where(x => missingFundTransactionsIds.Contains(x.Id)))
                 .ToArrayAsync(cancellationToken)];
         }
 
@@ -151,4 +142,27 @@ public sealed class LedgerTransactionsReader(ApplicationDbContext dbContext) : I
             Budgets = budgets,
         };
     }
+
+    private static IQueryable<LedgerTransactions.AccountTransaction> Project(IQueryable<AccountTransaction> transactions)
+        => transactions
+            .Select(x => new LedgerTransactions.AccountTransaction(
+                x.Id,
+                x.AccountId,
+                x.Value,
+                x.Date,
+                x.Title,
+                x.Comment,
+                x.Tags,
+                x.InTransfer != null || x.OutTransfer != null));
+
+    private static IQueryable<LedgerTransactions.FundTransaction> Project(IQueryable<FundTransaction> transactions)
+        => transactions
+            .Select(x => new LedgerTransactions.FundTransaction(
+                x.Id,
+                x.FundId,
+                x.Value,
+                x.Date,
+                x.Title,
+                x.Comment,
+                x.InTransfer != null || x.OutTransfer != null));
 }

@@ -18,7 +18,7 @@ public sealed class GetLedgerHandler(ILedgerReader ledgerReader) : IRequestHandl
         var accounts = ledger.Accounts.Select(account => new LedgerDTO.Account()
         {
             Id = account.Id,
-            Balance = account.GetBalance(),
+            Balance = account.Balance,
             Name = account.Name,
             Description = account.Description
         }).ToArray();
@@ -28,10 +28,10 @@ public sealed class GetLedgerHandler(ILedgerReader ledgerReader) : IRequestHandl
             var funds = budget.Funds.Select(fund => new LedgerDTO.Fund()
             {
                 Id = fund.Id,
-                Balance = fund.GetBalance(),
+                Balance = fund.Balance,
                 Name = fund.Name,
                 Description = fund.Description
-            });
+            }).ToArray();
             return new LedgerDTO.Budget()
             {
                 Id = budget.Id,
@@ -40,7 +40,7 @@ public sealed class GetLedgerHandler(ILedgerReader ledgerReader) : IRequestHandl
                 Name = budget.Name,
                 Description = budget.Description,
             };
-        });
+        }).ToArray();
 
         return new LedgerDTO()
         {

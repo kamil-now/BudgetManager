@@ -1,5 +1,4 @@
 using BudgetManager.Domain.Enums;
-using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Domain.Entities;
 
@@ -15,14 +14,4 @@ public class Fund : Entity
     public Budget Budget { get; set; } = null!;
 
     public virtual ICollection<FundTransaction> Transactions { get; set; } = [];
-
-    public Balance GetBalance()
-    {
-        Balance balance = [];
-        foreach (var x in Transactions)
-        {
-            balance.Add(x.Value);
-        }
-        return balance;
-    }
 }

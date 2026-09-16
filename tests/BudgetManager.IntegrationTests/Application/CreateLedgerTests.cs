@@ -1,7 +1,8 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Validators;
-using BudgetManager.Domain.Enums;
 using BudgetManager.Domain;
+using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Enums;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -41,23 +42,25 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var id = await Mediator.Send(command);
 
         // Assert
-        var ledger = await LedgerReader.ReadAsync(id, default);
+        var ledger = await EntityStore.GetAsync<Ledger>(id, default);
         ledger.ShouldNotBeNull();
         ledger.OwnerId.ShouldBe(userId);
         ledger.Name.ShouldBe(command.Name);
         ledger.Description.ShouldBe(command.Description);
 
-        ledger.Budgets.Count.ShouldBe(1);
+        var budgets = (await EntityStore.GetAsync<Budget>(x => x.LedgerId == id, default)).ToArray();
+        budgets.Length.ShouldBe(1);
 
-        var budget = ledger.Budgets.First();
+        var budget = budgets.First();
         budget.ShouldNotBeNull();
         budget.LedgerId.ShouldBe(id);
         budget.Name.ShouldBe(command.Budget.Name);
         budget.Description.ShouldBe(command.Budget.Description);
 
-        budget.Funds.Count.ShouldBe(1);
+        var funds = (await EntityStore.GetAsync<Fund>(x => x.BudgetId == budget.Id, default)).ToArray();
+        funds.Length.ShouldBe(1);
         var commandFund = command.Budget.Funds.First();
-        var fund = budget.Funds.First();
+        var fund = funds.First();
 
         fund.ShouldNotBeNull();
         fund.Name.ShouldBe(commandFund.Name);
@@ -66,11 +69,12 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         fund.AllocationTemplateType.ShouldBe(commandFund.AllocationTemplateType);
         fund.AllocationTemplateValue.ShouldBe(commandFund.AllocationTemplateValue);
 
-        ledger.Accounts.Count.ShouldBe(3);
+        var accounts = (await EntityStore.GetAsync<Account>(x => x.LedgerId == id, default)).OrderBy(x => x.Name).ToArray();
+        accounts.Length.ShouldBe(3);
 
         for (var i = 0; i < 3; i++)
         {
-            var account = ledger.Accounts.ElementAt(1);
+            var account = accounts.ElementAt(1);
             var commandAccount = command.Accounts.FirstOrDefault(x => x.Name == account.Name);
             commandAccount.ShouldNotBeNull();
             account.ShouldNotBeNull();
@@ -78,8 +82,9 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
             account.Name.ShouldBe(commandAccount.Name);
             account.Description.ShouldBe(commandAccount.Description);
 
-            account.Transactions.Count.ShouldBe(1);
-            var income = account.Transactions.First();
+            var transactions = (await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == account.Id, default)).ToArray();
+            transactions.Length.ShouldBe(1);
+            var income = transactions.First();
             income.Title.ShouldBe(Constants.InitialBalanceTransactionTitle);
             income.Value.ShouldBeEquivalentTo(commandAccount.InitialBalance);
         }

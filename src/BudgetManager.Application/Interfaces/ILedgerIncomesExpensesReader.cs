@@ -1,8 +1,8 @@
-using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Interfaces;
 
 public interface ILedgerIncomesExpensesReader
 {
-    Task<IEnumerable<AccountTransaction>> ReadAsync(Guid ledgerId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken = default);
+    Task<LedgerStatistics?> ReadAsync(Guid ledgerId, LedgerStatisticsFilters filters, CancellationToken cancellationToken = default);
 }

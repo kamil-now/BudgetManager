@@ -1,8 +1,8 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Validators;
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Models;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -82,7 +82,9 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         account.Name.ShouldBe(command.Name);
         account.Description.ShouldBe(command.Description);
         account.LedgerId.ShouldBe(ledger.Id);
-        account.GetBalance().ShouldBeEquivalentTo(new Balance() { { command.InitialBalance.Currency, command.InitialBalance.Amount } });
+        var transactions = (await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == accountId)).ToArray();
+        transactions.Length.ShouldBe(1);
+        transactions.First().Value.ShouldBe(command.InitialBalance);
     }
 
     private async Task<Ledger> CreateLedgerAsync(Guid ownerId)
