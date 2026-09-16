@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using BudgetManager.Application.Commands;
-using BudgetManager.Common.Enums;
+using BudgetManager.Domain.Enums;
 using BudgetManager.Domain;
 using Shouldly;
 using Xunit.Abstractions;

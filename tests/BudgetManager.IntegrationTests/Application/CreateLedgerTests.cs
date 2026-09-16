@@ -1,6 +1,6 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Validators;
-using BudgetManager.Common.Enums;
+using BudgetManager.Domain.Enums;
 using BudgetManager.Domain;
 using Shouldly;
 using Xunit.Abstractions;

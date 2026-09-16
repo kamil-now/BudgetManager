@@ -398,7 +398,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("BudgetManager.Common.Models.Money", "Value", b1 =>
+                    b.OwnsOne("BudgetManager.Domain.Models.Money", "Value", b1 =>
                         {
                             b1.Property<Guid>("AccountTransactionId")
                                 .HasColumnType("uuid");
@@ -477,7 +477,7 @@ namespace BudgetManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("BudgetManager.Common.Models.Money", "Value", b1 =>
+                    b.OwnsOne("BudgetManager.Domain.Models.Money", "Value", b1 =>
                         {
                             b1.Property<Guid>("FundTransactionId")
                                 .HasColumnType("uuid");

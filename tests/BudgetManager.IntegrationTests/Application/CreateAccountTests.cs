@@ -1,6 +1,6 @@
 using BudgetManager.Application.Commands;
 using BudgetManager.Application.Validators;
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using Shouldly;

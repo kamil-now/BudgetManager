@@ -1,4 +1,4 @@
-namespace BudgetManager.Common.Models;
+namespace BudgetManager.Domain.Models;
 
 public class Balance : Dictionary<string, decimal>
 {

@@ -1,4 +1,4 @@
-using BudgetManager.Common.Enums;
+using BudgetManager.Domain.Enums;
 
 namespace BudgetManager.Application.Models;
 

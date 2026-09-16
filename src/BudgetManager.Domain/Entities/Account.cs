@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Models;
 using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Domain.Entities;

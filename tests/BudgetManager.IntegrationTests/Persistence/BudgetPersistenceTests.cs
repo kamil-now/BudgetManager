@@ -1,4 +1,4 @@
-using BudgetManager.Common.Enums;
+using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;

@@ -1,4 +1,4 @@
-namespace BudgetManager.Common.Enums;
+namespace BudgetManager.Domain.Enums;
 
 public enum AllocationType
 {

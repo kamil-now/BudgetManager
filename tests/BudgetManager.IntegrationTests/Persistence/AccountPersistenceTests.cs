@@ -1,4 +1,4 @@
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,5 @@
-using BudgetManager.Common.Enums;
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Enums;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Domain.Entities;
 

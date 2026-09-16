@@ -1,4 +1,4 @@
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Domain.Entities;
 

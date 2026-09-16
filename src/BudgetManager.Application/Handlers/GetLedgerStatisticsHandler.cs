@@ -1,7 +1,7 @@
 using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 
 namespace BudgetManager.Application.Handlers;

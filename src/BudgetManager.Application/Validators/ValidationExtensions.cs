@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
-using BudgetManager.Common.Models;
+using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
-using BudgetManager.Domain.Entities;
-using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Validators;
 

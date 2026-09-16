@@ -1,4 +1,4 @@
-namespace BudgetManager.Common.Models;
+namespace BudgetManager.Domain.Models;
 
 public sealed record Money(decimal Amount, string Currency) : IEquatable<Money>
 {
