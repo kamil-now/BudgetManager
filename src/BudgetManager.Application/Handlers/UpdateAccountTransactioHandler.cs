@@ -6,18 +6,18 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class UpdateAccountTransactioHandler(IBudgetManagerService service) : IRequestHandler<UpdateAccountTransactionCommand>
+public sealed class UpdateAccountTransactioHandler(IEntityStore store) : IRequestHandler<UpdateAccountTransactionCommand>
 {
     public async Task Handle(UpdateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
         ValidateCommand(command);
 
-        var income = await service.GetAsync<AccountTransaction>(command.Id, cancellationToken);
+        var income = await store.GetAsync<AccountTransaction>(command.Id, cancellationToken);
 
         if (income.AccountId != command.AccountId)
         {
-            var currentAccount = await service.GetAsync<Account>(income.AccountId, cancellationToken);
-            var targetAccount = await service.GetAsync<Account>(command.AccountId, cancellationToken);
+            var currentAccount = await store.GetAsync<Account>(income.AccountId, cancellationToken);
+            var targetAccount = await store.GetAsync<Account>(command.AccountId, cancellationToken);
 
             if (currentAccount.LedgerId != targetAccount.LedgerId)
             {
@@ -32,7 +32,7 @@ public sealed class UpdateAccountTransactioHandler(IBudgetManagerService service
         income.Comment = command.Comment;
         income.Date = command.Date;
 
-        await service.SaveChangesAsync(cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
     }
 
     private static void ValidateCommand(UpdateAccountTransactionCommand command)

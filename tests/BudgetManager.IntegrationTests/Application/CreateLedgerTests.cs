@@ -41,7 +41,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var id = await Mediator.Send(command);
 
         // Assert
-        var ledger = await BudgetManagerService.GetLedgerAsync(x => x.Id == id, default);
+        var ledger = await LedgerReader.ReadAsync(id, default);
         ledger.ShouldNotBeNull();
         ledger.OwnerId.ShouldBe(userId);
         ledger.Name.ShouldBe(command.Name);

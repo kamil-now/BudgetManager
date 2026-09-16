@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Security;
 using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
@@ -46,8 +47,8 @@ public class RequestAuthorizerTests
         // Arrange
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
-        var authorizer = CreateAuthorizer(userId, out var service);
-        service.GetOwnerIdAsync(accountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(Guid.NewGuid());
+        var authorizer = CreateAuthorizer(userId, out var ownerReader);
+        ownerReader.ReadOwnerIdAsync(accountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(Guid.NewGuid());
 
         // Act & Assert
         var ex = await Should.ThrowAsync<AuthorizationException>(() => authorizer.AuthorizeAsync(new AccountRequest(accountId), default));
@@ -59,8 +60,8 @@ public class RequestAuthorizerTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var authorizer = CreateAuthorizer(Guid.NewGuid(), out var service);
-        service.GetOwnerIdAsync(accountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns((Guid?)null);
+        var authorizer = CreateAuthorizer(Guid.NewGuid(), out var ownerReader);
+        ownerReader.ReadOwnerIdAsync(accountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns((Guid?)null);
 
         // Act & Assert
         await Should.ThrowAsync<AuthorizationException>(() => authorizer.AuthorizeAsync(new AccountRequest(accountId), default));
@@ -73,9 +74,9 @@ public class RequestAuthorizerTests
         var userId = Guid.NewGuid();
         var ownAccountId = Guid.NewGuid();
         var otherAccountId = Guid.NewGuid();
-        var authorizer = CreateAuthorizer(userId, out var service);
-        service.GetOwnerIdAsync(ownAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(userId);
-        service.GetOwnerIdAsync(otherAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(Guid.NewGuid());
+        var authorizer = CreateAuthorizer(userId, out var ownerReader);
+        ownerReader.ReadOwnerIdAsync(ownAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(userId);
+        ownerReader.ReadOwnerIdAsync(otherAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(Guid.NewGuid());
 
         // Act & Assert
         await Should.ThrowAsync<AuthorizationException>(() => authorizer.AuthorizeAsync(new AccountRequest(ownAccountId, otherAccountId), default));
@@ -88,18 +89,18 @@ public class RequestAuthorizerTests
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var targetAccountId = Guid.NewGuid();
-        var authorizer = CreateAuthorizer(userId, out var service);
-        service.GetOwnerIdAsync(Arg.Any<Guid>(), Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(userId);
+        var authorizer = CreateAuthorizer(userId, out var ownerReader);
+        ownerReader.ReadOwnerIdAsync(Arg.Any<Guid>(), Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>()).Returns(userId);
 
         // Act
         await authorizer.AuthorizeAsync(new AccountRequest(accountId, targetAccountId), default);
 
         // Assert
-        await service.Received(1).GetOwnerIdAsync(accountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>());
-        await service.Received(1).GetOwnerIdAsync(targetAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>());
+        await ownerReader.Received(1).ReadOwnerIdAsync(accountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>());
+        await ownerReader.Received(1).ReadOwnerIdAsync(targetAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>());
     }
 
-    private static RequestAuthorizer CreateAuthorizer(Guid? userId, out IBudgetManagerService service)
+    private static RequestAuthorizer CreateAuthorizer(Guid? userId, out IResourceOwnerReader ownerReader)
     {
         var currentUser = Substitute.For<ICurrentUserService>();
         if (userId is Guid id)
@@ -111,8 +112,8 @@ public class RequestAuthorizerTests
             currentUser.UserId.Returns(_ => throw new AuthenticationException("User ID is invalid."));
         }
 
-        service = Substitute.For<IBudgetManagerService>();
+        ownerReader = Substitute.For<IResourceOwnerReader>();
 
-        return new RequestAuthorizer(currentUser, service);
+        return new RequestAuthorizer(currentUser, ownerReader);
     }
 }

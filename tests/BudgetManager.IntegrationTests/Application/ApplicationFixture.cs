@@ -1,10 +1,8 @@
 using BudgetManager.Application.Configuration;
 using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
-using BudgetManager.Common;
-using BudgetManager.Domain.Interfaces;
+using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
-using BudgetManager.Infrastructure.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,10 +23,10 @@ public class ApplicationFixture : TestBedFixture
             .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole()))
             .EnableSensitiveDataLogging());
 
-        services.AddSingleton<IBudgetManagerService, BudgetManagerService>();
         services.AddSingleton<MockCurrentUserService>();
         services.AddSingleton<ICurrentUserService>(s => s.GetService<MockCurrentUserService>()!);
 
+        services.UseStore();
         services.UseMediator();
     }
 

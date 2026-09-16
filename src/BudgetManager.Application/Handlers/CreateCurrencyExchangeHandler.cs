@@ -6,14 +6,14 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateCurrencyExchangeHandler(IBudgetManagerService service) : IRequestHandler<CreateCurrencyExchangeCommand, Guid>
+public sealed class CreateCurrencyExchangeHandler(IEntityStore store) : IRequestHandler<CreateCurrencyExchangeCommand, Guid>
 {
     public async Task<Guid> Handle(CreateCurrencyExchangeCommand command, CancellationToken cancellationToken)
     {
         ValidateCommand(command);
-        return await service.RunInTransactionAsync(async () =>
+        return await store.RunInTransactionAsync(async () =>
         {
-            var expense = await service.CreateAsync(new AccountTransaction
+            var expense = await store.CreateAsync(new AccountTransaction
             {
                 AccountId = command.AccountId,
                 Title = command.Title,
@@ -22,7 +22,7 @@ public sealed class CreateCurrencyExchangeHandler(IBudgetManagerService service)
                 Date = command.Date,
             }, cancellationToken) ?? throw new InvalidOperationException("Failed to create expense.");
 
-            var income = await service.CreateAsync(new AccountTransaction
+            var income = await store.CreateAsync(new AccountTransaction
             {
                 AccountId = command.TargetAccountId ?? command.AccountId,
                 Title = command.Title,
@@ -31,15 +31,15 @@ public sealed class CreateCurrencyExchangeHandler(IBudgetManagerService service)
                 Date = command.Date,
             }, cancellationToken) ?? throw new InvalidOperationException("Failed to create income.");
 
-            await service.SaveChangesAsync(cancellationToken);
+            await store.SaveChangesAsync(cancellationToken);
 
-            var transfer = await service.CreateAsync(new AccountTransfer()
+            var transfer = await store.CreateAsync(new AccountTransfer()
             {
                 IncomeId = income.Id,
                 ExpenseId = expense.Id
             });
 
-            await service.SaveChangesAsync(cancellationToken);
+            await store.SaveChangesAsync(cancellationToken);
             return transfer.Id;
 
         }, cancellationToken);

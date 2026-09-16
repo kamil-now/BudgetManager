@@ -1,10 +1,10 @@
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
-using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetLedgerTransactionsHandler(IBudgetManagerService service) : IRequestHandler<GetLedgerTransactionsQuery, LedgerTransactionsDTO?>
+public sealed class GetLedgerTransactionsHandler(ILedgerTransactionsReader transactionsReader) : IRequestHandler<GetLedgerTransactionsQuery, LedgerTransactionsDTO?>
 {
     public async Task<LedgerTransactionsDTO?> Handle(GetLedgerTransactionsQuery query, CancellationToken cancellationToken)
     {
@@ -12,7 +12,7 @@ public sealed class GetLedgerTransactionsHandler(IBudgetManagerService service) 
         filters.From ??= DateTimeOffset.MinValue;
         filters.To ??= DateTimeOffset.MaxValue;
 
-        var ledgerTransactions = await service.GetLedgerTransactionsAsync(query.LedgerId, filters, cancellationToken);
+        var ledgerTransactions = await transactionsReader.ReadAsync(query.LedgerId, filters, cancellationToken);
 
         var accountTransfers = ledgerTransactions.AccountTransfers
                 .Select(transfer => new

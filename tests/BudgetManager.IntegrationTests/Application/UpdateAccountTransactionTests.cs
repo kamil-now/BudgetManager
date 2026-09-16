@@ -23,7 +23,7 @@ public class UpdateAccountTransactionTests(ITestOutputHelper testOutputHelper, A
         var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
         ex.Message.ShouldBe("Transaction target account must belong to the same ledger as the current account.");
 
-        var unchanged = await BudgetManagerService.GetAsync<AccountTransaction>(transaction.Id);
+        var unchanged = await EntityStore.GetAsync<AccountTransaction>(transaction.Id);
         unchanged.AccountId.ShouldBe(account.Id);
     }
 
@@ -42,7 +42,7 @@ public class UpdateAccountTransactionTests(ITestOutputHelper testOutputHelper, A
         await Mediator.Send(command);
 
         // Assert
-        var updated = await BudgetManagerService.GetAsync<AccountTransaction>(transaction.Id);
+        var updated = await EntityStore.GetAsync<AccountTransaction>(transaction.Id);
         updated.AccountId.ShouldBe(sameLedgerAccount.Id);
     }
 
@@ -78,7 +78,7 @@ public class UpdateAccountTransactionTests(ITestOutputHelper testOutputHelper, A
         await Mediator.Send(command);
 
         // Assert
-        var updated = await BudgetManagerService.GetAsync<AccountTransaction>(transaction.Id);
+        var updated = await EntityStore.GetAsync<AccountTransaction>(transaction.Id);
         updated.AccountId.ShouldBe(account.Id);
         updated.Title.ShouldBe(command.Title);
         updated.Comment.ShouldBe(command.Comment);
@@ -91,26 +91,26 @@ public class UpdateAccountTransactionTests(ITestOutputHelper testOutputHelper, A
     {
         if (ledgerId == null)
         {
-            var ledger = await BudgetManagerService.CreateAsync(new Ledger { OwnerId = ownerId, Name = $"Ledger {Guid.NewGuid()}" });
-            await BudgetManagerService.SaveChangesAsync();
+            var ledger = await EntityStore.CreateAsync(new Ledger { OwnerId = ownerId, Name = $"Ledger {Guid.NewGuid()}" });
+            await EntityStore.SaveChangesAsync();
             ledgerId = ledger.Id;
         }
 
-        var account = await BudgetManagerService.CreateAsync(new Account { LedgerId = ledgerId.Value, Name = $"Account {Guid.NewGuid()}" });
-        await BudgetManagerService.SaveChangesAsync();
+        var account = await EntityStore.CreateAsync(new Account { LedgerId = ledgerId.Value, Name = $"Account {Guid.NewGuid()}" });
+        await EntityStore.SaveChangesAsync();
         return account;
     }
 
     private async Task<AccountTransaction> CreateTransactionAsync(Guid accountId)
     {
-        var transaction = await BudgetManagerService.CreateAsync(new AccountTransaction
+        var transaction = await EntityStore.CreateAsync(new AccountTransaction
         {
             AccountId = accountId,
             Value = new(100, "PLN"),
             Date = DateTimeOffset.UtcNow,
             Title = "Test Transaction"
         });
-        await BudgetManagerService.SaveChangesAsync();
+        await EntityStore.SaveChangesAsync();
         return transaction;
     }
 }

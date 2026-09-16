@@ -6,6 +6,7 @@ using BudgetManager.Infrastructure.Auth.Models;
 using BudgetManager.Infrastructure.Auth.Services;
 using BudgetManager.Infrastructure.Events;
 using BudgetManager.Infrastructure.Persistence;
+using BudgetManager.Infrastructure.Persistence.Readers;
 using BudgetManager.Infrastructure.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -54,10 +55,9 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection UsePostgreSQL(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IBudgetManagerService, BudgetManagerService>();
-
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+        services.UseStore();
         return services;
     }
 
@@ -91,6 +91,18 @@ public static class ServiceCollectionExtensions
                 services.AddScoped(handlerInterface, handlerType);
             }
         }
+
+        return services;
+    }
+
+    public static IServiceCollection UseStore(this IServiceCollection services)
+    {
+        services.AddScoped<IEntityStore, EntityStore>();
+
+        services.AddScoped<ILedgerReader, LedgerReader>();
+        services.AddScoped<ILedgerIncomesExpensesReader, LedgerIncomesExpensesReader>();
+        services.AddScoped<ILedgerTransactionsReader, LedgerTransactionsReader>();
+        services.AddScoped<IResourceOwnerReader, ResourceOwnerReader>();
 
         return services;
     }

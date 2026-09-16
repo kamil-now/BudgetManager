@@ -1,6 +1,6 @@
 using BudgetManager.Application.Handlers;
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Queries;
-using BudgetManager.Domain.Interfaces;
 using NSubstitute;
 using Shouldly;
 
@@ -12,9 +12,9 @@ public class GetLedgerTests
     public async Task GetLedger_WhenLedgerDoesNotExist_ShouldReturnNull()
     {
         // Arrange
-        var budgetService = Substitute.For<IBudgetManagerService>();
+        var ledgerReader = Substitute.For<ILedgerReader>();
 
-        var handler = new GetLedgerHandler(budgetService);
+        var handler = new GetLedgerHandler(ledgerReader);
 
         // Act
         var ledger = await handler.Handle(new GetLedgerQuery(Guid.Empty), default);

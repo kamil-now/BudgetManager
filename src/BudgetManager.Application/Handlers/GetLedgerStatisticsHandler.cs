@@ -1,21 +1,21 @@
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
 using BudgetManager.Common.Models;
 using BudgetManager.Domain;
-using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetLedgerStatisticsHandler(IBudgetManagerService service) : IRequestHandler<GetLedgerStatisticsQuery, LedgerStatisticsDTO?>
+public sealed class GetLedgerStatisticsHandler(ILedgerReader ledgerReader, ILedgerIncomesExpensesReader incomesExpensesReader) : IRequestHandler<GetLedgerStatisticsQuery, LedgerStatisticsDTO?>
 {
     public async Task<LedgerStatisticsDTO?> Handle(GetLedgerStatisticsQuery query, CancellationToken cancellationToken)
     {
-        var ledger = await service.GetLedgerAsync(x => x.Id == query.LedgerId, cancellationToken);
+        var ledger = await ledgerReader.ReadAsync(query.LedgerId, cancellationToken);
         if (ledger is null)
         {
             return null;
         }
-        var transactions = await service.GetLedgerIncomesExpensesAsync(query.LedgerId, query.Filters.From, query.Filters.To, cancellationToken);
+        var transactions = await incomesExpensesReader.ReadAsync(query.LedgerId, query.Filters.From, query.Filters.To, cancellationToken);
 
         var incomes = transactions.Where(x => x.Value.Amount > 0);
         var expenses = transactions.Where(x => x.Value.Amount < 0);

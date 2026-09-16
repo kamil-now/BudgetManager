@@ -33,8 +33,8 @@ public class GetLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFixtu
     {
         // Arrange
         var userId = await MockAuthenticatedUserAsync();
-        var ledger = await BudgetManagerService.CreateAsync(new Ledger { OwnerId = userId, Name = "Own Ledger" });
-        await BudgetManagerService.SaveChangesAsync();
+        var ledger = await EntityStore.CreateAsync(new Ledger { OwnerId = userId, Name = "Own Ledger" });
+        await EntityStore.SaveChangesAsync();
 
         // Act
         var result = await Mediator.Send(new GetLedgerQuery(ledger.Id));
@@ -47,8 +47,8 @@ public class GetLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFixtu
     private async Task<Guid> CreateLedgerOfAnotherUserAsync()
     {
         var otherUserId = await MockAuthenticatedUserAsync();
-        var ledger = await BudgetManagerService.CreateAsync(new Ledger { OwnerId = otherUserId, Name = "Other User Ledger" });
-        await BudgetManagerService.SaveChangesAsync();
+        var ledger = await EntityStore.CreateAsync(new Ledger { OwnerId = otherUserId, Name = "Other User Ledger" });
+        await EntityStore.SaveChangesAsync();
 
         await MockAuthenticatedUserAsync();
 

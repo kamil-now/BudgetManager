@@ -75,7 +75,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         var accountId = await Mediator.Send(command);
 
         // Assert
-        var account = await BudgetManagerService.GetAsync<Account>(accountId);
+        var account = await EntityStore.GetAsync<Account>(accountId);
 
         account.ShouldNotBeNull();
         account.Id.ShouldBe(accountId);
@@ -87,8 +87,8 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
 
     private async Task<Ledger> CreateLedgerAsync(Guid ownerId)
     {
-        var ledger = await BudgetManagerService.CreateAsync(new Ledger { OwnerId = ownerId, Name = $"Ledger {Guid.NewGuid()}" });
-        await BudgetManagerService.SaveChangesAsync();
+        var ledger = await EntityStore.CreateAsync(new Ledger { OwnerId = ownerId, Name = $"Ledger {Guid.NewGuid()}" });
+        await EntityStore.SaveChangesAsync();
         return ledger;
     }
 }

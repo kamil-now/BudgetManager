@@ -7,11 +7,11 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class LoginHandler(IBudgetManagerService budgetService, IPasswordHasher passwordHasher) : IRequestHandler<LoginCommand, UserDTO>
+public sealed class LoginHandler(IEntityStore store, IPasswordHasher passwordHasher) : IRequestHandler<LoginCommand, UserDTO>
 {
     public async Task<UserDTO> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
-        var users = await budgetService.GetAsync<User>(x => x.Email == command.Email, cancellationToken);
+        var users = await store.GetAsync<User>(x => x.Email == command.Email, cancellationToken);
         if (users == null || !users.Any())
         {
             throw new AuthenticationException($"User with email '{command.Email}' not found.");

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 
@@ -10,13 +11,13 @@ public abstract record Resource(Guid Id)
 
     public abstract Type EntityType { get; }
 
-    public abstract Task<Guid?> GetOwnerIdAsync(IBudgetManagerService service, CancellationToken cancellationToken);
+    public abstract Task<Guid?> ReadOwnerIdAsync(IResourceOwnerReader ownerReader, CancellationToken cancellationToken);
 }
 
 public sealed record Resource<T>(Guid Id, Expression<Func<T, Guid>> OwnerSelector) : Resource(Id) where T : Entity
 {
     public override Type EntityType => typeof(T);
 
-    public override Task<Guid?> GetOwnerIdAsync(IBudgetManagerService service, CancellationToken cancellationToken)
-        => service.GetOwnerIdAsync(Id, OwnerSelector, cancellationToken);
+    public override Task<Guid?> ReadOwnerIdAsync(IResourceOwnerReader ownerReader, CancellationToken cancellationToken)
+        => ownerReader.ReadOwnerIdAsync(Id, OwnerSelector, cancellationToken);
 }

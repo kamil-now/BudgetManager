@@ -1,15 +1,15 @@
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
 using BudgetManager.Common.Models;
-using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetLedgerHandler(IBudgetManagerService budgetService) : IRequestHandler<GetLedgerQuery, LedgerDTO?>
+public sealed class GetLedgerHandler(ILedgerReader ledgerReader) : IRequestHandler<GetLedgerQuery, LedgerDTO?>
 {
     public async Task<LedgerDTO?> Handle(GetLedgerQuery query, CancellationToken cancellationToken)
     {
-        var ledger = await budgetService.GetLedgerAsync(x => x.Id == query.Id, cancellationToken);
+        var ledger = await ledgerReader.ReadAsync(query.Id, cancellationToken);
         if (ledger is null)
         {
             return null;

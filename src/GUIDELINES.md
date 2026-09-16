@@ -60,10 +60,11 @@ Merged code coverage report can be generated using `dotnet-reportgenerator-globa
 - use required properties with `required` keyword
 - use navigation properties with `= null!`
 - use collections with `= []`
-- in application command/query handlers use `BudgetManagerService` for database operations
-- create new `BudgetManagerService` methods when needed
-- avoid using `SaveChangesAsync()` in `BudgetManagerService` methods - saving should be invoked by command/query handler after all changes are applied (`SaveChangesAsync` then wraps all in single transaction)
-- use explicit transactions for complex operations with `BudgetManagerService.RunInTransactionAsync`
+- in command handlers use `EntityStore` for database operations
+- for a query write a reader: an interface in `Application/Interfaces` named after the data it returns, ending in `Reader`, and an implementation in `Infrastructure/Persistence/Readers` - never add read methods to `EntityStore`
+- register the reader in `UseStore()` in `Infrastructure/Configuration/ServiceCollectionExtensions.cs`
+- avoid using `SaveChangesAsync()` in `EntityStore` methods - saving should be invoked by command/query handler after all changes are applied (`SaveChangesAsync` then wraps all in single transaction)
+- use explicit transactions for complex operations with `EntityStore.RunInTransactionAsync`
 
 ### Migrations
 - use Entity Framework Tools (`dotnet tool install --global dotnet-ef`)

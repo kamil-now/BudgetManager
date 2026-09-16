@@ -1,5 +1,5 @@
 using BudgetManager.Domain.Entities;
-using BudgetManager.Infrastructure.Persistence.Services;
+using BudgetManager.Infrastructure.Persistence.Readers;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -10,45 +10,45 @@ public class OwnerResolutionTests(ITestOutputHelper testOutputHelper, Persistenc
     private record Seed(Guid OwnerId, Guid LedgerId, Guid AccountTransactionId);
 
     [Fact]
-    public async Task GetOwnerIdAsync_WhenOwnerIsOnTheEntity_ShouldReturnIt()
+    public async Task ReadOwnerIdAsync_WhenOwnerIsOnTheEntity_ShouldReturnIt()
     {
         // Arrange
-        var (seed, service) = await SeedAsync();
+        var (seed, reader) = await SeedAsync();
 
         // Act
-        var ownerId = await service.GetOwnerIdAsync<Ledger>(seed.LedgerId, x => x.OwnerId);
+        var ownerId = await reader.ReadOwnerIdAsync<Ledger>(seed.LedgerId, x => x.OwnerId);
 
         // Assert
         ownerId.ShouldBe(seed.OwnerId);
     }
 
     [Fact]
-    public async Task GetOwnerIdAsync_WhenOwnerIsOnTheParent_ShouldReturnIt()
+    public async Task ReadOwnerIdAsync_WhenOwnerIsOnTheParent_ShouldReturnIt()
     {
         // Arrange
-        var (seed, service) = await SeedAsync();
+        var (seed, reader) = await SeedAsync();
 
         // Act
-        var ownerId = await service.GetOwnerIdAsync<AccountTransaction>(seed.AccountTransactionId, x => x.Account.Ledger.OwnerId);
+        var ownerId = await reader.ReadOwnerIdAsync<AccountTransaction>(seed.AccountTransactionId, x => x.Account.Ledger.OwnerId);
 
         // Assert
         ownerId.ShouldBe(seed.OwnerId);
     }
 
     [Fact]
-    public async Task GetOwnerIdAsync_WhenEntityDoesNotExist_ShouldReturnNull()
+    public async Task ReadOwnerIdAsync_WhenEntityDoesNotExist_ShouldReturnNull()
     {
         // Arrange
-        var (_, service) = await SeedAsync();
+        var (_, reader) = await SeedAsync();
 
         // Act
-        var ownerId = await service.GetOwnerIdAsync<Ledger>(Guid.NewGuid(), x => x.OwnerId);
+        var ownerId = await reader.ReadOwnerIdAsync<Ledger>(Guid.NewGuid(), x => x.OwnerId);
 
         // Assert
         ownerId.ShouldBeNull();
     }
 
-    private async Task<(Seed Seed, BudgetManagerService Service)> SeedAsync()
+    private async Task<(Seed Seed, ResourceOwnerReader Reader)> SeedAsync()
     {
         var dbContext = GetContext();
 
@@ -66,6 +66,6 @@ public class OwnerResolutionTests(ITestOutputHelper testOutputHelper, Persistenc
         dbContext.AddRange(user, ledger, account, accountTransaction);
         await dbContext.SaveChangesAsync();
 
-        return (new Seed(user.Id, ledger.Id, accountTransaction.Id), new BudgetManagerService(dbContext));
+        return (new Seed(user.Id, ledger.Id, accountTransaction.Id), new ResourceOwnerReader(dbContext));
     }
 }

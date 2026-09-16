@@ -6,13 +6,13 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateAccountTransactionHandler(IBudgetManagerService service) : IRequestHandler<CreateAccountTransactionCommand, Guid>
+public sealed class CreateAccountTransactionHandler(IEntityStore store) : IRequestHandler<CreateAccountTransactionCommand, Guid>
 {
     public async Task<Guid> Handle(CreateAccountTransactionCommand command, CancellationToken cancellationToken)
     {
         ValidateCommand(command);
 
-        var entity = await service.CreateAsync(new AccountTransaction
+        var entity = await store.CreateAsync(new AccountTransaction
         {
             AccountId = command.AccountId,
             Title = command.Title,
@@ -22,7 +22,7 @@ public sealed class CreateAccountTransactionHandler(IBudgetManagerService servic
             Date = command.Date,
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create AccountOperation.");
 
-        await service.SaveChangesAsync(cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
 
         if (entity.Id == Guid.Empty)
         {

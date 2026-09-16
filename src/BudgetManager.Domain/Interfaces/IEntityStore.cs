@@ -1,21 +1,13 @@
 using System.Linq.Expressions;
 using BudgetManager.Domain.Entities;
-using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Domain.Interfaces;
 
-public interface IBudgetManagerService
+public interface IEntityStore
 {
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
     Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default);
-
-    Task<LedgerTransactions> GetLedgerTransactionsAsync(Guid ledgerId, LedgerTransactionsFilters filters, CancellationToken cancellationToken);
-    Task<IEnumerable<AccountTransaction>> GetLedgerIncomesExpensesAsync(Guid ledgerId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken);
-
-    Task<Ledger?> GetLedgerAsync(Expression<Func<Ledger, bool>> predicate, CancellationToken cancellationToken);
-
-    Task<Guid?> GetOwnerIdAsync<T>(Guid id, Expression<Func<T, Guid>> ownerSelector, CancellationToken cancellationToken = default) where T : Entity;
 
     Task<T> GetAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity;
     Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;

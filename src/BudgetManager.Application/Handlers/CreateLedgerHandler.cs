@@ -7,7 +7,7 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudgetManagerService budgetService) : IRequestHandler<CreateLedgerCommand, Guid>
+public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntityStore store) : IRequestHandler<CreateLedgerCommand, Guid>
 {
     public async Task<Guid> Handle(CreateLedgerCommand command, CancellationToken cancellationToken)
     {
@@ -17,7 +17,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
 
         var ledgerId = Guid.NewGuid();
         var budgetId = Guid.NewGuid();
-        var entity = await budgetService.CreateAsync(new Ledger
+        var entity = await store.CreateAsync(new Ledger
         {
             Id = ledgerId,
             OwnerId = userId,
@@ -58,7 +58,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IBudget
             }]
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create ledger.");
 
-        await budgetService.SaveChangesAsync(cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
 
         if (entity.Id == Guid.Empty)
         {

@@ -6,14 +6,14 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateAccountHandler(IBudgetManagerService service) : IRequestHandler<CreateAccountCommand, Guid>
+public sealed class CreateAccountHandler(IEntityStore store) : IRequestHandler<CreateAccountCommand, Guid>
 {
     public async Task<Guid> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
     {
         await ValidateCommandAsync(command, cancellationToken);
 
         var accountId = Guid.NewGuid();
-        var entity = await service.CreateAsync(new Account
+        var entity = await store.CreateAsync(new Account
         {
             Id = accountId,
             LedgerId = command.LedgerId,
@@ -22,7 +22,7 @@ public sealed class CreateAccountHandler(IBudgetManagerService service) : IReque
             Transactions = [new() { Title = "Initial balance", Value = command.InitialBalance, AccountId = accountId }]
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create account.");
 
-        await service.SaveChangesAsync(cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
 
         if (entity.Id == Guid.Empty)
         {
@@ -33,7 +33,7 @@ public sealed class CreateAccountHandler(IBudgetManagerService service) : IReque
 
     private async Task ValidateCommandAsync(CreateAccountCommand command, CancellationToken cancellationToken)
     {
-        if (await service.ExistsAsync<Account>(x => x.Name == command.Name && x.LedgerId == command.LedgerId, cancellationToken))
+        if (await store.ExistsAsync<Account>(x => x.Name == command.Name && x.LedgerId == command.LedgerId, cancellationToken))
         {
             throw new ConflictException($"Account with name {command.Name} already exists in ledger {command.LedgerId}.");
         }

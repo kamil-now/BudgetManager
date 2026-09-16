@@ -8,20 +8,20 @@ using BudgetManager.Domain.Interfaces;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class CreateUserHandler(IBudgetManagerService budgetService, IPasswordHasher passwordHasher) : IRequestHandler<CreateUserCommand, UserDTO>
+public sealed class CreateUserHandler(IEntityStore store, IPasswordHasher passwordHasher) : IRequestHandler<CreateUserCommand, UserDTO>
 {
     public async Task<UserDTO> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
         await ValidateCommandAsync(command, cancellationToken);
 
-        var entity = await budgetService.CreateAsync(new User
+        var entity = await store.CreateAsync(new User
         {
             Name = command.Name,
             Email = command.Email,
             HashedPassword = passwordHasher.Hash(command.Password),
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create user.");
 
-        await budgetService.SaveChangesAsync(cancellationToken);
+        await store.SaveChangesAsync(cancellationToken);
         if (entity.Id == Guid.Empty)
         {
             throw new InvalidOperationException("User ID cannot be empty.");
@@ -38,7 +38,7 @@ public sealed class CreateUserHandler(IBudgetManagerService budgetService, IPass
 
         // TODO evaluate password strenght
 
-        if (await budgetService.ExistsAsync<User>(x => x.Email == command.Email, cancellationToken))
+        if (await store.ExistsAsync<User>(x => x.Email == command.Email, cancellationToken))
         {
             throw new ConflictException($"User with email '{command.Email}' already exists.");
         }
