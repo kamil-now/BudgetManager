@@ -74,8 +74,39 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 
         var accountTransfers = await dbContext.AccountTransfers
                 .AsNoTracking()
-                .Where(x => accountTransactionsIds.Contains(x.IncomeId))
+                .Where(x => accountTransactionsIds.Contains(x.IncomeId) || accountTransactionsIds.Contains(x.ExpenseId))
                 .ToArrayAsync(cancellationToken);
+
+        var missingAccountTransactionsIds = accountTransfers
+                .SelectMany(x => new[] { x.IncomeId, x.ExpenseId })
+                .Except(accountTransactionsIds)
+                .ToArray();
+
+        if (missingAccountTransactionsIds.Length > 0)
+        {
+            accountTransactions = [.. accountTransactions, .. await dbContext.AccountTransactions
+                .AsNoTracking()
+                .Include(x => x.InTransfer)
+                .Include(x => x.OutTransfer)
+                .Where(x => missingAccountTransactionsIds.Contains(x.Id))
+                .ToArrayAsync(cancellationToken)];
+        }
+
+        var missingAccountIds = accountTransactions
+                .Select(x => x.AccountId)
+                .Where(x => !accounts.ContainsKey(x))
+                .Distinct()
+                .ToArray();
+
+        if (missingAccountIds.Length > 0)
+        {
+            foreach (var account in await dbContext.Accounts
+                .AsNoTracking()
+                .Where(x => missingAccountIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Name })
+                .ToArrayAsync(cancellationToken))
+                accounts[account.Id] = account.Name;
+        }
 
         var funds = await dbContext.Funds
              .AsNoTracking()
@@ -97,8 +128,57 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 
         var fundTransfers = await dbContext.FundTransfers
                 .AsNoTracking()
-                .Where(x => fundTransactionsIds.Contains(x.AllocationId))
+                .Where(x => fundTransactionsIds.Contains(x.AllocationId) || fundTransactionsIds.Contains(x.DeallocationId))
                 .ToArrayAsync(cancellationToken);
+
+        var missingFundTransactionsIds = fundTransfers
+                .SelectMany(x => new[] { x.AllocationId, x.DeallocationId })
+                .Except(fundTransactionsIds)
+                .ToArray();
+
+        if (missingFundTransactionsIds.Length > 0)
+        {
+            fundTransactions = [.. fundTransactions, .. await dbContext.FundTransactions
+                .AsNoTracking()
+                .Include(x => x.InTransfer)
+                .Include(x => x.OutTransfer)
+                .Include(x => x.Fund)
+                .ThenInclude(x => x.Budget)
+                .Where(x => missingFundTransactionsIds.Contains(x.Id))
+                .ToArrayAsync(cancellationToken)];
+        }
+
+        var missingFundIds = fundTransactions
+                .Select(x => x.FundId)
+                .Where(x => !funds.ContainsKey(x))
+                .Distinct()
+                .ToArray();
+
+        if (missingFundIds.Length > 0)
+        {
+            foreach (var fund in await dbContext.Funds
+                .AsNoTracking()
+                .Where(x => missingFundIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.BudgetId, x.Name })
+                .ToArrayAsync(cancellationToken))
+                funds[fund.Id] = (fund.BudgetId, fund.Name);
+        }
+
+        var missingBudgetIds = funds.Values
+                .Select(x => x.BudgetId)
+                .Where(x => !budgets.ContainsKey(x))
+                .Distinct()
+                .ToArray();
+
+        if (missingBudgetIds.Length > 0)
+        {
+            foreach (var budget in await dbContext.Budgets
+                .AsNoTracking()
+                .Where(x => missingBudgetIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Name })
+                .ToArrayAsync(cancellationToken))
+                budgets[budget.Id] = budget.Name;
+        }
 
         return new()
         {
