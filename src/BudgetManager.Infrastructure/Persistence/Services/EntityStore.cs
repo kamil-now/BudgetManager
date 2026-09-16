@@ -67,7 +67,7 @@ public class EntityStore(ApplicationDbContext dbContext) : IEntityStore
         }
 
         return await dbContext.Set<T>().FindAsync([id], cancellationToken)
-          ?? throw new KeyNotFoundException($"Entity of type '{typeof(T).Name}' with ID '{id}' not found.");
+          ?? throw new NotFoundException($"Entity of type '{typeof(T).Name}' with ID '{id}' not found.");
     }
 
     public async Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
