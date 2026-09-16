@@ -52,13 +52,13 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
     {
         var accounts = await dbContext.Accounts
              .AsNoTracking()
-             .Where(x => (filters.AccountId != null && x.Id == filters.AccountId) || (filters.AccountId == null && x.LedgerId == ledgerId))
+             .Where(x => x.LedgerId == ledgerId && (filters.AccountId == null || x.Id == filters.AccountId))
              .Select(x => new { x.Id, x.Name })
              .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
 
         var budgets = await dbContext.Budgets
              .AsNoTracking()
-             .Where(x => (filters.BudgetId != null && x.Id == filters.BudgetId) || (filters.BudgetId == null && x.LedgerId == ledgerId))
+             .Where(x => x.LedgerId == ledgerId && (filters.BudgetId == null || x.Id == filters.BudgetId))
              .Select(x => new { x.Id, x.Name })
              .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
 
@@ -110,7 +110,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 
         var funds = await dbContext.Funds
              .AsNoTracking()
-             .Where(x => (filters.FundId != null && x.Id == filters.FundId) || budgets.Keys.Contains(x.BudgetId))
+             .Where(x => (filters.FundId != null && x.Id == filters.FundId && x.Budget.LedgerId == ledgerId) || budgets.Keys.Contains(x.BudgetId))
              .Select(x => new { x.Id, x.BudgetId, x.Name })
              .ToDictionaryAsync(x => x.Id, x => (x.BudgetId, x.Name), cancellationToken);
 
