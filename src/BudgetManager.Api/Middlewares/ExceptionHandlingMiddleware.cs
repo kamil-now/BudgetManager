@@ -35,7 +35,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
 
     private static async Task Set(HttpContext context, string message, HttpStatusCode status)
     {
-        context.Response.ContentType = "application/text";
+        context.Response.ContentType = "text/plain";
         context.Response.StatusCode = (int)status;
         await context.Response.WriteAsync(message);
     }

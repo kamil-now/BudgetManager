@@ -185,6 +185,28 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         result.UpdatedAt.ShouldNotBeNull();
     }
 
+    [Fact]
+    public async Task SaveChangesAsync_WhenAccountIsModified_StampsUpdatedAt()
+    {
+        // Arrange
+        var user = NewUser();
+        var ledger = NewLedger(user);
+        var account = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
+        var dbContext = GetContext();
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Accounts.Add(account);
+        await dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Act
+        account.Description = "Updated";
+        await dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        var result = GetContext().Accounts.Single(x => x.Id == account.Id);
+        result.UpdatedAt.ShouldNotBeNull();
+    }
+
     private static User NewUser() => new()
     {
         Name = "Test User",

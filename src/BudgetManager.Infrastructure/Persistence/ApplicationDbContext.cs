@@ -22,7 +22,21 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 
-    public override int SaveChanges()
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampTimestamps();
+
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampTimestamps();
+
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void StampTimestamps()
     {
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {
@@ -37,7 +51,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     break;
             }
         }
-
-        return base.SaveChanges();
     }
 }
