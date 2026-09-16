@@ -110,7 +110,7 @@ public class BudgetManagerService(ApplicationDbContext dbContext) : IBudgetManag
 
         var funds = await dbContext.Funds
              .AsNoTracking()
-             .Where(x => (filters.FundId != null && x.Id == filters.FundId) || budgets.Keys.Contains(x.Id))
+             .Where(x => (filters.FundId != null && x.Id == filters.FundId) || budgets.Keys.Contains(x.BudgetId))
              .Select(x => new { x.Id, x.BudgetId, x.Name })
              .ToDictionaryAsync(x => x.Id, x => (x.BudgetId, x.Name), cancellationToken);
 
