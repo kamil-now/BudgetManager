@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BudgetManager.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260910123128_Initial")]
+    [Migration("20260917113405_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -176,6 +176,9 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LedgerId");
+
+                    b.HasIndex("Name", "LedgerId")
+                        .IsUnique();
 
                     b.ToTable("Budgets", (string)null);
                 });

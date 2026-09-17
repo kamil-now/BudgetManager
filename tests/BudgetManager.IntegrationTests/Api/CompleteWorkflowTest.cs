@@ -416,27 +416,53 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             );
     }
 
+    [Fact, TestPriority(9)]
+    public async Task CreateBudget()
+    {
+        _testState.LedgerId.ShouldNotBeNull();
+
+        var command = new CreateBudgetCommand(
+            LedgerId: _testState.LedgerId.Value,
+            Name: "Holiday budget",
+            Funds: [
+                new("Flights", 0, 500, AllocationType.Fixed),
+                new("Hotels", 1, 700, AllocationType.Fixed),
+                new("Spending money", 2, 0.5m, AllocationType.Percent)
+            ],
+            Description: "Summer trip");
+
+        var response = await Client.PostAsJsonAsync("/api/budgets", command);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
+
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
+
+        id.ShouldNotBe(Guid.Empty);
+
+        var ledgerResponse = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}");
+        ledgerResponse.StatusCode.ShouldBe(HttpStatusCode.OK, await ledgerResponse.Content.ReadAsStringAsync());
+
+        var ledger = await ledgerResponse.Content.ReadFromJsonAsync<LedgerDTO>();
+
+        ledger.ShouldNotBeNull();
+        ledger.Budgets.Count().ShouldBe(2);
+
+        var budget = ledger.Budgets.FirstOrDefault(x => x.Id == id);
+
+        budget.ShouldNotBeNull()
+            .ShouldSatisfyAllConditions(
+                x => x.Name.ShouldBe(command.Name),
+                x => x.Description.ShouldBe(command.Description),
+                x => x.Funds.Count().ShouldBe(command.Funds.Count()),
+                x => x.Funds.Select(f => f.Name).ShouldBe(command.Funds.Select(f => f.Name), ignoreOrder: true),
+                x => x.Balance.Keys.ShouldBeEmpty());
+
+        _testState.BudgetId = id;
+        _testState.CreatedBudget = command;
+        _testState.Ledger = ledger;
+    }
+
 #pragma warning disable CS1998, CA1822
-    private async Task GenerateBudgetProposal()
-    {
-        // TODO
-        /* based on 30 days report
-           list of funds with proposed allocations
-           allocation type - fixed/percent
-           detect pattern - if 1-3 expenses in category - fixed sum
-        */
-    }
-
-    private async Task AlterBudgetProposal()
-    {
-        // TODO
-    }
-
-    private async Task CreateBudget()
-    {
-        // TODO
-    }
-
     private async Task CreateBudgetAllocations()
     {
         // TODO
@@ -599,7 +625,9 @@ public class TestState
 
     public Guid? UserId { get; set; }
     public Guid? LedgerId { get; set; }
+    public Guid? BudgetId { get; set; }
     public CreateLedgerCommand? CreatedLedger { get; set; }
+    public CreateBudgetCommand? CreatedBudget { get; set; }
     public LedgerDTO? Ledger { get; set; }
     public LedgerTransactionsDTO? LedgerTransactions { get; set; }
 

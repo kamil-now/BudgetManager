@@ -174,6 +174,9 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasIndex("LedgerId");
 
+                    b.HasIndex("Name", "LedgerId")
+                        .IsUnique();
+
                     b.ToTable("Budgets", (string)null);
                 });
 

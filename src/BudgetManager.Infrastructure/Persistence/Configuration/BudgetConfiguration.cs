@@ -26,5 +26,9 @@ public class BudgetConfiguration : IEntityTypeConfiguration<Budget>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => x.LedgerId);
+
+        builder
+            .HasIndex(x => new { x.Name, x.LedgerId })
+            .IsUnique();
     }
 }

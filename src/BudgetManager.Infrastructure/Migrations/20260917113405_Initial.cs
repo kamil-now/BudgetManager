@@ -266,6 +266,12 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "LedgerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Budgets_Name_LedgerId",
+                table: "Budgets",
+                columns: new[] { "Name", "LedgerId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Funds_BudgetId",
                 table: "Funds",
                 column: "BudgetId");
