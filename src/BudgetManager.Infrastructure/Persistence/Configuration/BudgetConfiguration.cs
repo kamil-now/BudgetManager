@@ -25,6 +25,11 @@ public class BudgetConfiguration : IEntityTypeConfiguration<Budget>
             .HasForeignKey(x => x.BudgetId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(x => x.AllocationTemplates)
+            .WithOne(x => x.Budget)
+            .HasForeignKey(x => x.BudgetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(x => x.LedgerId);
 
         builder

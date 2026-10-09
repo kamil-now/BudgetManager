@@ -11,7 +11,7 @@ namespace BudgetManager.IntegrationTests.Application;
 
 public class CreateBudgetTests(ITestOutputHelper testOutputHelper, ApplicationFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
-    private static readonly CreateFundDTO[] _funds = [new("Test Fund", 0, 100, AllocationType.Fixed, "Test Fund Description")];
+    private static readonly CreateFundDTO[] _funds = [new("Test Fund", [new("EUR", 0, AllocationType.Fixed, Amount: 100)], "Test Fund Description")];
 
     [Fact]
     public async Task CreateBudget_WhenUserIsNotAuthenticated_ShouldThrowException()
@@ -98,11 +98,28 @@ public class CreateBudgetTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var userId = await MockAuthenticatedUserAsync();
         var ledger = await CreateLedgerAsync(userId);
 
-        var command = new CreateBudgetCommand(ledger.Id, "Test Budget", [new("Test Fund", -1, 100, AllocationType.Fixed)]);
+        var command = new CreateBudgetCommand(ledger.Id, "Test Budget", [new("Test Fund", [new("EUR", -1, AllocationType.Fixed, Amount: 100)])]);
 
         // Act & Assert
         var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
-        ex.Message.ShouldBe("AllocationTemplateSequence of Test Fund must be greater than or equal zero.");
+        ex.Message.ShouldBe("Allocation template of Test Fund sequence must be greater than or equal zero.");
+    }
+
+    [Fact]
+    public async Task CreateBudget_WhenFundsShareAllocationSequenceInCurrency_ShouldThrowException()
+    {
+        // Arrange
+        var userId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(userId);
+
+        var command = new CreateBudgetCommand(ledger.Id, "Test Budget", [
+            new("Fund A", [new("EUR", 0, AllocationType.Fixed, Amount: 100)]),
+            new("Fund B", [new("EUR", 0, AllocationType.Percent, Percent: 10)])
+        ]);
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
+        ex.Message.ShouldBe("Allocation sequences in EUR must be unique.");
     }
 
     [Fact]
@@ -175,10 +192,73 @@ public class CreateBudgetTests(ITestOutputHelper testOutputHelper, ApplicationFi
         funds.Length.ShouldBe(1);
         funds[0].ShouldSatisfyAllConditions(
             fund => fund.Name.ShouldBe(_funds[0].Name),
-            fund => fund.Description.ShouldBe(_funds[0].Description),
-            fund => fund.AllocationTemplateSequence.ShouldBe(_funds[0].AllocationTemplateSequence),
-            fund => fund.AllocationTemplateValue.ShouldBe(_funds[0].AllocationTemplateValue),
-            fund => fund.AllocationTemplateType.ShouldBe(_funds[0].AllocationTemplateType));
+            fund => fund.Description.ShouldBe(_funds[0].Description));
+    }
+
+    [Fact]
+    public async Task CreateBudget_ShouldCreateOneAllocationTemplatePerCurrency()
+    {
+        // Arrange
+        var userId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(userId);
+
+        var command = new CreateBudgetCommand(ledger.Id, "Test Budget", [
+            new("Fund A", [new("EUR", 0, AllocationType.Fixed, Amount: 100), new("USD", 0, AllocationType.Percent, Percent: 50)]),
+            new("Fund B", [new("EUR", 1, AllocationType.Percent, Percent: 25)])
+        ]);
+
+        // Act
+        var budgetId = await Mediator.Send(command);
+
+        // Assert
+        var templates = await EntityStore.GetAsync<AllocationTemplate>(x => x.BudgetId == budgetId);
+        templates.Select(x => x.Currency).ShouldBe(["EUR", "USD"], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task CreateBudget_ShouldCreateAllocationTemplateLines()
+    {
+        // Arrange
+        var userId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(userId);
+
+        var command = new CreateBudgetCommand(ledger.Id, "Test Budget", [
+            new("Fund A", [new("EUR", 0, AllocationType.Fixed, Amount: 100.50m)]),
+            new("Fund B", [new("EUR", 1, AllocationType.Percent, Percent: 12.34m)])
+        ]);
+
+        // Act
+        var budgetId = await Mediator.Send(command);
+
+        // Assert
+        var funds = (await EntityStore.GetAsync<Fund>(x => x.BudgetId == budgetId)).ToDictionary(x => x.Name, x => x.Id);
+        var template = (await EntityStore.GetAsync<AllocationTemplate>(x => x.BudgetId == budgetId)).ShouldHaveSingleItem();
+        var lines = (await EntityStore.GetAsync<AllocationTemplateLine>(x => x.AllocationTemplateId == template.Id)).ToDictionary(x => x.FundId);
+
+        lines.Count.ShouldBe(2);
+        lines[funds["Fund A"]].ShouldBeOfType<FixedAllocationTemplateLine>().ShouldSatisfyAllConditions(
+            line => line.Sequence.ShouldBe(0),
+            line => line.Amount.ShouldBe(100.50m));
+        lines[funds["Fund B"]].ShouldBeOfType<PercentAllocationTemplateLine>().ShouldSatisfyAllConditions(
+            line => line.Sequence.ShouldBe(1),
+            line => line.Percent.ShouldBe(12.34m));
+    }
+
+    [Fact]
+    public async Task CreateBudget_WhenFundHasNoAllocationTemplates_ShouldCreateFundWithoutLines()
+    {
+        // Arrange
+        var userId = await MockAuthenticatedUserAsync();
+        var ledger = await CreateLedgerAsync(userId);
+
+        var command = new CreateBudgetCommand(ledger.Id, "Test Budget", [new("Test Fund", [])]);
+
+        // Act
+        var budgetId = await Mediator.Send(command);
+
+        // Assert
+        (await EntityStore.GetAsync<Fund>(x => x.BudgetId == budgetId)).ShouldHaveSingleItem();
+        (await EntityStore.GetAsync<AllocationTemplate>(x => x.BudgetId == budgetId)).ShouldBeEmpty();
     }
 
     private async Task<Ledger> CreateLedgerAsync(Guid ownerId)

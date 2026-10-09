@@ -26,5 +26,10 @@ public class FundConfiguration : IEntityTypeConfiguration<Fund>
             .WithOne(x => x.Fund)
             .HasForeignKey(x => x.FundId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.AllocationTemplateLines)
+            .WithOne(x => x.Fund)
+            .HasForeignKey(x => x.FundId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

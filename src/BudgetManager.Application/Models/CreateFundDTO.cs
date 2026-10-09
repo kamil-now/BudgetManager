@@ -1,10 +1,11 @@
-using BudgetManager.Domain.Enums;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Models;
 
 public record CreateFundDTO(
   string Name,
-  int AllocationTemplateSequence,
-  decimal AllocationTemplateValue,
-  AllocationType AllocationTemplateType,
-  string? Description = null);
+  IEnumerable<FundAllocation> AllocationTemplates,
+  string? Description = null)
+{
+    public IEnumerable<FundAllocation> AllocationTemplates { get; init; } = AllocationTemplates ?? [];
+}

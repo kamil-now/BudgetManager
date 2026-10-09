@@ -12,7 +12,7 @@ public class CreateBudgetTests(ITestOutputHelper testOutputHelper, ApiFixture fi
 {
     private const string _baseUrl = "/api/budgets";
 
-    private static readonly CreateFundDTO[] _funds = [new("[fund name]", 0, 100, AllocationType.Fixed, "[fund description]")];
+    private static readonly CreateFundDTO[] _funds = [new("[fund name]", [new("EUR", 0, AllocationType.Fixed, Amount: 100)], "[fund description]")];
 
     [Fact]
     public async Task CreateBudget_WhenUserIsUnauthorized_401()

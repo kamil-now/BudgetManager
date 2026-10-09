@@ -8,6 +8,10 @@ public static class Constants
     public const int CurrencyCodeLength = 3;
     public const int MoneyPrecision = 18;
     public const int MoneyDecimalPlaces = 2;
+    public const decimal MaxMoneyAmount = 9_999_999_999_999_999.99m;
+    public const int PercentPrecision = 5;
+    public const int PercentDecimalPlaces = 2;
+    public const int MaxAllocationPercent = 100;
     public const int MaxNameLength = 100;
     public const int MaxEmailLength = 254;  // RFC 5321 limit
     public const int MaxTitleLength = 200;

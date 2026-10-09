@@ -125,6 +125,28 @@ namespace BudgetManager.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AllocationTemplates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    BudgetId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AllocationTemplates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AllocationTemplates_Budgets_BudgetId",
+                        column: x => x.BudgetId,
+                        principalTable: "Budgets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Funds",
                 columns: table => new
                 {
@@ -132,9 +154,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     BudgetId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    AllocationTemplateSequence = table.Column<int>(type: "integer", nullable: false),
-                    AllocationTemplateValue = table.Column<decimal>(type: "numeric", nullable: false),
-                    AllocationTemplateType = table.Column<int>(type: "integer", nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -174,6 +193,38 @@ namespace BudgetManager.Infrastructure.Migrations
                         name: "FK_AccountTransfers_AccountTransactions_IncomeId",
                         column: x => x.IncomeId,
                         principalTable: "AccountTransactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AllocationTemplateLines",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AllocationTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FundId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Sequence = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    Percent = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AllocationTemplateLines", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AllocationTemplateLines_AllocationTemplates_AllocationTempl~",
+                        column: x => x.AllocationTemplateId,
+                        principalTable: "AllocationTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AllocationTemplateLines_Funds_FundId",
+                        column: x => x.FundId,
+                        principalTable: "Funds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -261,6 +312,23 @@ namespace BudgetManager.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AllocationTemplateLines_AllocationTemplateId_FundId",
+                table: "AllocationTemplateLines",
+                columns: new[] { "AllocationTemplateId", "FundId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AllocationTemplateLines_FundId",
+                table: "AllocationTemplateLines",
+                column: "FundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AllocationTemplates_BudgetId_Currency",
+                table: "AllocationTemplates",
+                columns: new[] { "BudgetId", "Currency" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Budgets_LedgerId",
                 table: "Budgets",
                 column: "LedgerId");
@@ -312,10 +380,16 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "AccountTransfers");
 
             migrationBuilder.DropTable(
+                name: "AllocationTemplateLines");
+
+            migrationBuilder.DropTable(
                 name: "FundTransfers");
 
             migrationBuilder.DropTable(
                 name: "AccountTransactions");
+
+            migrationBuilder.DropTable(
+                name: "AllocationTemplates");
 
             migrationBuilder.DropTable(
                 name: "FundTransactions");

@@ -140,6 +140,84 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.ToTable("AccountTransfers", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetId", "Currency")
+                        .IsUnique();
+
+                    b.ToTable("AllocationTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplateLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AllocationTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FundId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FundId");
+
+                    b.HasIndex("AllocationTemplateId", "FundId")
+                        .IsUnique();
+
+                    b.ToTable("AllocationTemplateLines", (string)null);
+
+                    b.HasDiscriminator<int>("Type");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("BudgetManager.Domain.Entities.Budget", b =>
                 {
                     b.Property<Guid>("Id")
@@ -185,15 +263,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<int>("AllocationTemplateSequence")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("AllocationTemplateType")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("AllocationTemplateValue")
-                        .HasColumnType("numeric");
 
                     b.Property<Guid>("BudgetId")
                         .HasColumnType("uuid");
@@ -379,6 +448,28 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetManager.Domain.Entities.FixedAllocationTemplateLine", b =>
+                {
+                    b.HasBaseType("BudgetManager.Domain.Entities.AllocationTemplateLine");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasDiscriminator().HasValue(0);
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.PercentAllocationTemplateLine", b =>
+                {
+                    b.HasBaseType("BudgetManager.Domain.Entities.AllocationTemplateLine");
+
+                    b.Property<decimal>("Percent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.HasDiscriminator().HasValue(1);
+                });
+
             modelBuilder.Entity("BudgetManager.Domain.Entities.Account", b =>
                 {
                     b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
@@ -445,6 +536,36 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("Expense");
 
                     b.Navigation("Income");
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplate", b =>
+                {
+                    b.HasOne("BudgetManager.Domain.Entities.Budget", "Budget")
+                        .WithMany("AllocationTemplates")
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Budget");
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplateLine", b =>
+                {
+                    b.HasOne("BudgetManager.Domain.Entities.AllocationTemplate", "AllocationTemplate")
+                        .WithMany("Lines")
+                        .HasForeignKey("AllocationTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BudgetManager.Domain.Entities.Fund", "Fund")
+                        .WithMany("AllocationTemplateLines")
+                        .HasForeignKey("FundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AllocationTemplate");
+
+                    b.Navigation("Fund");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Budget", b =>
@@ -549,13 +670,22 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("OutTransfer");
                 });
 
+            modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplate", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("BudgetManager.Domain.Entities.Budget", b =>
                 {
+                    b.Navigation("AllocationTemplates");
+
                     b.Navigation("Funds");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Fund", b =>
                 {
+                    b.Navigation("AllocationTemplateLines");
+
                     b.Navigation("Transactions");
                 });
 

@@ -64,11 +64,11 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
 
         var command = new CreateLedgerCommand("Default Ledger", null,
           new("Main budget", [
-              new("Food", 0, 600, AllocationType.Fixed),
-              new("Rent", 1, 800, AllocationType.Fixed),
-              new("Utilities", 2, 200, AllocationType.Fixed),
-              new("Entertainment", 3, 0.2m, AllocationType.Percent),
-              new("Savings", 4, 0.8m, AllocationType.Percent)
+              new("Food", [new("EUR", 0, AllocationType.Fixed, Amount: 600)]),
+              new("Rent", [new("EUR", 1, AllocationType.Fixed, Amount: 800)]),
+              new("Utilities", [new("EUR", 2, AllocationType.Fixed, Amount: 200)]),
+              new("Entertainment", [new("EUR", 3, AllocationType.Percent, Percent: 20)]),
+              new("Savings", [new("EUR", 4, AllocationType.Percent, Percent: 80)])
               ]),
               [
                 new(new(256, "EUR"), "Cash"),
@@ -425,9 +425,9 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             LedgerId: _testState.LedgerId.Value,
             Name: "Holiday budget",
             Funds: [
-                new("Flights", 0, 500, AllocationType.Fixed),
-                new("Hotels", 1, 700, AllocationType.Fixed),
-                new("Spending money", 2, 0.5m, AllocationType.Percent)
+                new("Flights", [new("EUR", 0, AllocationType.Fixed, Amount: 500)]),
+                new("Hotels", [new("EUR", 1, AllocationType.Fixed, Amount: 700)]),
+                new("Spending money", [new("EUR", 2, AllocationType.Percent, Percent: 50)])
             ],
             Description: "Summer trip");
 

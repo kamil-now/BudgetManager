@@ -16,7 +16,17 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
         Validate(command);
 
         var ledgerId = Guid.NewGuid();
-        var budgetId = Guid.NewGuid();
+        var budget = new Budget
+        {
+            LedgerId = ledgerId,
+            Name = command.Budget.Name,
+            Description = command.Budget.Description
+        };
+        foreach (var fund in command.Budget.Funds)
+        {
+            budget.AddFund(fund.Name, fund.Description, fund.AllocationTemplates);
+        }
+
         var entity = await store.CreateAsync(new Ledger
         {
             Id = ledgerId,
@@ -40,22 +50,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
                     }]
                 };
             })],
-            Budgets = [new Budget()
-            {
-                Id = budgetId,
-                LedgerId = ledgerId,
-                Name = command.Budget.Name,
-                Description = command.Budget.Description,
-                Funds = [.. command.Budget.Funds.Select(x => new Fund()
-                {
-                    BudgetId = budgetId,
-                    Name = x.Name,
-                    Description = x.Description,
-                    AllocationTemplateSequence = x.AllocationTemplateSequence,
-                    AllocationTemplateType = x.AllocationTemplateType,
-                    AllocationTemplateValue = x.AllocationTemplateValue
-                })]
-            }]
+            Budgets = [budget]
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create ledger.");
 
         await store.SaveChangesAsync(cancellationToken);
@@ -81,13 +76,6 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
 
         command.Budget.Name.EnsureNotEmpty("Budget name").EnsureNotLongerThan(Constants.MaxNameLength, "Budget name");
         command.Budget.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {command.Budget.Name}");
-        command.Budget.Funds.EnsureNotEmpty();
-
-        foreach (var fund in command.Budget.Funds)
-        {
-            fund.Name.EnsureNotEmpty("Fund name").EnsureNotLongerThan(Constants.MaxNameLength, "Fund name");
-            fund.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {fund.Name}");
-            fund.AllocationTemplateSequence.EnsureNonnegative($"AllocationTemplateSequence of {fund.Name}");
-        }
+        command.Budget.Funds.EnsureNotEmpty().EnsureValidFunds();
     }
 }

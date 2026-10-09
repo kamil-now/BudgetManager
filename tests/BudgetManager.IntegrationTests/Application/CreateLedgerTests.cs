@@ -31,7 +31,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var command = new CreateLedgerCommand(
           "[ledger name]",
           "[ledger description]",
-          new("[budget name]", [new("[fund name]", 42, 20, AllocationType.Percent, "[fund description]")], "[budget description]"),
+          new("[budget name]", [new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")], "[budget description]"),
           [
             new(new(123, "EUR"), "[account name 1]", "[account description 1]"),
             new(new(0, "EUR"), "[account name 2]", "[account description 2]"),
@@ -65,9 +65,14 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         fund.ShouldNotBeNull();
         fund.Name.ShouldBe(commandFund.Name);
         fund.Description.ShouldBe(commandFund.Description);
-        fund.AllocationTemplateSequence.ShouldBe(commandFund.AllocationTemplateSequence);
-        fund.AllocationTemplateType.ShouldBe(commandFund.AllocationTemplateType);
-        fund.AllocationTemplateValue.ShouldBe(commandFund.AllocationTemplateValue);
+
+        var template = (await EntityStore.GetAsync<AllocationTemplate>(x => x.BudgetId == budget.Id, default)).ShouldHaveSingleItem();
+        template.Currency.ShouldBe("EUR");
+
+        var line = (await EntityStore.GetAsync<AllocationTemplateLine>(x => x.AllocationTemplateId == template.Id, default)).ShouldHaveSingleItem();
+        line.FundId.ShouldBe(fund.Id);
+        line.Sequence.ShouldBe(42);
+        line.ShouldBeOfType<PercentAllocationTemplateLine>().Percent.ShouldBe(20);
 
         var accounts = (await EntityStore.GetAsync<Account>(x => x.LedgerId == id, default)).OrderBy(x => x.Name).ToArray();
         accounts.Length.ShouldBe(3);

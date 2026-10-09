@@ -12,23 +12,18 @@ public sealed class CreateBudgetHandler(IEntityStore store) : IRequestHandler<Cr
     {
         await ValidateCommandAsync(command, cancellationToken);
 
-        var budgetId = Guid.NewGuid();
-        var entity = await store.CreateAsync(new Budget
+        var budget = new Budget
         {
-            Id = budgetId,
             LedgerId = command.LedgerId,
             Name = command.Name,
-            Description = command.Description,
-            Funds = [.. command.Funds.Select(x => new Fund()
-            {
-                BudgetId = budgetId,
-                Name = x.Name,
-                Description = x.Description,
-                AllocationTemplateSequence = x.AllocationTemplateSequence,
-                AllocationTemplateType = x.AllocationTemplateType,
-                AllocationTemplateValue = x.AllocationTemplateValue
-            })]
-        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create budget.");
+            Description = command.Description
+        };
+        foreach (var fund in command.Funds)
+        {
+            budget.AddFund(fund.Name, fund.Description, fund.AllocationTemplates);
+        }
+
+        var entity = await store.CreateAsync(budget, cancellationToken) ?? throw new InvalidOperationException("Failed to create budget.");
 
         await store.SaveChangesAsync(cancellationToken);
 
@@ -44,14 +39,7 @@ public sealed class CreateBudgetHandler(IEntityStore store) : IRequestHandler<Cr
         command.LedgerId.EnsureNotEmpty();
         command.Name.EnsureNotEmpty("Budget name").EnsureNotLongerThan(Constants.MaxNameLength, "Budget name");
         command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
-        command.Funds.EnsureNotEmpty();
-
-        foreach (var fund in command.Funds)
-        {
-            fund.Name.EnsureNotEmpty("Fund name").EnsureNotLongerThan(Constants.MaxNameLength, "Fund name");
-            fund.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {fund.Name}");
-            fund.AllocationTemplateSequence.EnsureNonnegative($"AllocationTemplateSequence of {fund.Name}");
-        }
+        command.Funds.EnsureNotEmpty().EnsureValidFunds();
 
         if (await store.ExistsAsync<Budget>(x => x.Name == command.Name && x.LedgerId == command.LedgerId, cancellationToken))
         {

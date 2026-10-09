@@ -12,6 +12,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<AccountTransfer> AccountTransfers { get; set; }
     public DbSet<Budget> Budgets { get; set; }
     public DbSet<Fund> Funds { get; set; }
+    public DbSet<AllocationTemplate> AllocationTemplates { get; set; }
+    public DbSet<AllocationTemplateLine> AllocationTemplateLines { get; set; }
     public DbSet<FundTransaction> FundTransactions { get; set; }
     public DbSet<FundTransfer> FundTransfers { get; set; }
 

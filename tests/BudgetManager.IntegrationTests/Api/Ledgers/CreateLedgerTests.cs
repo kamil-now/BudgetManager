@@ -18,7 +18,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
         new(
           "[budget name]",
           [
-            new("[fund name]", 42, 20, AllocationType.Percent, "[fund description]")
+            new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")
           ],
           "[budget description]"),
         [
@@ -84,6 +84,7 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
             var tooLongName = new string('b', Constants.MaxNameLength + 1);
             var validAccount = ValidCommand.Accounts.First();
             var validFund = ValidCommand.Budget.Funds.First();
+            var validAllocation = validFund.AllocationTemplates.First();
 
             Add(ValidCommand with { Description = tooLongDescription }, $"Description value is too long. Max length is {Constants.MaxCommentLength}.");
 
@@ -115,7 +116,11 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Description = tooLongDescription }] } }, $"Description of {validFund.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { AllocationTemplateSequence = -1 }] } }, $"AllocationTemplateSequence of {validFund.Name} must be greater than or equal zero.");
+            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Sequence = -1 }] }] } }, $"Allocation template of {validFund.Name} sequence must be greater than or equal zero.");
+
+            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Percent = 100.01m }] }] } }, $"Allocation template of {validFund.Name} percent must be less than or equal {Constants.MaxAllocationPercent}.");
+
+            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund, validFund with { Name = "[other fund name]", AllocationTemplates = [validAllocation with { Sequence = 0, Percent = 81 }] }] } }, $"Allocation percents in {validAllocation.Currency} must add up to less than or equal {Constants.MaxAllocationPercent}.");
         }
     }
 
