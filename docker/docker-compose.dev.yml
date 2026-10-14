@@ -1,0 +1,97 @@
+name: budget-manager
+
+services:
+  budget-manager-api:
+    env_file:
+      - .env
+    build:
+      context: ../src
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${API_EXTERNAL_PORT}:8080"
+    networks:
+      - network
+    environment:
+      RunDatabaseMigrationsOnStartup: true
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      ConnectionStrings__DefaultConnection: Host=budget-manager-db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+    depends_on:
+      budget-manager-db:
+        condition: service_healthy
+
+  budget-manager-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+    networks:
+      - network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:9.8
+    ports:
+      - 5050:80
+    networks:
+      - network
+    environment:
+      PGADMIN_DEFAULT_EMAIL: demo@example.com
+      PGADMIN_DEFAULT_PASSWORD: secret
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_HOST: budget-manager-db
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
+      PGADMIN_CONFIG_X_CONTENT_TYPE_OPTIONS: "''"
+      PGADMIN_CONFIG_SHARED_STORAGE: "[{'name': 'shared', 'path': '/shared', 'restricted_access': True}]"
+    healthcheck:
+      test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      budget-manager-db:
+        condition: service_healthy
+    configs:
+      - source: servers.json
+        target: /pgadmin4/servers.json
+      - source: pgpass
+        target: /shared/pgpass
+        uid: "5050"
+        gid: "5050"
+        mode: 0600
+
+configs:
+  pgpass:
+    content: |
+      budget-manager-db:5432:*:${DB_USER}:${DB_PASSWORD}
+  servers.json:
+    content: |
+      {"Servers": {"1": {
+        "Group": "Servers",
+        "Name": "Budget Manager DB",
+        "Host": "budget-manager-db",
+        "Port": 5432,
+        "MaintenanceDB": "${DB_NAME}",
+        "Username": "${DB_USER}",
+        "Password": "${DB_PASSWORD}",
+        "PassFile": "/shared/pgpass",
+        "SSLMode": "prefer"
+      }}}
+
+volumes:
+  postgres_data:
+
+networks:
+  network:
