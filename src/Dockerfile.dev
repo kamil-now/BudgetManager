@@ -1,4 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
+RUN curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l /vsdbg
 WORKDIR /src
 EXPOSE 8080
 COPY ["BudgetManager.Api/BudgetManager.Api.csproj", "BudgetManager.Api/"]

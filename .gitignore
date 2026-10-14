@@ -142,5 +142,6 @@ _NCrunch*
 **.env.local
 
 **.vs
+.vscode
 
 /coveragereport

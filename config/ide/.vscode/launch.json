@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "name": ".NET Core Docker Attach",
+      "type": "coreclr",
+      "request": "attach",
+      "requireExactSource": false,
+      "processId": "${command:pickRemoteProcess}",
+      "pipeTransport": {
+        "pipeCwd": "${workspaceFolder}",
+        "pipeProgram": "docker",
+        "pipeArgs": [
+          "exec",
+          "-i",
+          "budget-manager-budget-manager-api-1"
+        ],
+        "debuggerPath": "/vsdbg/vsdbg",
+        "quoteArgs": false
+      },
+      "sourceFileMap": {
+        "/src": "${workspaceFolder}\\src"
+      }
+    },
+    {
+      "name": "API Debug",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/BudgetManager.Api/BudgetManager.Api.csproj"
+    }
+  ]
+}
