@@ -60,6 +60,8 @@ public class ApiFixture : TestBedFixture
     {
         services.AddSingleton(Factory!);
         services.AddSingleton(Client!);
+        // lets tests assert on what the API persisted, in the same database the API uses
+        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(_connectionString));
     }
 
     protected override async ValueTask DisposeAsyncCore()

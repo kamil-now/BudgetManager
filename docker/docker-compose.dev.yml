@@ -19,6 +19,22 @@ services:
       budget-manager-db:
         condition: service_healthy
 
+  budget-manager-ui:
+    build:
+      context: ../src/BudgetManager.UI
+      dockerfile: Dockerfile.dev
+    environment:
+      API_PROXY_TARGET: http://budget-manager-api:8080
+    ports:
+      - "${UI_EXTERNAL_PORT:-4200}:4200"
+    networks:
+      - network
+    volumes:
+      - ../src/BudgetManager.UI:/app
+      - /app/node_modules
+    depends_on:
+      - budget-manager-api
+
   budget-manager-db:
     image: postgres:17
     environment:

@@ -46,7 +46,7 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fi
 
     protected async Task<Guid> RegisterAndLogin()
     {
-        var user = new CreateUserCommand($"test@email{Guid.NewGuid()}", "password", "Test User");
+        var user = new CreateUserCommand($"test{Guid.NewGuid()}@email.com", "password", "Test User");
         var userId = await Register(user);
         await Login(new(user.Email, user.Password));
         return userId;

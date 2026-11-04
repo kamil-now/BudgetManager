@@ -19,6 +19,17 @@ services:
       budget-manager-db:
         condition: service_healthy
 
+  budget-manager-ui:
+    build:
+      context: ../src/BudgetManager.UI
+      dockerfile: Dockerfile
+    ports:
+      - "${UI_EXTERNAL_PORT:-4200}:80"
+    networks:
+      - network
+    depends_on:
+      - budget-manager-api
+
   budget-manager-db:
     image: postgres:17
     environment:

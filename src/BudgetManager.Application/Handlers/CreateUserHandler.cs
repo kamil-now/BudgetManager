@@ -12,12 +12,13 @@ public sealed class CreateUserHandler(IEntityStore store, IPasswordHasher passwo
 {
     public async Task<UserDTO> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
-        await ValidateCommandAsync(command, cancellationToken);
+        var email = command.Email.NormalizeEmail();
+        await ValidateCommandAsync(command, email, cancellationToken);
 
         var entity = await store.CreateAsync(new User
         {
             Name = command.Name,
-            Email = command.Email,
+            Email = email,
             HashedPassword = passwordHasher.Hash(command.Password),
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create user.");
 
@@ -30,17 +31,15 @@ public sealed class CreateUserHandler(IEntityStore store, IPasswordHasher passwo
         return new UserDTO(entity);
     }
 
-    private async Task ValidateCommandAsync(CreateUserCommand command, CancellationToken cancellationToken)
+    private async Task ValidateCommandAsync(CreateUserCommand command, string email, CancellationToken cancellationToken)
     {
-        command.Email.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxEmailLength);
+        email.EnsureValidEmail(nameof(command.Email));
         command.Name?.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxNameLength);
-        command.Password.EnsureNotEmpty();
+        command.Password.EnsureValidPassword();
 
-        // TODO evaluate password strenght
-
-        if (await store.ExistsAsync<User>(x => x.Email == command.Email, cancellationToken))
+        if (await store.ExistsAsync<User>(x => x.Email == email, cancellationToken))
         {
-            throw new ConflictException($"User with email '{command.Email}' already exists.");
+            throw new ConflictException($"User with email '{email}' already exists.");
         }
     }
 }

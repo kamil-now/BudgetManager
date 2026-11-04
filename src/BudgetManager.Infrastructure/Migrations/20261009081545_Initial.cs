@@ -16,7 +16,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
                     HashedPassword = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),

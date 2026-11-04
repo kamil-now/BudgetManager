@@ -14,6 +14,8 @@ public static class Constants
     public const int MaxAllocationPercent = 100;
     public const int MaxNameLength = 100;
     public const int MaxEmailLength = 254;  // RFC 5321 limit
+    public const int MinPasswordLength = 8;
+    public const int MaxPasswordBytes = 72; // bcrypt ignores everything past 72 bytes
     public const int MaxTitleLength = 200;
     public const int MaxCommentLength = 1000;
     public const int MaxTagsLength = 500;

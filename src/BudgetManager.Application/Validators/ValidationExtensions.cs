@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using BudgetManager.Application.Models;
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Enums;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Validators;
 
@@ -189,6 +191,32 @@ public static class ValidationExtensions
         if (val == null || val.Length != Constants.CurrencyCodeLength || val.Any(x => !char.IsAsciiLetterUpper(x)))
         {
             throw new ValidationException($"{paramName?.TrimName()} value '{val}' is not a valid currency code.");
+        }
+        return val;
+    }
+
+    public static string NormalizeEmail(this string email)
+     => email.Trim().ToLowerInvariant();
+
+    public static string EnsureValidEmail(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        val.EnsureNotEmpty(paramName).EnsureNotLongerThan(Constants.MaxEmailLength, paramName);
+        if (!Regex.IsMatch(val, Constants.EmailRegexp))
+        {
+            throw new ValidationException($"{paramName?.TrimName()} value '{val}' is not a valid email address.");
+        }
+        return val;
+    }
+
+    public static string EnsureValidPassword(this string val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        if (val == null || val.Length < Constants.MinPasswordLength)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} must be at least {Constants.MinPasswordLength} characters long.");
+        }
+        if (Encoding.UTF8.GetByteCount(val) > Constants.MaxPasswordBytes)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} is too long. Max length is {Constants.MaxPasswordBytes} bytes.");
         }
         return val;
     }

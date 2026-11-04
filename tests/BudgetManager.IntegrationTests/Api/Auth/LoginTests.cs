@@ -24,15 +24,43 @@ public class LoginTests(ITestOutputHelper testOutputHelper, ApiFixture fixture) 
     }
 
     [Fact]
-    public async Task Login_WhenEmailIsInvalid_ShouldFail()
+    public async Task Login_WhenEmailIsUnknown_ShouldReturnGenericMessage()
     {
         // Act
-        var response = await Client.PostAsJsonAsync(_url, new LoginCommand("email", "password"));
+        var response = await Client.PostAsJsonAsync(_url, new LoginCommand($"unknown{Guid.NewGuid()}@email.com", "password"));
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        var responseContent = await response.Content.ReadAsStringAsync();
-        responseContent.ShouldBe($"User with email 'email' not found.");
+        (await response.Content.ReadAsStringAsync()).ShouldBe("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task Login_WhenPasswordIsWrong_ShouldReturnGenericMessage()
+    {
+        // Arrange
+        var email = $"test{Guid.NewGuid()}@email.com";
+        await Client.PostAsJsonAsync("/api/auth/register", new CreateUserCommand(email, "password", null));
+
+        // Act
+        var response = await Client.PostAsJsonAsync(_url, new LoginCommand(email, "wrong-password"));
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await response.Content.ReadAsStringAsync()).ShouldBe("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task Login_WhenEmailDiffersInCaseAndWhitespace_ShouldSucceed()
+    {
+        // Arrange
+        var email = $"test{Guid.NewGuid()}@email.com";
+        await Client.PostAsJsonAsync("/api/auth/register", new CreateUserCommand(email, "password", null));
+
+        // Act
+        var response = await Client.PostAsJsonAsync(_url, new LoginCommand($"  {email.ToUpperInvariant()} ", "password"));
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 }
 

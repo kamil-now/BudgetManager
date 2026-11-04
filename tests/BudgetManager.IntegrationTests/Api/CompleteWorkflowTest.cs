@@ -620,7 +620,7 @@ public class TestState
 {
     public string UserEmail = "test@test.test";
     public string UserName = "Test User";
-    public string UserPassword = "1234";
+    public string UserPassword = "password1234";
     public string Token = "invalid";
 
     public Guid? UserId { get; set; }

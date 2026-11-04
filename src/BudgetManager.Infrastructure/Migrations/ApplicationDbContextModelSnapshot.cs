@@ -427,7 +427,6 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasColumnType("character varying(60)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
