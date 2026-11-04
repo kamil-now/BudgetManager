@@ -37,6 +37,8 @@ Migrations (run from `/src`):
 dotnet ef migrations add [Name] --context ApplicationDbContext --project BudgetManager.Infrastructure --startup-project BudgetManager.Api
 ```
 
+The app is not in production yet, so schema changes go into the `Initial` migration (`20261009081545_Initial.cs`, its `.Designer.cs`, and `ApplicationDbContextModelSnapshot.cs`, kept in sync) instead of a new migration, and no data-fix migrations are written. Local databases are recreated after such a change. Drop this rule once there is a production database.
+
 All integration tests run against a `postgres:17` container started by Testcontainers (`TestDatabase`), one migrated database per fixture, so Docker has to be running. Unit tests need nothing.
 
 ## Architecture
