@@ -18,10 +18,11 @@ public class ApiFixture : TestBedFixture
 
     private WebApplicationFactory<Program>? Factory { get; set; }
     private HttpClient? Client { get; set; }
+    private readonly string _connectionString;
 
     public ApiFixture()
     {
-        var connectionString = TestDatabase.CreateMigratedDatabase();
+        var connectionString = _connectionString = TestDatabase.CreateMigratedDatabase();
 
         lock (FactoryLock)
         {
@@ -36,12 +37,23 @@ public class ApiFixture : TestBedFixture
                     });
 
                     builder.UseEnvironment("Test");
+                    // every test logs in from the same address; RateLimitTests lowers it again
+                    builder.UseSetting("AuthRateLimit:PermitLimit", int.MaxValue.ToString());
                 });
 
             Client = Factory.CreateClient();
         }
 
         SharedClient = Client;
+    }
+
+    /// <summary>A client for the same app with extra host settings; built under the same lock as the main host.</summary>
+    public HttpClient CreateClient(Action<IWebHostBuilder> configure)
+    {
+        lock (FactoryLock)
+        {
+            return Factory!.WithWebHostBuilder(configure).CreateClient();
+        }
     }
 
     protected override void AddServices(IServiceCollection services, IConfiguration? configuration)

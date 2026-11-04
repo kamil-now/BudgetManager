@@ -1,14 +1,17 @@
 
+using BudgetManager.Api.Configuration;
 using BudgetManager.Api.Models;
 using BudgetManager.Application.Commands;
 using BudgetManager.Infrastructure.Auth.Interfaces;
 using BudgetManager.Infrastructure.Auth.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BudgetManager.Api.Controllers;
 
 [AllowAnonymous]
+[EnableRateLimiting(AuthRateLimit.PolicyName)]
 public class AuthController(IMediator mediator, IJwtTokenGenerator jwtGenerator) : BaseController
 {
     [HttpPost("login")]

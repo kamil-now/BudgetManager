@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using BudgetManager.Api.Configuration;
 using BudgetManager.Api.Middlewares;
 using BudgetManager.Api.Services;
 using BudgetManager.Application.Configuration;
@@ -5,8 +7,10 @@ using BudgetManager.Application.Services;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
@@ -74,12 +78,44 @@ try
 
     builder.Services.AddControllers();
 
+    // the UI's nginx proxies /api, so the client address arrives in X-Forwarded-For;
+    // only trust it from private networks so a client reaching the API directly cannot spoof it
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("10.0.0.0/8"));
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("172.16.0.0/12"));
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("192.168.0.0/16"));
+    });
+
+    builder.Services.Configure<AuthRateLimit>(builder.Configuration.GetSection(AuthRateLimit.SectionName));
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.AddPolicy(AuthRateLimit.PolicyName, context =>
+        {
+            var limit = context.RequestServices.GetRequiredService<IOptions<AuthRateLimit>>().Value;
+            return RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = limit.PermitLimit,
+                    Window = TimeSpan.FromSeconds(limit.WindowSeconds),
+                    QueueLimit = 0,
+                });
+        });
+    });
+
     var app = builder.Build();
+
+    app.UseForwardedHeaders();
 
     app.UseSerilogRequestLogging();
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseRateLimiter();
 
     if (builder.Configuration.GetValue<bool>("RunDatabaseMigrationsOnStartup"))
     {
