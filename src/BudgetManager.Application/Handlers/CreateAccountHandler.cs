@@ -19,7 +19,7 @@ public sealed class CreateAccountHandler(IEntityStore store) : IRequestHandler<C
             LedgerId = command.LedgerId,
             Name = command.Name,
             Description = command.Description,
-            Transactions = [new() { Title = "Initial balance", Value = command.InitialBalance, AccountId = accountId }]
+            Transactions = [AccountTransaction.CreateInitialBalance(accountId, command.InitialBalance)]
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create account.");
 
         await store.SaveChangesAsync(cancellationToken);

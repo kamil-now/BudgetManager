@@ -42,12 +42,7 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
                     LedgerId = ledgerId,
                     Name = x.Name,
                     Description = x.Description,
-                    Transactions = [new AccountTransaction()
-                    {
-                        Title = Constants.InitialBalanceTransactionTitle,
-                        Value = x.InitialBalance,
-                        AccountId = accountId
-                    }]
+                    Transactions = [AccountTransaction.CreateInitialBalance(accountId, x.InitialBalance)]
                 };
             })],
             Budgets = [budget]

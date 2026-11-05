@@ -70,6 +70,19 @@ public class EntityStore(ApplicationDbContext dbContext) : IEntityStore
           ?? throw new NotFoundException($"Entity of type '{typeof(T).Name}' with ID '{id}' not found.");
     }
 
+    public async Task<T> GetAsync<T>(Guid id, IEnumerable<Expression<Func<T, object>>> includes, CancellationToken cancellationToken) where T : Entity
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("ID cannot be empty", nameof(id));
+        }
+
+        var query = includes.Aggregate(dbContext.Set<T>().AsQueryable(), (current, include) => current.Include(include));
+
+        return await query.SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
+          ?? throw new NotFoundException($"Entity of type '{typeof(T).Name}' with ID '{id}' not found.");
+    }
+
     public async Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken) where T : Entity
     {
         ArgumentNullException.ThrowIfNull(predicate);

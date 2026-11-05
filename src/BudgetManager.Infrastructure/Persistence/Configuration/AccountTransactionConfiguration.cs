@@ -29,6 +29,9 @@ public class AccountTransactionConfiguration : IEntityTypeConfiguration<AccountT
         builder.Property(x => x.Date)
             .IsRequired();
 
+        builder.Property(x => x.Type)
+            .IsRequired();
+
         builder.Property(x => x.Title)
             .HasMaxLength(Constants.MaxTitleLength);
 

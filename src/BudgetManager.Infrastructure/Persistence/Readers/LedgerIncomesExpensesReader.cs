@@ -1,5 +1,5 @@
 using BudgetManager.Application.Interfaces;
-using BudgetManager.Domain;
+using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -78,8 +78,9 @@ public sealed class LedgerIncomesExpensesReader(ApplicationDbContext dbContext) 
     private static IQueryable<AccountTransaction> Filter(IQueryable<AccountTransaction> transactions, Guid ledgerId, LedgerStatisticsFilters filters)
         => transactions
             .Where(x => x.Account.LedgerId == ledgerId)
-            .Where(x => x.InTransfer == null && x.OutTransfer == null)
+            .Where(x => x.OutTransfer == null || x.OutTransfer.Income.Account.LedgerId != ledgerId)
+            .Where(x => x.InTransfer == null || x.InTransfer.Expense.Account.LedgerId != ledgerId)
             .Where(x => x.Value.Amount != 0)
             .Where(x => (filters.From == null || x.Date >= filters.From) && (filters.To == null || x.Date <= filters.To))
-            .Where(x => filters.IncludeInitialBalance || x.Title == null || x.Title != Constants.InitialBalanceTransactionTitle);
+            .Where(x => filters.IncludeInitialBalance || x.Type != AccountTransactionType.InitialBalance);
 }

@@ -114,12 +114,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         var user = NewUser();
         var ledger = NewLedger(user);
         var account = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
-        var transaction = new AccountTransaction
-        {
-            AccountId = account.Id,
-            Value = new Money(100, "EUR"),
-            Date = DateTimeOffset.UtcNow
-        };
+        var transaction = AccountTransaction.Create(account.Id, new Money(100, "EUR"), DateTimeOffset.UtcNow, null);
         var dbContext = GetContext();
         dbContext.Users.Add(user);
         dbContext.Ledgers.Add(ledger);
@@ -135,6 +130,27 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         // Assert
         var result = GetContext();
         (await result.AccountTransactions.AnyAsync(x => x.Id == transaction.Id)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Delete_WhenAccountHasTransfer_ThrowsException()
+    {
+        // Arrange
+        var user = NewUser();
+        var ledger = NewLedger(user);
+        var source = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
+        var target = new Account { LedgerId = ledger.Id, Name = $"Test Account {Guid.NewGuid()}" };
+        var dbContext = GetContext();
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Accounts.AddRange(source, target);
+        dbContext.AccountTransfers.Add(AccountTransfer.Transfer(source.Id, target.Id, new Money(100, "EUR"), DateTimeOffset.UtcNow, null, null, null));
+        await dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Act & Assert
+        var other = GetContext();
+        other.Accounts.Remove(await other.Accounts.SingleAsync(x => x.Id == source.Id));
+        await Should.ThrowAsync<DbUpdateException>(() => other.SaveChangesAsync(CancellationToken.None));
     }
 
     [Fact]
@@ -154,12 +170,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
 
         // Act & Assert
         var other = GetContext();
-        other.AccountTransactions.Add(new AccountTransaction
-        {
-            AccountId = account.Id,
-            Value = new Money(tooLargeAmount, "EUR"),
-            Date = DateTimeOffset.UtcNow
-        });
+        other.AccountTransactions.Add(AccountTransaction.Create(account.Id, new Money(tooLargeAmount, "EUR"), DateTimeOffset.UtcNow, null));
         await Should.ThrowAsync<DbUpdateException>(() => other.SaveChangesAsync(CancellationToken.None));
     }
 

@@ -93,7 +93,7 @@ public sealed class GetLedgerTransactionsHandler(ILedgerTransactionsReader trans
                     x.Transfer.Id,
                     x.Expense.AccountId,
                     ledgerTransactions.Accounts[x.Expense.AccountId],
-                    x.Expense.Value,
+                    -x.Expense.Value,
                     x.Income.Value,
                     x.Income.Date,
                     x.Income.AccountId,

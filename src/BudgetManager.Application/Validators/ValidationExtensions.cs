@@ -160,6 +160,15 @@ public static class ValidationExtensions
         return val.EnsureValidInitialBalance(paramName?.TrimName());
     }
 
+    public static Money EnsureValidPositive(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
+    {
+        if (val.Amount < 0)
+        {
+            throw new ValidationException($"{paramName?.TrimName()} amount must be positive.");
+        }
+        return val.EnsureValid(paramName?.TrimName());
+    }
+
     public static Money EnsureValidInitialBalance(this Money val, [CallerArgumentExpression(nameof(val))] string? paramName = null)
     {
         val.Currency.EnsureValidCurrency($"{paramName?.TrimName()} currency");

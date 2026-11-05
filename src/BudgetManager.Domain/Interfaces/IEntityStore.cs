@@ -10,6 +10,7 @@ public interface IEntityStore
     Task<T> RunInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default);
 
     Task<T> GetAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : Entity;
+    Task<T> GetAsync<T>(Guid id, IEnumerable<Expression<Func<T, object>>> includes, CancellationToken cancellationToken = default) where T : Entity;
     Task<IEnumerable<T>> GetAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;
     Task<T> CreateAsync<T>(T entity, CancellationToken cancellationToken = default) where T : Entity;
     Task<bool> ExistsAsync<T>(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default) where T : Entity;

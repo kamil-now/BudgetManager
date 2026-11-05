@@ -103,13 +103,7 @@ public class UpdateAccountTransactionTests(ITestOutputHelper testOutputHelper, A
 
     private async Task<AccountTransaction> CreateTransactionAsync(Guid accountId)
     {
-        var transaction = await EntityStore.CreateAsync(new AccountTransaction
-        {
-            AccountId = accountId,
-            Value = new(100, "PLN"),
-            Date = DateTimeOffset.UtcNow,
-            Title = "Test Transaction"
-        });
+        var transaction = await EntityStore.CreateAsync(AccountTransaction.Create(accountId, new(100, "PLN"), DateTimeOffset.UtcNow, "Test Transaction"));
         await EntityStore.SaveChangesAsync();
         return transaction;
     }

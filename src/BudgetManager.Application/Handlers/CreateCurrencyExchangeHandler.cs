@@ -19,7 +19,8 @@ public sealed class CreateCurrencyExchangeHandler(IEntityStore store) : IRequest
             command.Buy,
             command.Date,
             command.Title,
-            command.Comment);
+            command.Comment,
+            command.Tags);
 
         await store.CreateAsync(transfer, cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
@@ -29,8 +30,8 @@ public sealed class CreateCurrencyExchangeHandler(IEntityStore store) : IRequest
 
     private static void ValidateCommand(CreateCurrencyExchangeCommand command)
     {
-        command.Buy.EnsureValid();
-        command.Sell.EnsureValid();
+        command.Buy.EnsureValidPositive();
+        command.Sell.EnsureValidPositive();
 
         if (command.Buy.Currency == command.Sell.Currency)
         {
@@ -39,5 +40,6 @@ public sealed class CreateCurrencyExchangeHandler(IEntityStore store) : IRequest
 
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
         command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
+        command.Tags.EnsureValidTags();
     }
 }

@@ -61,7 +61,7 @@ public class OwnerResolutionTests(ITestOutputHelper testOutputHelper, Persistenc
         };
         var ledger = new Ledger { Id = Guid.NewGuid(), OwnerId = user.Id, Name = "Test Ledger" };
         var account = new Account { Id = Guid.NewGuid(), LedgerId = ledger.Id, Name = "Test Account" };
-        var accountTransaction = new AccountTransaction { Id = Guid.NewGuid(), AccountId = account.Id, Value = new(1, "PLN") };
+        var accountTransaction = AccountTransaction.Create(account.Id, new(1, "PLN"), default, null);
 
         dbContext.AddRange(user, ledger, account, accountTransaction);
         await dbContext.SaveChangesAsync();

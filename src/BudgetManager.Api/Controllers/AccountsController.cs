@@ -69,6 +69,20 @@ public class AccountsController(IMediator mediator) : BaseController
         return CreatedAtAction(nameof(GetTransfer), new { accountId, transferId = id }, id);
     }
 
+    [HttpPut("{accountId}/transfer/{transferId}")]
+    public async Task<ActionResult> UpdateTransfer([FromRoute] Guid accountId, [FromRoute] Guid transferId, [FromBody] UpdateAccountTransferCommand request)
+    {
+        await mediator.Send(request with { Id = transferId, AccountId = accountId });
+        return Ok();
+    }
+
+    [HttpPut("{accountId}/currencyExchange/{transferId}")]
+    public async Task<ActionResult> UpdateCurrencyExchange([FromRoute] Guid accountId, [FromRoute] Guid transferId, [FromBody] UpdateCurrencyExchangeCommand request)
+    {
+        await mediator.Send(request with { Id = transferId, AccountId = accountId });
+        return Ok();
+    }
+
     [HttpPost("{accountId}/currencyExchange")]
     public async Task<ActionResult> CreateCurrencyExchange([FromRoute] Guid accountId, [FromBody] CreateCurrencyExchangeCommand request)
     {

@@ -12,15 +12,9 @@ public sealed class CreateAccountTransactionHandler(IEntityStore store) : IReque
     {
         ValidateCommand(command);
 
-        var entity = await store.CreateAsync(new AccountTransaction
-        {
-            AccountId = command.AccountId,
-            Title = command.Title,
-            Tags = command.Tags?.ToList(),
-            Value = command.Value,
-            Comment = command.Comment,
-            Date = command.Date,
-        }, cancellationToken) ?? throw new InvalidOperationException("Failed to create AccountOperation.");
+        var entity = await store.CreateAsync(
+            AccountTransaction.Create(command.AccountId, command.Value, command.Date, command.Title, command.Comment, command.Tags),
+            cancellationToken) ?? throw new InvalidOperationException("Failed to create AccountOperation.");
 
         await store.SaveChangesAsync(cancellationToken);
 

@@ -18,7 +18,8 @@ public sealed class CreateAccountTransferHandler(IEntityStore store) : IRequestH
             command.Value,
             command.Date,
             command.Title,
-            command.Comment);
+            command.Comment,
+            command.Tags);
 
         await store.CreateAsync(transfer, cancellationToken);
         await store.SaveChangesAsync(cancellationToken);
@@ -28,7 +29,7 @@ public sealed class CreateAccountTransferHandler(IEntityStore store) : IRequestH
 
     private static void ValidateCommand(CreateAccountTransferCommand command)
     {
-        command.Value.EnsureValid();
+        command.Value.EnsureValidPositive();
 
         if (command.AccountId == command.TargetAccountId)
         {
@@ -37,5 +38,6 @@ public sealed class CreateAccountTransferHandler(IEntityStore store) : IRequestH
 
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
         command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
+        command.Tags.EnsureValidTags();
     }
 }

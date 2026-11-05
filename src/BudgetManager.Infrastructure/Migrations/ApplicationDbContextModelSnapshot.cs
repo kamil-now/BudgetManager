@@ -81,6 +81,9 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("Date")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Tags")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -523,13 +526,13 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasOne("BudgetManager.Domain.Entities.AccountTransaction", "Expense")
                         .WithOne("OutTransfer")
                         .HasForeignKey("BudgetManager.Domain.Entities.AccountTransfer", "ExpenseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BudgetManager.Domain.Entities.AccountTransaction", "Income")
                         .WithOne("InTransfer")
                         .HasForeignKey("BudgetManager.Domain.Entities.AccountTransfer", "IncomeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Expense");

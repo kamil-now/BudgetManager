@@ -14,10 +14,12 @@ public class AccountTransferConfiguration : IEntityTypeConfiguration<AccountTran
 
         builder.HasOne(x => x.Income)
             .WithOne(x => x.InTransfer)
-            .HasForeignKey<AccountTransfer>(x => x.IncomeId);
+            .HasForeignKey<AccountTransfer>(x => x.IncomeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Expense)
             .WithOne(x => x.OutTransfer)
-            .HasForeignKey<AccountTransfer>(x => x.ExpenseId);
+            .HasForeignKey<AccountTransfer>(x => x.ExpenseId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
