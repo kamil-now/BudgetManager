@@ -1,6 +1,6 @@
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit.Abstractions;

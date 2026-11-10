@@ -1,4 +1,5 @@
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +11,8 @@ public class BudgetsController(IMediator mediator) : BaseController
     [HttpGet("{budgetId}")]
     public async Task<ActionResult> GetBudget([FromRoute] Guid budgetId)
     {
-        throw new NotImplementedException(); //  TODO
+        var budget = await mediator.Send(new GetBudgetQuery(budgetId));
+        return Ok(budget);
     }
 
     [HttpPost]

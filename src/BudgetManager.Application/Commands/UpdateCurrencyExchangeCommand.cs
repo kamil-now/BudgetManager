@@ -1,6 +1,6 @@
 using BudgetManager.Application.Security;
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Commands;
 
@@ -16,7 +16,7 @@ public record UpdateCurrencyExchangeCommand(
   IEnumerable<string>? Tags = null
 ) : IRequest, IRequiresAccess
 {
-  IEnumerable<Resource> IRequiresAccess.Resources => TargetAccountId is Guid targetAccountId
-    ? [Resource.Of<AccountTransfer>(Id), Resource.Of<Account>(AccountId), Resource.Of<Account>(targetAccountId)]
-    : [Resource.Of<AccountTransfer>(Id), Resource.Of<Account>(AccountId)];
+    IEnumerable<Resource> IRequiresAccess.Resources => TargetAccountId is Guid targetAccountId
+          ? [Resource.Of<AccountTransfer>(Id), Resource.Of<Account>(AccountId), Resource.Of<Account>(targetAccountId)]
+          : [Resource.Of<AccountTransfer>(Id), Resource.Of<Account>(AccountId)];
 }

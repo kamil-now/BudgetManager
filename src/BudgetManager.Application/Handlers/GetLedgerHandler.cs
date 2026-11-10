@@ -1,20 +1,16 @@
 using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Queries;
+using BudgetManager.Application.Validators;
 using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Handlers;
 
-public sealed class GetLedgerHandler(ILedgerReader ledgerReader) : IRequestHandler<GetLedgerQuery, LedgerDTO?>
+public sealed class GetLedgerHandler(ILedgerReader ledgerReader) : IRequestHandler<GetLedgerQuery, LedgerDTO>
 {
-    public async Task<LedgerDTO?> Handle(GetLedgerQuery query, CancellationToken cancellationToken)
+    public async Task<LedgerDTO> Handle(GetLedgerQuery query, CancellationToken cancellationToken)
     {
-        var ledger = await ledgerReader.ReadAsync(query.Id, cancellationToken);
-        if (ledger is null)
-        {
-            return null;
-        }
-
+        var ledger = await ledgerReader.ReadAsync(query.Id, cancellationToken) ?? throw new NotFoundException($"Ledger {query.Id} not found.");
         var accounts = ledger.Accounts.Select(account => new LedgerDTO.Account()
         {
             Id = account.Id,

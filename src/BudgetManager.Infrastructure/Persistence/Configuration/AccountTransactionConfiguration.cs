@@ -12,7 +12,7 @@ public class AccountTransactionConfiguration : IEntityTypeConfiguration<AccountT
     {
         builder.ToTable("AccountTransactions");
 
-       builder.ConfigureEntity();
+        builder.ConfigureEntity();
 
         builder.OwnsOne(x => x.Value, money =>
         {

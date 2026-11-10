@@ -1,6 +1,6 @@
 using BudgetManager.Application.Security;
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Commands;
 

@@ -7,5 +7,5 @@ namespace BudgetManager.Application.Queries;
 
 public record GetLedgerTransactionsQuery(Guid LedgerId, LedgerTransactionsFilters Filters) : IRequest<LedgerTransactionsDTO?>, IRequiresAccess
 {
-  IEnumerable<Resource> IRequiresAccess.Resources => [Resource.Of<Ledger>(LedgerId)];
+    IEnumerable<Resource> IRequiresAccess.Resources => [Resource.Of<Ledger>(LedgerId)];
 }

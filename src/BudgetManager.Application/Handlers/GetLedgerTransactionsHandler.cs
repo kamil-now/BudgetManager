@@ -42,7 +42,7 @@ public sealed class GetLedgerTransactionsHandler(ILedgerTransactionsReader trans
         return new LedgerTransactionsDTO()
         {
             Incomes = [.. ledgerTransactions.AccountTransactions
-                .Where(x => x.Value.Amount > 0 && !x.IsTransferLeg)
+                .Where(x => x.Value.Amount > 0 && !x.IsTransfer)
                 .Select(x => new LedgerTransactionsDTO.AccountTransaction(
                     x.Id,
                     x.AccountId,
@@ -58,7 +58,7 @@ public sealed class GetLedgerTransactionsHandler(ILedgerTransactionsReader trans
             ))],
 
             Expenses = [.. ledgerTransactions.AccountTransactions
-                .Where(x => x.Value.Amount < 0 && !x.IsTransferLeg)
+                .Where(x => x.Value.Amount < 0 && !x.IsTransfer)
                 .Select(x => new LedgerTransactionsDTO.AccountTransaction(
                     x.Id,
                     x.AccountId,
@@ -104,7 +104,7 @@ public sealed class GetLedgerTransactionsHandler(ILedgerTransactionsReader trans
             ))],
 
             Allocations = [.. ledgerTransactions.FundTransactions
-                .Where(x => x.Value.Amount > 0 && !x.IsTransferLeg)
+                .Where(x => x.Value.Amount > 0 && !x.IsTransfer)
                 .Select(x => new LedgerTransactionsDTO.FundTransaction(
                     x.Id,
                     ledgerTransactions.Funds[x.FundId].Item1,
@@ -121,7 +121,7 @@ public sealed class GetLedgerTransactionsHandler(ILedgerTransactionsReader trans
             ))],
 
             Deallocations = [.. ledgerTransactions.FundTransactions
-                .Where(x => x.Value.Amount < 0 && !x.IsTransferLeg)
+                .Where(x => x.Value.Amount < 0 && !x.IsTransfer)
                 .Select(x => new LedgerTransactionsDTO.FundTransaction(
                     x.Id,
                     ledgerTransactions.Funds[x.FundId].Item1,

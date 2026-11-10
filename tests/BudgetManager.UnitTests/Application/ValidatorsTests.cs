@@ -1,11 +1,11 @@
 using System.Linq.Expressions;
 using BudgetManager.Application.Models;
 using BudgetManager.Application.Validators;
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Interfaces;
+using BudgetManager.Domain.Models;
 using NSubstitute;
 using Shouldly;
 

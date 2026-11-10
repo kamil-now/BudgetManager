@@ -68,5 +68,5 @@ public class Balance : Dictionary<string, decimal>
             sum.Add(b);
         }
         return sum;
-    } 
+    }
 }

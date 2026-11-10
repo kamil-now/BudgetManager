@@ -1,4 +1,5 @@
 using BudgetManager.Application.Commands;
+using BudgetManager.Application.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +11,8 @@ public class AccountsController(IMediator mediator) : BaseController
     [HttpGet("{accountId}")]
     public async Task<ActionResult> GetAccount([FromRoute] Guid accountId)
     {
-        throw new NotImplementedException(); //  TODO
+        var account = await mediator.Send(new GetAccountQuery(accountId));
+        return Ok(account);
     }
 
     [HttpPost]
@@ -34,7 +36,8 @@ public class AccountsController(IMediator mediator) : BaseController
     [HttpGet("{accountId}/transaction/{transactionId}")]
     public async Task<ActionResult> GetTransaction([FromRoute] Guid accountId, [FromRoute] Guid transactionId)
     {
-        throw new NotImplementedException(); //  TODO
+        var transaction = await mediator.Send(new GetAccountTransactionQuery(accountId, transactionId));
+        return Ok(transaction);
     }
 
     [HttpPut("{accountId}/transaction/{transactionId}")]
@@ -55,7 +58,8 @@ public class AccountsController(IMediator mediator) : BaseController
     [HttpGet("{accountId}/transfer/{transferId}")]
     public async Task<ActionResult> GetTransfer([FromRoute] Guid accountId, [FromRoute] Guid transferId)
     {
-        throw new NotImplementedException(); //  TODO
+        var transfer = await mediator.Send(new GetAccountTransferQuery(accountId, transferId));
+        return Ok(transfer);
     }
 
     [HttpPost("{accountId}/transfer")]

@@ -1,6 +1,6 @@
 using BudgetManager.Application.Interfaces;
-using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 

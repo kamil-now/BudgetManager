@@ -3,7 +3,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using BudgetManager.Api.Models;
 using BudgetManager.Application.Commands;
-using BudgetManager.Application.Handlers;
 using BudgetManager.Application.Models;
 using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Models;
@@ -16,7 +15,7 @@ namespace BudgetManager.IntegrationTests.Api;
 /// <summary>
 /// Serves as E2E test substitute by validating full user journey and cross-feature integration through the API layer
 /// </summary>
-/// 
+///
 [Collection("Sequential")]
 [TestCaseOrderer("BudgetManager.IntegrationTests.Api.PriorityOrderer", "BudgetManager.IntegrationTests")]
 public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture fixture, TestState state) : BaseTest(testOutputHelper, fixture), IClassFixture<TestState>
@@ -63,13 +62,13 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         _testState.UserId.ShouldNotBeNull();
 
         var command = new CreateLedgerCommand("Default Ledger", null,
-          new("Main budget", [
+          [new("Main budget", [
               new("Food", [new("EUR", 0, AllocationType.Fixed, Amount: 600)]),
               new("Rent", [new("EUR", 1, AllocationType.Fixed, Amount: 800)]),
               new("Utilities", [new("EUR", 2, AllocationType.Fixed, Amount: 200)]),
               new("Entertainment", [new("EUR", 3, AllocationType.Percent, Percent: 20)]),
               new("Savings", [new("EUR", 4, AllocationType.Percent, Percent: 80)])
-              ]),
+              ])],
               [
                 new(new(256, "EUR"), "Cash"),
                 new(new(2048, "EUR"), "Main Account"),
@@ -106,12 +105,13 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         ledger.Budgets.Count().ShouldBe(1);
         var budget = ledger.Budgets.First();
 
-        budget.Name.ShouldBe(_testState.CreatedLedger.Budget.Name);
-        budget.Description.ShouldBe(_testState.CreatedLedger.Budget.Description);
+        var createdBudget = _testState.CreatedLedger.Budgets.First();
+        budget.Name.ShouldBe(createdBudget.Name);
+        budget.Description.ShouldBe(createdBudget.Description);
 
-        budget.Funds.Count().ShouldBe(_testState.CreatedLedger.Budget.Funds.Count());
+        budget.Funds.Count().ShouldBe(createdBudget.Funds.Count());
 
-        foreach (var expectedFund in _testState.CreatedLedger.Budget.Funds)
+        foreach (var expectedFund in createdBudget.Funds)
         {
             var fund = budget.Funds.FirstOrDefault(x => x.Name == expectedFund.Name);
             fund.ShouldNotBeNull($"Fund with name '{expectedFund.Name}' not found.");

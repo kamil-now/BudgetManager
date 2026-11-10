@@ -15,11 +15,70 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
     {
         // Arrange
         MockUnauthenticatedUser();
-        var command = new CreateLedgerCommand(string.Empty, null, new(string.Empty, []), []);
+        var command = new CreateLedgerCommand(string.Empty, null, [new(string.Empty, [])], []);
 
         // Act & Assert
         var ex = await Should.ThrowAsync<AuthenticationException>(() => Mediator.Send(command));
         ex.Message.ShouldBe("User ID '00000000-0000-0000-0000-000000000000' is invalid.");
+    }
+
+    [Fact]
+    public async Task CreateLedger_WithWizardDefaults_ShouldCreateBudgetFundsAndAccounts()
+    {
+        // Arrange — the exact funds/accounts the new-ledger wizard pre-fills and POSTs.
+        await MockAuthenticatedUserAsync();
+        var command = new CreateLedgerCommand(
+          "Default Ledger",
+          null,
+          [
+            new("Main budget",
+            [
+              new("Food", [new("EUR", 0, AllocationType.Fixed, Amount: 600)]),
+              new("Rent", [new("EUR", 1, AllocationType.Fixed, Amount: 800)]),
+              new("Utilities", [new("EUR", 2, AllocationType.Fixed, Amount: 200)]),
+              new("Entertainment", [new("EUR", 3, AllocationType.Percent, Percent: 20)]),
+              new("Savings", [new("EUR", 4, AllocationType.Percent, Percent: 80)]),
+            ]),
+          ],
+          [
+            new(new(256, "EUR"), "Cash"),
+            new(new(2048, "EUR"), "Main Account"),
+            new(new(4096, "EUR"), "Savings Account"),
+          ]);
+
+        // Act
+        var id = await Mediator.Send(command);
+
+        // Assert
+        id.ShouldNotBe(Guid.Empty);
+        var budget = (await EntityStore.GetAsync<Budget>(x => x.LedgerId == id, default)).ShouldHaveSingleItem();
+        (await EntityStore.GetAsync<Fund>(x => x.BudgetId == budget.Id, default)).Count().ShouldBe(5);
+        (await EntityStore.GetAsync<Account>(x => x.LedgerId == id, default)).Count().ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task CreateLedger_WhenMultipleBudgets_ShouldCreateEveryBudget()
+    {
+        // Arrange
+        await MockAuthenticatedUserAsync();
+        var command = new CreateLedgerCommand(
+          "Multi-budget ledger",
+          null,
+          [
+            new("Household", [new("Groceries", [new("EUR", 0, AllocationType.Percent, Percent: 100)])]),
+            new("Business", [new("Taxes", [new("EUR", 0, AllocationType.Fixed, Amount: 500)])]),
+            new("Travel", [new("Flights", [new("USD", 0, AllocationType.Percent, Percent: 60)])]),
+          ],
+          [new(new(1000, "EUR"), "Account")]);
+
+        // Act
+        var id = await Mediator.Send(command);
+
+        // Assert
+        var budgets = (await EntityStore.GetAsync<Budget>(x => x.LedgerId == id, default)).ToArray();
+        budgets.Length.ShouldBe(3);
+        budgets.Select(x => x.Name).OrderBy(x => x)
+            .ShouldBe(["Business", "Household", "Travel"]);
     }
 
     [Fact]
@@ -31,7 +90,7 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var command = new CreateLedgerCommand(
           "[ledger name]",
           "[ledger description]",
-          new("[budget name]", [new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")], "[budget description]"),
+          [new("[budget name]", [new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")], "[budget description]")],
           [
             new(new(123, "EUR"), "[account name 1]", "[account description 1]"),
             new(new(0, "EUR"), "[account name 2]", "[account description 2]"),
@@ -48,18 +107,19 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         ledger.Name.ShouldBe(command.Name);
         ledger.Description.ShouldBe(command.Description);
 
+        var commandBudget = command.Budgets.First();
         var budgets = (await EntityStore.GetAsync<Budget>(x => x.LedgerId == id, default)).ToArray();
         budgets.Length.ShouldBe(1);
 
         var budget = budgets.First();
         budget.ShouldNotBeNull();
         budget.LedgerId.ShouldBe(id);
-        budget.Name.ShouldBe(command.Budget.Name);
-        budget.Description.ShouldBe(command.Budget.Description);
+        budget.Name.ShouldBe(commandBudget.Name);
+        budget.Description.ShouldBe(commandBudget.Description);
 
         var funds = (await EntityStore.GetAsync<Fund>(x => x.BudgetId == budget.Id, default)).ToArray();
         funds.Length.ShouldBe(1);
-        var commandFund = command.Budget.Funds.First();
+        var commandFund = commandBudget.Funds.First();
         var fund = funds.First();
 
         fund.ShouldNotBeNull();
@@ -77,9 +137,8 @@ public class CreateLedgerTests(ITestOutputHelper testOutputHelper, ApplicationFi
         var accounts = (await EntityStore.GetAsync<Account>(x => x.LedgerId == id, default)).OrderBy(x => x.Name).ToArray();
         accounts.Length.ShouldBe(3);
 
-        for (var i = 0; i < 3; i++)
+        foreach (var account in accounts)
         {
-            var account = accounts.ElementAt(1);
             var commandAccount = command.Accounts.FirstOrDefault(x => x.Name == account.Name);
             commandAccount.ShouldNotBeNull();
             account.ShouldNotBeNull();

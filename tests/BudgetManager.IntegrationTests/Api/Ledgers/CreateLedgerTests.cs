@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using BudgetManager.Application.Commands;
-using BudgetManager.Domain.Enums;
 using BudgetManager.Domain;
+using BudgetManager.Domain.Enums;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -15,12 +15,14 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
     internal static CreateLedgerCommand ValidCommand = new(
         "[ledger name]",
         "[ledger description]",
-        new(
-          "[budget name]",
-          [
-            new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")
-          ],
-          "[budget description]"),
+        [
+          new(
+            "[budget name]",
+            [
+              new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")
+            ],
+            "[budget description]")
+        ],
         [
           new(new(123, "EUR"), "[account name]", "[account description]")
         ]);
@@ -83,8 +85,19 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
             var tooLongDescription = new string('a', Constants.MaxCommentLength + 1);
             var tooLongName = new string('b', Constants.MaxNameLength + 1);
             var validAccount = ValidCommand.Accounts.First();
-            var validFund = ValidCommand.Budget.Funds.First();
+            var validBudget = ValidCommand.Budgets.First();
+            var validFund = validBudget.Funds.First();
             var validAllocation = validFund.AllocationTemplates.First();
+
+            Add(ValidCommand with { Name = string.Empty }, "Ledger name cannot be empty.");
+
+            Add(ValidCommand with { Name = tooLongName }, $"Ledger name value is too long. Max length is {Constants.MaxNameLength}.");
+
+            Add(ValidCommand with { Accounts = [null!] }, "Account cannot be empty.");
+
+            Add(ValidCommand with { Budgets = [null!] }, "Budget cannot be empty.");
+
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [null!] }] }, "Fund cannot be empty.");
 
             Add(ValidCommand with { Description = tooLongDescription }, $"Description value is too long. Max length is {Constants.MaxCommentLength}.");
 
@@ -102,31 +115,39 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(1.234m, "USD") }] }, $"InitialBalance of {validAccount.Name} amount value '1.234' cannot have more than {Constants.MoneyDecimalPlaces} decimal places.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Name = string.Empty } }, "Budget name cannot be empty.");
+            Add(ValidCommand with { Accounts = [validAccount, validAccount] }, "Account names must be unique.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Name = tooLongName } }, $"Budget name value is too long. Max length is {Constants.MaxNameLength}.");
+            Add(ValidCommand with { Budgets = [] }, "Budgets cannot be empty.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Description = tooLongDescription } }, $"Description of {ValidCommand.Budget.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
+            Add(ValidCommand with { Budgets = [validBudget, validBudget] }, "Budget names must be unique.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [] } }, "Funds cannot be empty.");
+            Add(ValidCommand with { Budgets = [validBudget, validBudget with { Name = string.Empty }] }, "Budget name cannot be empty.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Name = string.Empty }] } }, "Fund name cannot be empty.");
+            Add(ValidCommand with { Budgets = [validBudget with { Name = string.Empty }] }, "Budget name cannot be empty.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Name = tooLongName }] } }, $"Fund name value is too long. Max length is {Constants.MaxNameLength}.");
+            Add(ValidCommand with { Budgets = [validBudget with { Name = tooLongName }] }, $"Budget name value is too long. Max length is {Constants.MaxNameLength}.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { Description = tooLongDescription }] } }, $"Description of {validFund.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
+            Add(ValidCommand with { Budgets = [validBudget with { Description = tooLongDescription }] }, $"Description of {validBudget.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Sequence = -1 }] }] } }, $"Allocation template of {validFund.Name} sequence must be greater than or equal zero.");
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [] }] }, "Funds cannot be empty.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Percent = 100.01m }] }] } }, $"Allocation template of {validFund.Name} percent must be less than or equal {Constants.MaxAllocationPercent}.");
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { Name = string.Empty }] }] }, "Fund name cannot be empty.");
 
-            Add(ValidCommand with { Budget = ValidCommand.Budget with { Funds = [validFund, validFund with { Name = "[other fund name]", AllocationTemplates = [validAllocation with { Sequence = 0, Percent = 81 }] }] } }, $"Allocation percents in {validAllocation.Currency} must add up to less than or equal {Constants.MaxAllocationPercent}.");
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { Name = tooLongName }] }] }, $"Fund name value is too long. Max length is {Constants.MaxNameLength}.");
+
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { Description = tooLongDescription }] }] }, $"Description of {validFund.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
+
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Sequence = -1 }] }] }] }, $"Allocation template of {validFund.Name} sequence must be greater than or equal zero.");
+
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Percent = 100.01m }] }] }] }, $"Allocation template of {validFund.Name} percent must be less than or equal {Constants.MaxAllocationPercent}.");
+
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund, validFund with { Name = "[other fund name]", AllocationTemplates = [validAllocation with { Sequence = 0, Percent = 81 }] }] }] }, $"Allocation percents in {validAllocation.Currency} must add up to less than or equal {Constants.MaxAllocationPercent}.");
         }
     }
 
     [Theory]
     [ClassData(typeof(InvalidRequests))]
-    public async Task CreateLedger_WhenCommandFailsValidation_400_WithErrorMessage(CreateLedgerCommand command, string expectedError)
+    public async Task CreateLedger_WhenCommandFailsValidation_422_WithErrorMessage(CreateLedgerCommand command, string expectedError)
     {
         // Arrange
         await RegisterAndLogin();

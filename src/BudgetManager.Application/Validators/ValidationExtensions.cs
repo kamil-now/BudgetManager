@@ -61,6 +61,11 @@ public static class ValidationExtensions
     {
         foreach (var fund in funds)
         {
+            if (fund == null)
+            {
+                throw new ValidationException("Fund cannot be empty.");
+            }
+
             fund.Name.EnsureNotEmpty("Fund name").EnsureNotLongerThan(Constants.MaxNameLength, "Fund name");
             fund.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {fund.Name}");
 

@@ -78,8 +78,7 @@ try
 
     builder.Services.AddControllers();
 
-    // the UI's nginx proxies /api, so the client address arrives in X-Forwarded-For;
-    // only trust it from private networks so a client reaching the API directly cannot spoof it
+    // the UI's nginx proxies /api, so the client address arrives in X-Forwarded-For; only trust it from private networks so a client reaching the API directly cannot spoof it
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;

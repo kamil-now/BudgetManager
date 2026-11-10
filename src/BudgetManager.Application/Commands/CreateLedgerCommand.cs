@@ -6,7 +6,7 @@ namespace BudgetManager.Application.Commands;
 public record CreateLedgerCommand(
   string Name,
   string? Description,
-  CreateBudgetDTO Budget,
+  IEnumerable<CreateBudgetDTO> Budgets,
   IEnumerable<CreateAccountDTO> Accounts
 ) : IRequest<Guid>, IRequiresAccess
 {

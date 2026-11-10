@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using BudgetManager.Domain.Enums;
-using BudgetManager.Domain.Models;
 using BudgetManager.Domain.Interfaces;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Domain.Entities;
 

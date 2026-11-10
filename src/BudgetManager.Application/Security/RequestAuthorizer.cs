@@ -1,6 +1,6 @@
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
-using BudgetManager.Application.Interfaces;
 
 namespace BudgetManager.Application.Security;
 

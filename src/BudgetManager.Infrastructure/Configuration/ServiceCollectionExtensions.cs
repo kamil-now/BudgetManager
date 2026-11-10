@@ -100,8 +100,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEntityStore, EntityStore>();
 
         services.AddScoped<ILedgerReader, LedgerReader>();
+        services.AddScoped<ILedgerListReader, LedgerListReader>();
         services.AddScoped<ILedgerIncomesExpensesReader, LedgerIncomesExpensesReader>();
         services.AddScoped<ILedgerTransactionsReader, LedgerTransactionsReader>();
+        services.AddScoped<IAccountReader, AccountReader>();
+        services.AddScoped<IBudgetReader, BudgetReader>();
+        services.AddScoped<IAccountTransactionReader, AccountTransactionReader>();
+        services.AddScoped<IAccountTransferReader, AccountTransferReader>();
         services.AddScoped<IResourceOwnerReader, ResourceOwnerReader>();
 
         return services;
