@@ -5,8 +5,8 @@ services:
     env_file:
       - .env
     build:
-      context: ../src
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: src/Dockerfile
     ports:
       - "${API_EXTERNAL_PORT}:8080"
     networks:

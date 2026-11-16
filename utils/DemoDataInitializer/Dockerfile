@@ -1,7 +1,7 @@
 # Build context: the repository root (see docker/docker-compose.dev.yml)
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /repo
-COPY ["global.json", "./"]
+COPY ["global.json", "Directory.Packages.props", "./"]
 COPY ["src/BudgetManager.Common/BudgetManager.Common.csproj", "src/BudgetManager.Common/"]
 COPY ["src/BudgetManager.Domain/BudgetManager.Domain.csproj", "src/BudgetManager.Domain/"]
 COPY ["src/BudgetManager.Application/BudgetManager.Application.csproj", "src/BudgetManager.Application/"]
