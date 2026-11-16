@@ -15,15 +15,13 @@ public sealed class GetBudgetHandler(IBudgetReader budgetReader) : IRequestHandl
         {
             Id = fund.Id,
             Balance = fund.Balance,
-            Name = fund.Name,
-            Description = fund.Description
+            Name = fund.Name
         }).ToArray();
 
         return new BudgetDTO
         {
             Id = budget.Id,
             Name = budget.Name,
-            Description = budget.Description,
             Funds = funds,
             Balance = Balance.Sum(funds.Select(x => x.Balance))
         };

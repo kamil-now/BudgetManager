@@ -1,0 +1,20 @@
+.funds-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.funds {
+  --rows: 7;
+}
+
+.fund-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.funds-foot {
+  display: flex;
+  margin-top: -4px;
+}

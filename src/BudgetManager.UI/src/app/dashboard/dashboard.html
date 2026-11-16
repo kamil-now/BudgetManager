@@ -1,0 +1,49 @@
+@let l = store.ledger();
+@if (store.status() === 'ready' && l) {
+  <div class="dash">
+    @if (viewport.phone()) {
+      <app-balance-card class="balance" layout="page" [name]="l.name" [totals]="store.totals()" />
+      <div class="segment tabs" role="group" [attr.aria-label]="'nav.dashboard' | t">
+        @for (t of tabs; track t.id) {
+          <button
+            type="button"
+            [class.active]="tab() === t.id"
+            [attr.aria-pressed]="tab() === t.id"
+            (click)="tab.set(t.id)"
+          >
+            {{ t.label | t }}
+          </button>
+        }
+      </div>
+    }
+    <div class="side">
+      <app-accounts-panel
+        class="accounts"
+        [class.tab-hidden]="viewport.phone() && tab() !== 'accounts'"
+        [accounts]="l.accounts"
+        [scope]="scope()"
+        (scopeChange)="scope.set($event)"
+      />
+      <app-budgets-panel
+        class="budgets"
+        [class.tab-hidden]="viewport.phone() && tab() !== 'budgets'"
+        [budgets]="l.budgets"
+        [scope]="scope()"
+        (scopeChange)="scope.set($event)"
+      />
+    </div>
+
+    <app-transactions-panel
+      class="main"
+      [class.tab-hidden]="viewport.phone() && tab() !== 'transactions'"
+      [(scope)]="scope"
+    />
+  </div>
+} @else {
+  <app-page-status
+    [state]="store.status()"
+    [loadingText]="'dashboard.loading' | t"
+    [errorText]="'dashboard.error' | t"
+    (retry)="retry()"
+  />
+}

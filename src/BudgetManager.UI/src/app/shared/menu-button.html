@@ -1,0 +1,51 @@
+<button
+  #trigger
+  type="button"
+  aria-haspopup="menu"
+  [class]="triggerClass()"
+  [id]="id + '-trigger'"
+  [attr.aria-label]="label()"
+  [attr.aria-expanded]="isOpen()"
+  [attr.aria-controls]="isOpen() ? id : null"
+  [disabled]="disabled()"
+  (click)="toggle()"
+  (keydown.arrowdown)="onTriggerArrow($event, 'first')"
+  (keydown.arrowup)="onTriggerArrow($event, 'last')"
+>
+  <ng-content />
+</button>
+@if (isOpen()) {
+  <div
+    class="menu"
+    role="menu"
+    [class.menu--end]="align() === 'end'"
+    [id]="id"
+    [attr.aria-labelledby]="id + '-trigger'"
+  >
+    @for (entry of items(); track $index; let i = $index) {
+      @if (entry.type === 'separator') {
+        <hr class="menu-sep" />
+      } @else {
+        <button
+          #item
+          type="button"
+          role="menuitem"
+          class="menu-item"
+          tabindex="-1"
+          [attr.aria-disabled]="entry.disabledReason ? true : null"
+          [attr.aria-label]="entry.disabledReason ? entry.label : null"
+          [attr.aria-describedby]="entry.disabledReason ? id + '-reason-' + i : null"
+          (click)="choose(entry)"
+          (keydown)="onItemKey($event)"
+        >
+          <span class="menu-text">
+            <span class="menu-label">{{ entry.label }}</span>
+            @if (entry.disabledReason) {
+              <span class="menu-reason" [id]="id + '-reason-' + i">{{ entry.disabledReason }}</span>
+            }
+          </span>
+        </button>
+      }
+    }
+  </div>
+}

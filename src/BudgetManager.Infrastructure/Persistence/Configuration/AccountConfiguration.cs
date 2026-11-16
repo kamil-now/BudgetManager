@@ -21,9 +21,6 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasIndex(a => new { a.Name, a.LedgerId })
             .IsUnique();
 
-        builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxCommentLength);
-
         builder.HasMany(x => x.Transactions)
             .WithOne(x => x.Account)
             .HasForeignKey(x => x.AccountId)

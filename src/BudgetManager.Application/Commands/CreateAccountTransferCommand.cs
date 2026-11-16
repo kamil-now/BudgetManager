@@ -9,9 +9,7 @@ public record CreateAccountTransferCommand(
   Guid TargetAccountId,
   Money Value,
   DateTimeOffset Date,
-  string? Title,
-  string? Comment = null,
-  IEnumerable<string>? Tags = null
+  string? Title
 ) : IRequest<Guid>, IRequiresAccess
 {
     IEnumerable<Resource> IRequiresAccess.Resources => [Resource.Of<Account>(AccountId), Resource.Of<Account>(TargetAccountId)];

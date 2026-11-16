@@ -10,9 +10,7 @@ public record UpdateAccountTransferCommand(
   Guid TargetAccountId,
   Money Value,
   DateTimeOffset Date,
-  string? Title,
-  string? Comment = null,
-  IEnumerable<string>? Tags = null
+  string? Title
 ) : IRequest, IRequiresAccess
 {
     IEnumerable<Resource> IRequiresAccess.Resources =>

@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using BudgetManager.Domain.Enums;
 using BudgetManager.Domain.Interfaces;
 using BudgetManager.Domain.Models;
 
@@ -9,7 +8,6 @@ public class Budget : Entity, IAccessControlled<Budget>
 {
     public required Guid LedgerId { get; set; }
     public required string Name { get; set; }
-    public string? Description { get; set; }
 
     public Ledger Ledger { get; set; } = null!;
     public virtual ICollection<Fund> Funds { get; set; } = [];
@@ -17,47 +15,25 @@ public class Budget : Entity, IAccessControlled<Budget>
 
     public static Expression<Func<Budget, Guid>> OwnerId => x => x.Ledger.OwnerId;
 
-    public void AddFund(string name, string? description, IEnumerable<FundAllocation> allocations)
+    public Fund AddFund(string name)
     {
         var fund = new Fund
         {
             BudgetId = Id,
-            Name = name,
-            Description = description
+            Name = name
         };
 
-        foreach (var allocation in allocations)
-        {
-            var template = AllocationTemplates
-                .SingleOrDefault(x => x.Currency == allocation.Currency);
-            if (template == null)
-            {
-                template = new AllocationTemplate { BudgetId = Id, Currency = allocation.Currency };
-                AllocationTemplates.Add(template);
-            }
-
-            template.Lines.Add(CreateAllocationTemplateLine(allocation, template.Id, fund.Id));
-        }
-
         Funds.Add(fund);
+
+        return fund;
     }
 
-    private static AllocationTemplateLine CreateAllocationTemplateLine(FundAllocation allocation, Guid allocationTemplateId, Guid fundId) => allocation.Type switch
+    public AllocationTemplate AddAllocationTemplate(string name, string currency, IEnumerable<AllocationLine> lines)
     {
-        AllocationType.Fixed => new FixedAllocationTemplateLine
-        {
-            AllocationTemplateId = allocationTemplateId,
-            FundId = fundId,
-            Sequence = allocation.Sequence,
-            Amount = allocation.Amount!.Value
-        },
-        AllocationType.Percent => new PercentAllocationTemplateLine
-        {
-            AllocationTemplateId = allocationTemplateId,
-            FundId = fundId,
-            Sequence = allocation.Sequence,
-            Percent = allocation.Percent!.Value
-        },
-        _ => throw new NotSupportedException($"Unsupported allocation type '{allocation.Type}'.")
-    };
+        var template = AllocationTemplate.Create(Id, name, currency, lines);
+
+        AllocationTemplates.Add(template);
+
+        return template;
+    }
 }

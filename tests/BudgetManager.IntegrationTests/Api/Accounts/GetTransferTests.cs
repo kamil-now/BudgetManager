@@ -82,7 +82,7 @@ public class GetTransferTests(ITestOutputHelper testOutputHelper, ApiFixture fix
         await RegisterAndLogin();
         var (ledgerId, accountId) = await CreateLedgerAndGetIds();
         var transferId = await CreateExchange(accountId);
-        var accountResponse = await Client.PostAsJsonAsync("/api/accounts", new CreateAccountCommand(ledgerId, new(0, "EUR"), $"Other {Guid.NewGuid()}", null));
+        var accountResponse = await Client.PostAsJsonAsync("/api/accounts", new CreateAccountCommand(ledgerId, new(0, "EUR"), $"Other {Guid.NewGuid()}"));
         accountResponse.StatusCode.ShouldBe(HttpStatusCode.Created, await accountResponse.Content.ReadAsStringAsync());
         var otherAccountId = await accountResponse.Content.ReadFromJsonAsync<Guid>();
 

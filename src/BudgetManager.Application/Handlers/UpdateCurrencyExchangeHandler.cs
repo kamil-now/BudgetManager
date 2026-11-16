@@ -20,9 +20,7 @@ public sealed class UpdateCurrencyExchangeHandler(IEntityStore store) : IRequest
             command.Sell,
             command.Buy,
             command.Date,
-            command.Title,
-            command.Comment,
-            command.Tags);
+            command.Title);
 
         await store.SaveChangesAsync(cancellationToken);
     }
@@ -38,7 +36,5 @@ public sealed class UpdateCurrencyExchangeHandler(IEntityStore store) : IRequest
         }
 
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
-        command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
-        command.Tags.EnsureValidTags();
     }
 }

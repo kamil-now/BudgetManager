@@ -9,7 +9,10 @@ public class FundTransactionConfiguration : IEntityTypeConfiguration<FundTransac
 {
     public void Configure(EntityTypeBuilder<FundTransaction> builder)
     {
-        builder.ToTable("FundTransactions");
+        // a row comes either from an account transaction (income allocation, expense payment) or from an allocation operation
+        builder.ToTable("FundTransactions", table => table.HasCheckConstraint(
+            "CK_FundTransactions_Source",
+            "num_nonnulls(\"AccountTransactionId\", \"AllocationId\") = 1"));
 
         builder.ConfigureEntity();
 
@@ -31,11 +34,20 @@ public class FundTransactionConfiguration : IEntityTypeConfiguration<FundTransac
         builder.Property(x => x.Title)
             .HasMaxLength(Constants.MaxTitleLength);
 
-        builder.Property(x => x.Comment)
-            .HasMaxLength(Constants.MaxCommentLength);
-
         builder.HasOne(x => x.Fund)
             .WithMany(x => x.Transactions)
             .HasForeignKey(x => x.FundId);
+
+        builder.HasOne(x => x.AccountTransaction)
+            .WithMany()
+            .HasForeignKey(x => x.AccountTransactionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => x.AccountTransactionId);
+
+        builder.HasIndex(x => x.AllocationId);
+
+        // also serves the foreign key, which then gets no index of its own
+        builder.HasIndex(x => new { x.FundId, x.Date });
     }
 }

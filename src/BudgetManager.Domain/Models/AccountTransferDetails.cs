@@ -9,6 +9,4 @@ public record AccountTransferDetails(
     string IncomeAccountName,
     Money IncomeValue,
     DateTimeOffset Date,
-    string? Title,
-    string? Comment,
-    List<string>? Tags);
+    string? Title);

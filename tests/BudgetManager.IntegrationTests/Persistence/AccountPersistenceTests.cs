@@ -18,7 +18,6 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         var account = new Account
         {
             Name = "Test Account",
-            Description = "Test Account Description",
             LedgerId = Guid.NewGuid()
         };
         var dbContext = GetContext();
@@ -45,7 +44,6 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         var account = new Account
         {
             Name = "Test Account",
-            Description = "Test Account Description",
             LedgerId = ledger.Id
         };
 
@@ -144,7 +142,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         dbContext.Users.Add(user);
         dbContext.Ledgers.Add(ledger);
         dbContext.Accounts.AddRange(source, target);
-        dbContext.AccountTransfers.Add(AccountTransfer.Transfer(source.Id, target.Id, new Money(100, "EUR"), DateTimeOffset.UtcNow, null, null, null));
+        dbContext.AccountTransfers.Add(AccountTransfer.Transfer(source.Id, target.Id, new Money(100, "EUR"), DateTimeOffset.UtcNow, null));
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Act & Assert
@@ -188,7 +186,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         dbContext.SaveChanges();
 
         // Act
-        account.Description = "Updated";
+        account.Name = $"Updated {Guid.NewGuid()}";
         dbContext.SaveChanges();
 
         // Assert
@@ -210,7 +208,7 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Act
-        account.Description = "Updated";
+        account.Name = $"Updated {Guid.NewGuid()}";
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Assert
@@ -236,7 +234,6 @@ public class AccountPersistenceTests(ITestOutputHelper testOutputHelper, Persist
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(Guid.Empty);
         result.Name.ShouldBe(expected.Name);
-        result.Description.ShouldBe(expected.Description);
         result.LedgerId.ShouldBe(expected.LedgerId);
         result.CreatedAt.ShouldBeGreaterThanOrEqualTo(timestamp);
         result.UpdatedAt.ShouldBeNull();

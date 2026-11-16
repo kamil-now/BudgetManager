@@ -1,6 +1,10 @@
+using BudgetManager.Application.Commands;
+using BudgetManager.Application.Models;
+using BudgetManager.Application.Queries;
 using BudgetManager.Common;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
+using BudgetManager.Domain.Models;
 using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
@@ -38,4 +42,33 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApplicationFi
     {
         MockCurrentUserService.MockUserId = null;
     }
+
+    /// <summary>
+    /// A ledger of the current user with a "Cash" account (empty initial balance) and a "Budget" with the given funds.
+    /// </summary>
+    protected async Task<LedgerDTO> SeedLedgerAsync(params string[] fundNames)
+    {
+        var ledgerId = await Mediator.Send(new CreateLedgerCommand(
+            $"Ledger {Guid.NewGuid()}",
+            [new CreateBudgetDTO("Budget", [.. (fundNames.Length == 0 ? ["Food", "Rent"] : fundNames).Select(x => new CreateFundDTO(x))])],
+            [new CreateAccountDTO(new(0, "EUR"), "Cash")]));
+
+        return await Mediator.Send(new GetLedgerQuery(ledgerId));
+    }
+
+    protected async Task<decimal> UnallocatedAsync(Guid ledgerId, string currency = "EUR")
+    {
+        var ledger = await Mediator.Send(new GetLedgerQuery(ledgerId));
+        return ledger.Balance.GetValueOrDefault(currency)
+            - ledger.Budgets.SelectMany(x => x.Funds).Sum(x => x.Balance.GetValueOrDefault(currency));
+    }
+
+    protected async Task<decimal> FundBalanceAsync(Guid ledgerId, Guid fundId, string currency = "EUR")
+        => (await Mediator.Send(new GetLedgerQuery(ledgerId))).Budgets.SelectMany(x => x.Funds).Single(x => x.Id == fundId).Balance.GetValueOrDefault(currency);
+
+    protected Task<Guid> CreateTemplateAsync(Guid budgetId, string name, string currency, params AllocationLine[] lines)
+        => Mediator.Send(new CreateAllocationTemplateCommand(budgetId, name, currency, lines));
+
+    protected static Guid FundId(LedgerDTO ledger, string name)
+        => ledger.Budgets.SelectMany(x => x.Funds).Single(x => x.Name == name).Id;
 }

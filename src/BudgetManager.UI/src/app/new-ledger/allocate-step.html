@@ -1,0 +1,83 @@
+@for (plan of plans(); track plan.currency) {
+  @if (plan.total <= 0) {
+    <p class="hint nothing">
+      {{
+        'step.nothing' | t: { currency: plan.currency, total: formatMoney(plan.total, plan.currency) }
+      }}
+    </p>
+  } @else {
+    @let remaining = left(plan);
+    <section class="plan" [attr.aria-labelledby]="'ia-title-' + plan.currency">
+      <div class="plan-head">
+        <h2 class="section-title" [id]="'ia-title-' + plan.currency">
+          {{
+            'step.toAllocate'
+              | t: { currency: plan.currency, total: formatMoney(plan.total, plan.currency) }
+          }}
+        </h2>
+        @let opts = options(plan);
+        @if (opts.length > 0) {
+          <div class="field inline fill-from">
+            <label [for]="'ia-from-' + plan.currency">{{ 'wizard.fillFrom' | t }}</label>
+            <div class="input">
+              <select
+                [id]="'ia-from-' + plan.currency"
+                [name]="'ia-from-' + plan.currency"
+                [ngModel]="plan.source ? optionId(plan.source) : ''"
+                (ngModelChange)="fillFrom(plan, $event)"
+              >
+                <option value="" disabled>{{ 'wizard.fillManual' | t }}</option>
+                @for (o of opts; track optionId(o)) {
+                  <option [value]="optionId(o)" [disabled]="!o.usable">
+                    {{ optionLabel(o, plan) }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      </div>
+      @if (plan.source === null) {
+        <p class="hint">{{ 'step.noTemplate' | t: { currency: plan.currency } }}</p>
+      }
+
+      @for (budget of budgets(); track $index; let b = $index) {
+        <h3 class="budget-name">{{ budget.name }}</h3>
+        <ul class="flat-list plan-funds" [attr.aria-label]="plan.currency + ' · ' + budget.name">
+          @for (fund of budget.funds; track $index; let f = $index) {
+            @let label = plan.currency + ': ' + budget.name + ' / ' + fund.name;
+            <li class="flat-row plan-fund">
+              <span class="name">{{ fund.name }}</span>
+              <div class="input">
+                <input
+                  class="num-in"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  inputmode="decimal"
+                  placeholder="0.00"
+                  [id]="inputId(plan, b, f)"
+                  [name]="inputId(plan, b, f)"
+                  [attr.aria-label]="label"
+                  [ngModel]="plan.amounts[key(b, f)] ?? null"
+                  (ngModelChange)="setAmount(plan, b, f, $event)"
+                />
+                <span class="suffix" aria-hidden="true">{{ plan.currency }}</span>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="addRest(plan, b, f)">
+                {{ 'step.rest' | t }}<span class="sr-only">{{ 'step.restInto' | t: { label: label } }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <p class="plan-totals" aria-live="polite">
+        {{ 'step.allocated' | t }} <strong>{{ formatMoney(allocated(plan), plan.currency) }}</strong>
+        <span aria-hidden="true">·</span>
+        {{ 'step.left' | t }}
+        <strong [class.bad]="remaining !== 0">{{ formatMoney(remaining, plan.currency) }}</strong>
+      </p>
+    </section>
+  }
+}

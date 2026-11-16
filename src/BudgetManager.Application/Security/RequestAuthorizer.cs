@@ -1,6 +1,7 @@
 using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
+using BudgetManager.Domain.Entities;
 
 namespace BudgetManager.Application.Security;
 
@@ -18,6 +19,12 @@ public sealed class RequestAuthorizer(ICurrentUserService currentUser, IResource
         if (request is not IRequiresAccess requiresAccess)
         {
             throw new InvalidOperationException($"{request.GetType().Name} declares neither {nameof(IRequiresAccess)} nor {nameof(IAnonymousRequest)}.");
+        }
+
+        // A token outlives the account it was issued for, so the user has to be looked up every time.
+        if (await Resource.Of<User>(userId).ReadOwnerIdAsync(ownerReader, cancellationToken) != userId)
+        {
+            throw new AuthenticationException($"User with ID '{userId}' no longer exists.");
         }
 
         foreach (var resource in requiresAccess.Resources)

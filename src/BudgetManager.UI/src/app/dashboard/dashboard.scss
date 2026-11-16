@@ -1,0 +1,86 @@
+:host {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+@mixin stacked {
+  .dash {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    height: auto;
+  }
+
+  .side {
+    display: contents;
+  }
+
+  .accounts {
+    max-height: none;
+  }
+
+  .main {
+    height: calc(100dvh - var(--topbar-h) - 24px);
+    min-height: 420px;
+  }
+}
+
+.dash {
+  display: grid;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 16px;
+  height: 100%;
+}
+
+.balance {
+  grid-column: 1 / -1;
+}
+
+.tabs {
+  display: flex;
+  height: 40px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.accounts,
+.budgets,
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+// Never shrinks, and the 45% cap never goes below the panel holding four single-currency account
+// rows: card border and padding 30px, head 28px + 8px, four rows of 13px + 1.25rem each and the
+// list's 2px bottom padding.
+.accounts {
+  flex: none;
+  max-height: max(45%, calc(120px + 5rem));
+}
+
+.budgets {
+  flex: 1 1 auto;
+}
+
+// After the panel rules above so it wins over their `display: flex`.
+.tab-hidden {
+  display: none;
+}
+
+@container (max-width: 700px) {
+  @include stacked;
+}
+
+@media (max-width: 859.98px) {
+  @include stacked;
+}

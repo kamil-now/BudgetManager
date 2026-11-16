@@ -18,13 +18,13 @@ public class AccountTransferTests(ITestOutputHelper testOutputHelper, Applicatio
         var target = await CreateAccountAsync(userId);
 
         // Act
-        var id = await Mediator.Send(new CreateAccountTransferCommand(source.Id, target.Id, new(100, "PLN"), DateTimeOffset.UtcNow, "title", null, ["tag"]));
+        var id = await Mediator.Send(new CreateAccountTransferCommand(source.Id, target.Id, new(100, "PLN"), DateTimeOffset.UtcNow, "title"));
 
         // Assert
         var (expense, income) = await GetTransactionsAsync(id);
         expense.Value.ShouldBe(new Money(-100, "PLN"));
         income.Value.ShouldBe(new Money(100, "PLN"));
-        income.Tags.ShouldBe(["tag"]);
+        income.Title.ShouldBe("title");
     }
 
     [Fact]

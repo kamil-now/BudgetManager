@@ -15,18 +15,16 @@ public sealed class LedgerReader(ApplicationDbContext dbContext) : ILedgerReader
             {
                 x.Id,
                 x.Name,
-                x.Description,
                 Accounts = x.Accounts
                     .OrderBy(a => a.Name)
-                    .Select(a => new { a.Id, a.Name, a.Description })
+                    .Select(a => new { a.Id, a.Name })
                     .ToList(),
                 Budgets = x.Budgets
                     .Select(b => new
                     {
                         b.Id,
                         b.Name,
-                        b.Description,
-                        Funds = b.Funds.Select(f => new { f.Id, f.Name, f.Description }).ToList()
+                        Funds = b.Funds.Select(f => new { f.Id, f.Name }).ToList()
                     })
                     .ToList()
             })
@@ -55,13 +53,11 @@ public sealed class LedgerReader(ApplicationDbContext dbContext) : ILedgerReader
         {
             Id = ledger.Id,
             Name = ledger.Name,
-            Description = ledger.Description,
-            Accounts = [.. ledger.Accounts.Select(a => new LedgerSummary.Account(a.Id, a.Name, a.Description, BalanceRows.BalanceOf(accountBalances, a.Id)))],
+            Accounts = [.. ledger.Accounts.Select(a => new LedgerSummary.Account(a.Id, a.Name, BalanceRows.BalanceOf(accountBalances, a.Id)))],
             Budgets = [.. ledger.Budgets.Select(b => new LedgerSummary.Budget(
                 b.Id,
                 b.Name,
-                b.Description,
-                [.. b.Funds.Select(f => new LedgerSummary.Fund(f.Id, f.Name, f.Description, BalanceRows.BalanceOf(fundBalances, f.Id)))]))]
+                [.. b.Funds.Select(f => new LedgerSummary.Fund(f.Id, f.Name, BalanceRows.BalanceOf(fundBalances, f.Id)))]))]
         };
     }
 }

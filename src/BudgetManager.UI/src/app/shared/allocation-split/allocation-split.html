@@ -1,0 +1,155 @@
+<section class="split" [attr.aria-labelledby]="headingId">
+  <div class="split-head">
+    <h3 class="split-title" [id]="headingId">{{ heading() || ('new.allocate' | t) }}</h3>
+    <div class="segment" role="group" [attr.aria-labelledby]="headingId">
+      @for (m of modes(); track m.value) {
+        <button
+          type="button"
+          [class.active]="mode() === m.value"
+          [attr.aria-pressed]="mode() === m.value"
+          [disabled]="disabled()"
+          (click)="setMode(m.value)"
+        >
+          {{ m.label | t }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (mode() === 'template') {
+    @if (templates() === null) {
+      <p class="hint" role="status">{{ 'split.checking' | t }}</p>
+    } @else if (options().length === 0) {
+      <p class="hint">{{ 'split.noTemplate' | t: { currency: currency() } }}</p>
+    } @else {
+      <div class="template-row">
+        <div class="field">
+          <label [for]="headingId + '-template'">{{ 'split.templateLabel' | t }}</label>
+          <div class="input">
+            <select
+              [id]="headingId + '-template'"
+              name="splitTemplate"
+              [ngModel]="templateId()"
+              (ngModelChange)="pickOption($event)"
+            >
+              <option value="" disabled>{{ 'split.chooseTemplateOption' | t }}</option>
+              @for (g of groups(); track g.budget.id) {
+                <optgroup [label]="g.budget.name">
+                  @for (o of g.options; track o.template.id) {
+                    <option [value]="o.template.id" [disabled]="!o.usable">{{ o.label }}</option>
+                  }
+                </optgroup>
+              }
+            </select>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="!selectedTemplate()"
+          (click)="customize()"
+        >
+          {{ 'split.customize' | t }}
+        </button>
+      </div>
+    }
+  }
+
+  @if (mode() === 'ledger') {
+    @if (ledgerTemplates() === null || templates() === null) {
+      <p class="hint" role="status">{{ 'split.checking' | t }}</p>
+    } @else if (ledgerOptions().length === 0) {
+      <p class="hint">{{ 'split.noLedgerTemplate' | t: { currency: currency() } }}</p>
+    } @else {
+      <div class="template-row">
+        <div class="field">
+          <label [for]="headingId + '-ledger-template'">{{ 'split.ledgerTemplateLabel' | t }}</label>
+          <div class="input">
+            <select
+              [id]="headingId + '-ledger-template'"
+              name="splitLedgerTemplate"
+              [ngModel]="ledgerTemplateId()"
+              (ngModelChange)="pickLedgerOption($event)"
+            >
+              <option value="" disabled>{{ 'split.chooseTemplateOption' | t }}</option>
+              @for (o of ledgerOptions(); track o.template.id) {
+                <option [value]="o.template.id" [disabled]="!o.usable">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+      @for (row of budgetPickRows(); track row.budgetId) {
+        <div class="template-row">
+          <div class="field">
+            <label [for]="headingId + '-budget-' + row.budgetId">{{ row.budgetName }}</label>
+            @if (row.options.length === 0) {
+              <p class="error">{{ 'split.budgetNeedsTemplate' | t: { name: row.budgetName, currency: currency() } }}</p>
+            } @else {
+              <div class="input">
+                <select
+                  [id]="headingId + '-budget-' + row.budgetId"
+                  [name]="'splitBudgetTemplate' + row.budgetId"
+                  [ngModel]="row.templateId"
+                  (ngModelChange)="pickBudgetTemplate(row.budgetId, $event)"
+                >
+                  @for (o of row.options; track o.template.id) {
+                    <option [value]="o.template.id">{{ o.label }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+  }
+
+  @if (mode() === 'custom') {
+    <app-allocation-steps
+      [funds]="funds()"
+      [currency]="currency()"
+      [steps]="steps()"
+      (stepsChange)="setSteps($event)"
+      [sample]="amountReady() ? amount() : null"
+    />
+    @if (funds().length === 0) {
+      <p class="hint">{{ 'split.noFunds' | t }}</p>
+    }
+  }
+
+  @if (mode() !== 'none') {
+    <div aria-live="polite">
+      @if (previewView(); as view) {
+        @if (view.loading) {
+          <p class="hint">{{ 'split.calculating' | t }}</p>
+        } @else if (view.error) {
+          <p class="error">{{ view.error }}</p>
+        } @else if (view.result; as result) {
+          @if (mode() === 'template' || mode() === 'ledger') {
+            <ul class="split-grid" [attr.aria-label]="'split.preview' | t">
+              @for (line of result.lines; track $index) {
+                <li>
+                  <span class="name">
+                    {{ line.fundName }}
+                    @if (showBudget() && line.budgetName) {
+                      <span class="muted">· {{ line.budgetName }}</span>
+                    }
+                  </span>
+                  <span class="amount">{{ formatMoney(line.amount, currency()) }}</span>
+                </li>
+              }
+            </ul>
+            @if (result.unallocated > 0) {
+              <p class="split-left">
+                {{ 'split.left' | t: { amount: formatMoney(result.unallocated, currency()) } }}
+              </p>
+            }
+          }
+        }
+      } @else if ((mode() === 'template' && selectedTemplate()) || (mode() === 'ledger' && selectedLedgerTemplate())) {
+        <p class="hint">{{ 'split.enterAmount' | t }}</p>
+      }
+    </div>
+  }
+</section>

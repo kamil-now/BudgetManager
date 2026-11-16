@@ -8,7 +8,8 @@ namespace BudgetManager.Infrastructure.Persistence.Readers;
 public sealed class AccountTransactionReader(ApplicationDbContext dbContext) : IAccountTransactionReader
 {
     public async Task<AccountTransactionDetails?> ReadAsync(Guid accountId, Guid id, CancellationToken cancellationToken = default)
-        => await dbContext.AccountTransactions
+    {
+        var transaction = await dbContext.AccountTransactions
             .AsNoTracking()
             .Where(x => x.Id == id
                 && x.AccountId == accountId
@@ -21,7 +22,26 @@ public sealed class AccountTransactionReader(ApplicationDbContext dbContext) : I
                 x.Value,
                 x.Date,
                 x.Title,
-                x.Comment,
-                x.Tags))
+                Array.Empty<FundAmount>()))
             .SingleOrDefaultAsync(cancellationToken);
+
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        var linked = await dbContext.FundTransactions
+            .AsNoTracking()
+            .Where(x => x.AccountTransactionId == id)
+            .OrderBy(x => x.CreatedAt)
+            .Select(x => new FundAmount(x.FundId, x.Value.Amount))
+            .ToArrayAsync(cancellationToken);
+
+        // positive rows are the allocations of an income, a negative one is the payment of an expense
+        return transaction with
+        {
+            Allocations = linked.Where(x => x.Amount > 0).ToArray(),
+            FundId = linked.FirstOrDefault(x => x.Amount < 0)?.FundId
+        };
+    }
 }

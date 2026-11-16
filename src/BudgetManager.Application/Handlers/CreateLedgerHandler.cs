@@ -4,6 +4,7 @@ using BudgetManager.Application.Validators;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Handlers;
 
@@ -21,22 +22,26 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
             var budget = new Budget
             {
                 LedgerId = ledgerId,
-                Name = b.Name,
-                Description = b.Description
+                Name = b.Name
             };
-            foreach (var fund in b.Funds)
-            {
-                budget.AddFund(fund.Name, fund.Description, fund.AllocationTemplates);
-            }
+            budget.AddFundsAndTemplates(b.Funds, b.AllocationTemplates);
             return budget;
         }).ToList();
+
+        // one initial allocation per currency
+        foreach (var currency in (command.InitialAllocations ?? []).GroupBy(x => x.Value.Currency))
+        {
+            var amounts = currency.Select(x => new FundAmount(
+                budgets.Single(b => b.Name == x.Budget).Funds.Single(f => f.Name == x.Fund).Id,
+                x.Value.Amount));
+            await store.CreateAsync(Allocation.CreateInitial(ledgerId, currency.Key, amounts), cancellationToken);
+        }
 
         var entity = await store.CreateAsync(new Ledger
         {
             Id = ledgerId,
             OwnerId = userId,
             Name = command.Name,
-            Description = command.Description,
             Accounts = [.. command.Accounts.Select(x =>
             {
                 var accountId = Guid.NewGuid();
@@ -45,7 +50,6 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
                     Id = accountId,
                     LedgerId = ledgerId,
                     Name = x.Name,
-                    Description = x.Description,
                     Transactions = [AccountTransaction.CreateInitialBalance(accountId, x.InitialBalance)]
                 };
             })],
@@ -64,7 +68,6 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
     private static void Validate(CreateLedgerCommand command)
     {
         command.Name.EnsureNotEmpty("Ledger name").EnsureNotLongerThan(Constants.MaxNameLength, "Ledger name");
-        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
         command.Accounts.EnsureNotEmpty();
 
         if (command.Accounts.Any(x => x == null))
@@ -75,7 +78,6 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
         foreach (var account in command.Accounts)
         {
             account.Name.EnsureNotEmpty("Account name").EnsureNotLongerThan(Constants.MaxNameLength, "Account name");
-            account.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {account.Name}");
             account.InitialBalance.EnsureValidInitialBalance($"InitialBalance of {account.Name}");
         }
 
@@ -94,13 +96,15 @@ public sealed class CreateLedgerHandler(ICurrentUserService currentUser, IEntity
         foreach (var budget in command.Budgets)
         {
             budget.Name.EnsureNotEmpty("Budget name").EnsureNotLongerThan(Constants.MaxNameLength, "Budget name");
-            budget.Description?.EnsureNotLongerThan(Constants.MaxCommentLength, $"Description of {budget.Name}");
             budget.Funds.EnsureNotEmpty().EnsureValidFunds();
+            budget.AllocationTemplates.EnsureValidAllocationTemplates(budget.Funds);
         }
 
         if (command.Budgets.GroupBy(x => x.Name).Any(g => g.Count() > 1))
         {
             throw new ValidationException("Budget names must be unique.");
         }
+
+        command.InitialAllocations.EnsureValidInitialAllocations(command.Budgets, command.Accounts);
     }
 }

@@ -11,9 +11,7 @@ public record UpdateCurrencyExchangeCommand(
   Money Buy,
   Money Sell,
   DateTimeOffset Date,
-  string? Title,
-  string? Comment = null,
-  IEnumerable<string>? Tags = null
+  string? Title
 ) : IRequest, IRequiresAccess
 {
     IEnumerable<Resource> IRequiresAccess.Resources => TargetAccountId is Guid targetAccountId

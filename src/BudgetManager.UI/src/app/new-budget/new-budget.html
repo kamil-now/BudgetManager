@@ -1,0 +1,71 @@
+@if (open()) {
+  @let editing = budget() !== null;
+  <app-modal
+    size="md"
+    [title]="(editing ? 'budget.edit' : 'budgets.new') | t"
+    [submitting]="submitting()"
+    [submitLabel]="(editing ? 'common.saveChanges' : 'budget.create') | t"
+    [busyLabel]="(editing ? 'common.saving' : 'common.creating') | t"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="submit()"
+  >
+    <div class="field">
+      <label for="nb-name">{{ 'common.name' | t }}</label>
+      <div class="input">
+        <input
+          id="nb-name"
+          name="name"
+          type="text"
+          autocomplete="off"
+          [placeholder]="'budget.namePlaceholder' | t"
+          [maxLength]="maxNameLength"
+          [(ngModel)]="name"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="funds-head">
+        <span class="label" id="nb-funds-label">{{ 'budget.funds' | t }}</span>
+        <span class="hint">{{ (editing ? 'budget.removeHint' : 'budget.fundsHint') | t }}</span>
+      </div>
+      <div class="flat-rows funds" role="group" aria-labelledby="nb-funds-label" #fundsList>
+        @for (fund of funds(); track fund.id; let i = $index) {
+          <div class="flat-row fund-row">
+            <div class="input f-name">
+              <input
+                type="text"
+                [attr.aria-label]="'common.fundName' | t"
+                [placeholder]="'common.fundName' | t"
+                [name]="'fname-' + fund.id"
+                [maxLength]="maxNameLength"
+                [(ngModel)]="fund.name"
+                (keydown.enter)="$event.preventDefault()"
+              />
+            </div>
+            <button
+              type="button"
+              class="btn-icon btn-icon-sm remove"
+              [attr.aria-label]="'common.removeFund' | t"
+              (click)="removeFund(i)"
+            >
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="funds-foot">
+      <button type="button" class="btn btn-ghost btn-sm btn-dashed add-fund" (click)="addFund()">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        {{ 'common.addFund' | t }}
+      </button>
+    </div>
+  </app-modal>
+}

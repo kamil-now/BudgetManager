@@ -86,13 +86,66 @@ public class BudgetPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
     }
 
     [Fact]
+    public async Task Delete_WhenAllocationTemplateHasLines_DeletesLines()
+    {
+        // Arrange
+        var (user, ledger, budget) = NewBudget();
+        var (fund, template, line) = NewAllocation(budget);
+        var dbContext = GetContext();
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Budgets.Add(budget);
+        dbContext.Funds.Add(fund);
+        dbContext.AllocationTemplates.Add(template);
+        dbContext.AllocationTemplateLines.Add(line);
+        await dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Act
+        var other = GetContext();
+        other.AllocationTemplates.Remove(await other.AllocationTemplates.SingleAsync(x => x.Id == template.Id));
+        await other.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        var result = GetContext();
+        (await result.AllocationTemplateLines.AnyAsync(x => x.Id == line.Id)).ShouldBeFalse();
+        (await result.Funds.AnyAsync(x => x.Id == fund.Id)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Remove_WhenLineIsRemovedFromTemplateLines_DeletesLine()
+    {
+        // Arrange
+        var (user, ledger, budget) = NewBudget();
+        var (fund, template, line) = NewAllocation(budget);
+        var dbContext = GetContext();
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Budgets.Add(budget);
+        dbContext.Funds.Add(fund);
+        dbContext.AllocationTemplates.Add(template);
+        dbContext.AllocationTemplateLines.Add(line);
+        await dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Act
+        var other = GetContext();
+        var loaded = await other.AllocationTemplates.Include(x => x.Lines).SingleAsync(x => x.Id == template.Id);
+        loaded.Lines.Remove(loaded.Lines.Single());
+        await other.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        var result = GetContext();
+        (await result.AllocationTemplateLines.AnyAsync(x => x.Id == line.Id)).ShouldBeFalse();
+        (await result.AllocationTemplates.AnyAsync(x => x.Id == template.Id)).ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Add_SavesAllocationTemplateLinesByType()
     {
         // Arrange
         var (user, ledger, budget) = NewBudget();
         var fixedFund = new Fund { BudgetId = budget.Id, Name = $"Fund {Guid.NewGuid()}" };
         var percentFund = new Fund { BudgetId = budget.Id, Name = $"Fund {Guid.NewGuid()}" };
-        var template = new AllocationTemplate { BudgetId = budget.Id, Currency = "EUR" };
+        var template = new AllocationTemplate { BudgetId = budget.Id, Name = "Template", Currency = "EUR" };
         var fixedLine = new FixedAllocationTemplateLine { AllocationTemplateId = template.Id, FundId = fixedFund.Id, Sequence = 0, Amount = 123.45m };
         var percentLine = new PercentAllocationTemplateLine { AllocationTemplateId = template.Id, FundId = percentFund.Id, Sequence = 1, Percent = 12.34m };
         var dbContext = GetContext();
@@ -115,7 +168,7 @@ public class BudgetPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
     }
 
     [Fact]
-    public async Task Add_WhenBudgetAlreadyHasAllocationTemplateInCurrency_ThrowsException()
+    public async Task Add_WhenBudgetAlreadyHasAllocationTemplateWithName_ThrowsException()
     {
         // Arrange
         var (user, ledger, budget) = NewBudget();
@@ -123,17 +176,56 @@ public class BudgetPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
         dbContext.Users.Add(user);
         dbContext.Ledgers.Add(ledger);
         dbContext.Budgets.Add(budget);
-        dbContext.AllocationTemplates.Add(new AllocationTemplate { BudgetId = budget.Id, Currency = "EUR" });
+        dbContext.AllocationTemplates.Add(new AllocationTemplate { BudgetId = budget.Id, Name = "Salary", Currency = "EUR" });
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Act & Assert
         var other = GetContext();
-        other.AllocationTemplates.Add(new AllocationTemplate { BudgetId = budget.Id, Currency = "EUR" });
+        other.AllocationTemplates.Add(new AllocationTemplate { BudgetId = budget.Id, Name = "Salary", Currency = "USD" });
         await Should.ThrowAsync<DbUpdateException>(() => other.SaveChangesAsync(CancellationToken.None));
     }
 
     [Fact]
-    public async Task Add_WhenFundAlreadyHasLineInAllocationTemplate_ThrowsException()
+    public async Task Add_WhenBudgetAlreadyHasAllocationTemplateInCurrencyWithAnotherName_SavesIt()
+    {
+        // Arrange
+        var (user, ledger, budget) = NewBudget();
+        var dbContext = GetContext();
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Budgets.Add(budget);
+        dbContext.AllocationTemplates.Add(new AllocationTemplate { BudgetId = budget.Id, Name = "Salary", Currency = "EUR" });
+        await dbContext.SaveChangesAsync(CancellationToken.None);
+
+        // Act
+        var other = GetContext();
+        other.AllocationTemplates.Add(new AllocationTemplate { BudgetId = budget.Id, Name = "Bonus", Currency = "EUR" });
+        await other.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        (await GetContext().AllocationTemplates.CountAsync(x => x.BudgetId == budget.Id && x.Currency == "EUR")).ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Add_WhenTwoBudgetsHaveTemplateWithSameName_SavesBoth()
+    {
+        // Arrange
+        var (user, ledger, budget) = NewBudget();
+        var second = new Budget { LedgerId = ledger.Id, Name = $"Budget {Guid.NewGuid()}" };
+        var dbContext = GetContext();
+        dbContext.Users.Add(user);
+        dbContext.Ledgers.Add(ledger);
+        dbContext.Budgets.AddRange(budget, second);
+        dbContext.AllocationTemplates.AddRange(
+            new AllocationTemplate { BudgetId = budget.Id, Name = "Salary", Currency = "EUR" },
+            new AllocationTemplate { BudgetId = second.Id, Name = "Salary", Currency = "EUR" });
+
+        // Act & Assert
+        await Should.NotThrowAsync(() => dbContext.SaveChangesAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Add_WhenFundAlreadyHasLineInAllocationTemplate_SavesSecondLine()
     {
         // Arrange
         var (user, ledger, budget) = NewBudget();
@@ -147,10 +239,13 @@ public class BudgetPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
         dbContext.AllocationTemplateLines.Add(line);
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
-        // Act & Assert
+        // Act
         var other = GetContext();
         other.AllocationTemplateLines.Add(new PercentAllocationTemplateLine { AllocationTemplateId = template.Id, FundId = fund.Id, Sequence = 1, Percent = 10 });
-        await Should.ThrowAsync<DbUpdateException>(() => other.SaveChangesAsync(CancellationToken.None));
+        await other.SaveChangesAsync(CancellationToken.None);
+
+        // Assert
+        (await GetContext().AllocationTemplateLines.CountAsync(x => x.AllocationTemplateId == template.Id && x.FundId == fund.Id)).ShouldBe(2);
     }
 
     private static (User User, Ledger Ledger, Budget Budget) NewBudget()
@@ -169,7 +264,7 @@ public class BudgetPersistenceTests(ITestOutputHelper testOutputHelper, Persiste
     private static (Fund Fund, AllocationTemplate Template, AllocationTemplateLine Line) NewAllocation(Budget budget)
     {
         var fund = new Fund { BudgetId = budget.Id, Name = $"Fund {Guid.NewGuid()}" };
-        var template = new AllocationTemplate { BudgetId = budget.Id, Currency = "EUR" };
+        var template = new AllocationTemplate { BudgetId = budget.Id, Name = "Template", Currency = "EUR" };
         var line = new FixedAllocationTemplateLine { AllocationTemplateId = template.Id, FundId = fund.Id, Sequence = 0, Amount = 100 };
         return (fund, template, line);
     }

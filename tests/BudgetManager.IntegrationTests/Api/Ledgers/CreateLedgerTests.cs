@@ -14,17 +14,21 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
     internal static CreateLedgerCommand ValidCommand = new(
         "[ledger name]",
-        "[ledger description]",
         [
           new(
             "[budget name]",
             [
-              new("[fund name]", [new("EUR", 42, AllocationType.Percent, Percent: 20)], "[fund description]")
+              new("[fund name]")
             ],
-            "[budget description]")
+            [
+              new("[template name]", "EUR", [new("[fund name]", 42, AllocationType.Percent, Percent: 20)])
+            ])
         ],
         [
-          new(new(123, "EUR"), "[account name]", "[account description]")
+          new(new(123, "EUR"), "[account name]")
+        ],
+        [
+          new("[budget name]", "[fund name]", new(123, "EUR"))
         ]);
 
     [Fact]
@@ -82,12 +86,12 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
     {
         public InvalidRequests()
         {
-            var tooLongDescription = new string('a', Constants.MaxCommentLength + 1);
             var tooLongName = new string('b', Constants.MaxNameLength + 1);
             var validAccount = ValidCommand.Accounts.First();
             var validBudget = ValidCommand.Budgets.First();
             var validFund = validBudget.Funds.First();
-            var validAllocation = validFund.AllocationTemplates.First();
+            var validTemplate = validBudget.AllocationTemplates!.First();
+            var validLine = validTemplate.Lines.First();
 
             Add(ValidCommand with { Name = string.Empty }, "Ledger name cannot be empty.");
 
@@ -99,15 +103,11 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Budgets = [validBudget with { Funds = [null!] }] }, "Fund cannot be empty.");
 
-            Add(ValidCommand with { Description = tooLongDescription }, $"Description value is too long. Max length is {Constants.MaxCommentLength}.");
-
             Add(ValidCommand with { Accounts = [] }, "Accounts cannot be empty.");
 
             Add(ValidCommand with { Accounts = [validAccount with { Name = string.Empty }] }, "Account name cannot be empty.");
 
             Add(ValidCommand with { Accounts = [validAccount with { Name = tooLongName }] }, $"Account name value is too long. Max length is {Constants.MaxNameLength}.");
-
-            Add(ValidCommand with { Accounts = [validAccount with { Description = tooLongDescription }] }, $"Description of {validAccount.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
 
             Add(ValidCommand with { Accounts = [validAccount with { InitialBalance = new(1, "USDD") }] }, $"InitialBalance of {validAccount.Name} currency value 'USDD' is not a valid currency code.");
 
@@ -127,21 +127,27 @@ public class LedgersControllerTests(ITestOutputHelper testOutputHelper, ApiFixtu
 
             Add(ValidCommand with { Budgets = [validBudget with { Name = tooLongName }] }, $"Budget name value is too long. Max length is {Constants.MaxNameLength}.");
 
-            Add(ValidCommand with { Budgets = [validBudget with { Description = tooLongDescription }] }, $"Description of {validBudget.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
-
             Add(ValidCommand with { Budgets = [validBudget with { Funds = [] }] }, "Funds cannot be empty.");
 
             Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { Name = string.Empty }] }] }, "Fund name cannot be empty.");
 
             Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { Name = tooLongName }] }] }, $"Fund name value is too long. Max length is {Constants.MaxNameLength}.");
 
-            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { Description = tooLongDescription }] }] }, $"Description of {validFund.Name} value is too long. Max length is {Constants.MaxCommentLength}.");
+            Add(ValidCommand with { Budgets = [validBudget with { AllocationTemplates = [validTemplate with { Lines = [validLine with { Sequence = -1 }] }] }] }, $"Allocation template {validTemplate.Name} sequence must be greater than or equal zero.");
 
-            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Sequence = -1 }] }] }] }, $"Allocation template of {validFund.Name} sequence must be greater than or equal zero.");
+            Add(ValidCommand with { Budgets = [validBudget with { AllocationTemplates = [validTemplate with { Lines = [validLine with { Percent = 100.01m }] }] }] }, $"Allocation template {validTemplate.Name} percent must be less than or equal {Constants.MaxAllocationPercent}.");
 
-            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund with { AllocationTemplates = [validAllocation with { Percent = 100.01m }] }] }] }, $"Allocation template of {validFund.Name} percent must be less than or equal {Constants.MaxAllocationPercent}.");
+            Add(ValidCommand with { Budgets = [validBudget with { AllocationTemplates = [validTemplate with { Lines = [validLine with { Percent = 0 }] }] }] }, $"Allocation template {validTemplate.Name} percent must be greater than zero.");
 
-            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund, validFund with { Name = "[other fund name]", AllocationTemplates = [validAllocation with { Sequence = 0, Percent = 81 }] }] }] }, $"Allocation percents in {validAllocation.Currency} must add up to less than or equal {Constants.MaxAllocationPercent}.");
+            Add(ValidCommand with { Budgets = [validBudget with { AllocationTemplates = [validTemplate, validTemplate] }] }, "Allocation template names in a budget must be unique.");
+
+            Add(ValidCommand with { Budgets = [validBudget with { AllocationTemplates = [validTemplate with { Lines = [validLine with { Fund = "[missing]" }] }] }] }, $"Allocation template {validTemplate.Name} allocates to unknown fund [missing].");
+
+            Add(ValidCommand with { Budgets = [validBudget with { Funds = [validFund, validFund] }] }, "Fund names in a budget must be unique.");
+
+            Add(ValidCommand with { InitialAllocations = null }, "Initial allocations in EUR must add up to 123 (got 0).");
+
+            Add(ValidCommand with { InitialAllocations = [new("[budget name]", "[fund name]", new(100, "EUR"))] }, "Initial allocations in EUR must add up to 123 (got 100).");
         }
     }
 

@@ -1,0 +1,36 @@
+@if (row(); as r) {
+  <app-modal
+    size="sm"
+    [title]="'delete.title' | t"
+    [submitLabel]="'delete.submit' | t"
+    [busyLabel]="'delete.busy' | t"
+    [submitting]="submitting()"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="confirm()"
+  >
+    <div class="summary-box">
+      <span>
+        <strong>{{ r.title }}</strong> ·
+        <span class="amount" [class]="r.amountClass">{{ r.amountNumber }} {{ r.currency }}</span>
+      </span>
+      <span>{{ r.kindLabel }} · {{ r.meta }}</span>
+    </div>
+    @if (r.kind === 'allocation' && r.item.allocations.length > 0) {
+      <ul class="split-grid" [attr.aria-label]="'delete.lines' | t">
+        @for (line of r.item.allocations; track line.id) {
+          <li>
+            <span class="name">{{ line.budgetName }} / {{ line.fundName }}</span>
+            <span class="amount">{{ formatMoney(line.amount.amount, line.amount.currency) }}</span>
+          </li>
+        }
+      </ul>
+    }
+    <div class="muted small">
+      @if (r.kind === 'income' && r.item.allocations.length > 0) {
+        {{ 'delete.allocationsToo' | t }}
+      }
+      {{ 'delete.cannotUndo' | t }}
+    </div>
+  </app-modal>
+}

@@ -17,6 +17,19 @@ public static class Constants
     public const int MinPasswordLength = 8;
     public const int MaxPasswordBytes = 72; // bcrypt ignores everything past 72 bytes
     public const int MaxTitleLength = 200;
-    public const int MaxCommentLength = 1000;
-    public const int MaxTagsLength = 500;
+    public const int MaxSearchLength = 100;
+    public const int DefaultFeedLimit = 50;
+    public const int MaxFeedLimit = 200;
+
+    public const int MaxPreferenceValueLength = 10;
+    public const string DefaultTheme = "system";
+    public static readonly IReadOnlyList<string> Themes = ["system", "light", "dark"];
+    public const string DefaultDateFormat = "yyyy-MM-dd";
+    public static readonly IReadOnlyList<string> DateFormats = ["yyyy-MM-dd", "dd.MM.yyyy", "dd/MM/yyyy", "MM/dd/yyyy"];
+    public const string DefaultCurrency = "EUR";
+    public static readonly IReadOnlyList<string> DefaultFavoriteCurrencies = ["EUR", "USD", "PLN"];
+    public const int MaxFavoriteCurrencies = 10;
+    public const int MaxFavoriteCurrenciesLength = MaxFavoriteCurrencies * (CurrencyCodeLength + 1) - 1; // comma-joined
+    public const string DefaultLanguage = "en";
+    public static readonly IReadOnlyList<string> Languages = ["en", "pl"];
 }

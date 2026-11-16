@@ -1,0 +1,45 @@
+.side label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.side--sell {
+  label {
+    color: var(--danger);
+  }
+  .input {
+    border-color: var(--danger-soft);
+  }
+  .input:focus-within {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-soft);
+  }
+}
+
+.side--buy label {
+  color: var(--accent);
+}
+
+.side .input input {
+  font-weight: 600;
+}
+
+.rate-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 12px;
+  margin-top: -4px;
+  font-size: 0.82rem;
+}
+
+.rate {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.loading {
+  margin: 0;
+}

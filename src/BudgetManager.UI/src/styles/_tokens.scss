@@ -1,0 +1,75 @@
+:root {
+  --bg: #eeece2;
+  --card: #faf9f5;
+  --ink: #262624;
+  --muted: #6b6a62;
+  --line: #e3e0d6;
+  --field: #f4f2ea;
+  --accent: #4e7d3f;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4eedd;
+  --danger: #c0392b;
+  --danger-soft: #f6e3e0;
+  --warn: #b8860b;
+  --info: #3b6c9a;
+  --info-soft: #e1eaf3;
+  --transfer: #8f6a12;
+  --radius: 12px;
+  --radius-sm: 10px;
+  --radius-chip: 999px;
+  --shadow: 0 10px 30px rgba(38, 38, 36, 0.14);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6a62' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --control-h: 36px;
+  --row-h: 40px;
+  --field-gap: 4px;
+  --gap-form: 12px;
+  --pad-card: 14px;
+  --modal-pad-y: 12px;
+  --modal-pad-x: 18px;
+  --topbar-h: 56px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #1f1e1d;
+    --card: #262624;
+    --ink: #ecebe3;
+    --muted: #9a968b;
+    --line: #3a3934;
+    --field: #1a1917;
+    --accent: #7fb069;
+    --accent-ink: #11160d;
+    --accent-soft: #26311d;
+    --danger: #e88a7d;
+    --danger-soft: #3a2420;
+    --warn: #d8b25a;
+    --info: #8db6dc;
+    --info-soft: #1f2b36;
+    --transfer: #d8b25a;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a968b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #1f1e1d;
+  --card: #262624;
+  --ink: #ecebe3;
+  --muted: #9a968b;
+  --line: #3a3934;
+  --field: #1a1917;
+  --accent: #7fb069;
+  --accent-ink: #11160d;
+  --accent-soft: #26311d;
+  --danger: #e88a7d;
+  --danger-soft: #3a2420;
+  --warn: #d8b25a;
+  --info: #8db6dc;
+  --info-soft: #1f2b36;
+  --transfer: #d8b25a;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a968b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}

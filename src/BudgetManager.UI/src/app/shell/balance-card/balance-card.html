@@ -1,0 +1,55 @@
+@if (layout() === 'page') {
+  <section class="card bal-page" [attr.aria-label]="'totals.balance' | t">
+    <p class="bal-ledger">{{ name() }}</p>
+    <div class="bal-grid">
+      @for (t of totals(); track t.currency) {
+        <ng-container *ngTemplateOutlet="cell; context: { $implicit: t }" />
+      }
+    </div>
+  </section>
+} @else {
+  @for (t of shown(); track t.currency) {
+    <ng-container *ngTemplateOutlet="cell; context: { $implicit: t }" />
+  }
+  @if (rest().length > 0) {
+    <div class="more-wrap">
+      <button
+        #more
+        type="button"
+        class="more-btn"
+        [attr.aria-expanded]="popoverOpen()"
+        [attr.aria-controls]="popoverOpen() ? popoverId : null"
+        (click)="togglePopover()"
+      >
+        {{ 'totals.more' | t: { count: rest().length } }}
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      @if (popoverOpen()) {
+        <div class="popover" [id]="popoverId">
+          @for (t of rest(); track t.currency) {
+            <ng-container *ngTemplateOutlet="cell; context: { $implicit: t }" />
+          }
+        </div>
+      }
+    </div>
+  }
+}
+
+<ng-template #cell let-t>
+  <div class="bal" role="group" [attr.aria-label]="'totals.group' | t: { currency: t.currency }">
+    <span class="bal-total amount" [class.amount--out]="t.total < 0"
+      >{{ formatAmount(t.total) }}<span class="ccy">{{ t.currency }}</span></span
+    >
+    @if (t.unallocated !== 0) {
+      <span class="bal-sub" [class.over]="t.unallocated < 0">
+        {{ 'common.unallocated' | t }}
+        <span class="amount">{{ formatMoney(t.unallocated, t.currency) }}</span>
+        @if (t.unallocated < 0) {
+          <span class="sr-only">{{ (t.total < 0 ? 'totals.overdrawn' : 'totals.overAllocated') | t }}</span>
+        }
+      </span>
+    }
+  </div>
+</ng-template>

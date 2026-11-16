@@ -1,0 +1,135 @@
+<section class="card group" aria-labelledby="pf-regional">
+  <h2 class="section-title" id="pf-regional">{{ 'settings.regional' | t }}</h2>
+  <div class="form-grid">
+    <div class="field">
+      <label for="pf-language">{{ 'settings.language' | t }}</label>
+      <div class="input">
+        <select
+          id="pf-language"
+          [ngModelOptions]="{ standalone: true }"
+          [ngModel]="value().language"
+          (ngModelChange)="update('language', $event)"
+        >
+          @for (option of languages; track option.value) {
+            <option [value]="option.value" [attr.lang]="option.value">{{ option.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="pf-date-format">{{ 'settings.dateFormat' | t }}</label>
+      <div class="input">
+        <select
+          id="pf-date-format"
+          [ngModelOptions]="{ standalone: true }"
+          [ngModel]="value().dateFormat"
+          (ngModelChange)="update('dateFormat', $event)"
+        >
+          @for (option of dateFormats; track option.value) {
+            <option [value]="option.value">{{ option.sample }} ({{ option.value }})</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card group" aria-labelledby="pf-currencies">
+  <h2 class="section-title" id="pf-currencies">{{ 'settings.currencies' | t }}</h2>
+  <div class="field">
+    <label for="pf-default-currency">{{ 'settings.defaultCurrency' | t }}</label>
+    <div class="input narrow">
+      <select
+        id="pf-default-currency"
+        aria-describedby="pf-default-hint"
+        [ngModelOptions]="{ standalone: true }"
+        [ngModel]="value().defaultCurrency"
+        (ngModelChange)="update('defaultCurrency', $event)"
+      >
+        @let ccy = currencyOptions();
+        @if (ccy.favorites.length > 0) {
+          <optgroup [label]="'currency.favorites' | t">
+            @for (c of ccy.favorites; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </optgroup>
+        }
+        <optgroup [label]="'currency.all' | t">
+          @for (c of ccy.others; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </optgroup>
+      </select>
+    </div>
+    <span class="hint" id="pf-default-hint">{{ 'settings.defaultCurrencyHint' | t }}</span>
+  </div>
+
+  <div class="field">
+    <span class="label" id="pf-favorites">{{ 'settings.favorites' | t }}</span>
+    <ul class="chips" aria-labelledby="pf-favorites" aria-describedby="pf-favorites-hint">
+      @for (c of value().favoriteCurrencies; track c) {
+        <li class="chip">
+          {{ c }}
+          <button
+            type="button"
+            [attr.aria-label]="'settings.removeFavorite' | t: { currency: c }"
+            (click)="removeFavorite(c)"
+          >
+            ×
+          </button>
+        </li>
+      } @empty {
+        <li class="muted small">{{ 'settings.noFavorites' | t }}</li>
+      }
+    </ul>
+    <div class="add-favorite">
+      <div class="input narrow">
+        <select
+          id="pf-favorite-to-add"
+          [attr.aria-label]="'settings.favoriteToAdd' | t"
+          [disabled]="favoritesFull()"
+          [ngModelOptions]="{ standalone: true }"
+          [ngModel]="favoriteToAdd()"
+          (ngModelChange)="favoriteToAdd.set($event)"
+        >
+          @for (c of addable(); track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </div>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="favoritesFull()"
+        (click)="addFavorite()"
+      >
+        {{ 'settings.addFavorite' | t }}
+      </button>
+    </div>
+    <span class="hint" id="pf-favorites-hint">
+      {{ (favoritesFull() ? 'settings.favoritesFull' : 'settings.favoritesHint') | t: { max: maxFavorites } }}
+    </span>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </div>
+</section>
+
+<section class="card group" aria-labelledby="pf-appearance">
+  <h2 class="section-title" id="pf-appearance">{{ 'settings.appearance' | t }}</h2>
+  <div class="field">
+    <span class="label" id="pf-theme">{{ 'settings.theme' | t }}</span>
+    <div class="segment" role="group" aria-labelledby="pf-theme">
+      @for (option of themes; track option.value) {
+        <button
+          type="button"
+          [class.active]="value().theme === option.value"
+          [attr.aria-pressed]="value().theme === option.value"
+          (click)="update('theme', option.value)"
+        >
+          {{ option.label | t }}
+        </button>
+      }
+    </div>
+  </div>
+</section>

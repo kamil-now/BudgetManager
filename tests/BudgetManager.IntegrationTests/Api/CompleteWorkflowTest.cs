@@ -61,18 +61,32 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
     {
         _testState.UserId.ShouldNotBeNull();
 
-        var command = new CreateLedgerCommand("Default Ledger", null,
+        var command = new CreateLedgerCommand("Default Ledger",
           [new("Main budget", [
-              new("Food", [new("EUR", 0, AllocationType.Fixed, Amount: 600)]),
-              new("Rent", [new("EUR", 1, AllocationType.Fixed, Amount: 800)]),
-              new("Utilities", [new("EUR", 2, AllocationType.Fixed, Amount: 200)]),
-              new("Entertainment", [new("EUR", 3, AllocationType.Percent, Percent: 20)]),
-              new("Savings", [new("EUR", 4, AllocationType.Percent, Percent: 80)])
-              ])],
+              new("Food"),
+              new("Rent"),
+              new("Utilities"),
+              new("Entertainment"),
+              new("Savings")
+              ],
+              [new("Default", "EUR", [
+                new("Food", 0, AllocationType.Fixed, Amount: 600),
+                new("Rent", 1, AllocationType.Fixed, Amount: 800),
+                new("Utilities", 2, AllocationType.Fixed, Amount: 200),
+                new("Entertainment", 3, AllocationType.Percent, Percent: 20),
+                new("Savings", 4, AllocationType.Percent, Percent: 100)
+              ])])],
               [
                 new(new(256, "EUR"), "Cash"),
                 new(new(2048, "EUR"), "Main Account"),
                 new(new(4096, "EUR"), "Savings Account")
+              ],
+              [
+                new("Main budget", "Food", new(600, "EUR")),
+                new("Main budget", "Rent", new(800, "EUR")),
+                new("Main budget", "Utilities", new(200, "EUR")),
+                new("Main budget", "Entertainment", new(960, "EUR")),
+                new("Main budget", "Savings", new(3840, "EUR"))
               ]);
         var response = await Client.PostAsJsonAsync("/api/ledgers", command);
 
@@ -100,14 +114,12 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         ledger.ShouldNotBeNull();
 
         ledger.Name.ShouldBe(_testState.CreatedLedger.Name);
-        ledger.Description.ShouldBe(_testState.CreatedLedger.Description);
 
         ledger.Budgets.Count().ShouldBe(1);
         var budget = ledger.Budgets.First();
 
         var createdBudget = _testState.CreatedLedger.Budgets.First();
         budget.Name.ShouldBe(createdBudget.Name);
-        budget.Description.ShouldBe(createdBudget.Description);
 
         budget.Funds.Count().ShouldBe(createdBudget.Funds.Count());
 
@@ -115,8 +127,9 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         {
             var fund = budget.Funds.FirstOrDefault(x => x.Name == expectedFund.Name);
             fund.ShouldNotBeNull($"Fund with name '{expectedFund.Name}' not found.");
-            fund.Description.ShouldBe(expectedFund.Description);
-            fund.Balance.Keys.ShouldBeEmpty();
+            var expectedAllocation = _testState.CreatedLedger.InitialAllocations.ShouldNotBeNull().Single(x => x.Fund == expectedFund.Name).Value;
+            fund.Balance.Keys.ShouldBe([expectedAllocation.Currency]);
+            fund.Balance[expectedAllocation.Currency].ShouldBe(expectedAllocation.Amount);
         }
 
         ledger.Accounts.Count().ShouldBe(_testState.CreatedLedger.Accounts.Count());
@@ -125,7 +138,6 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         {
             var account = ledger.Accounts.FirstOrDefault(x => x.Name == expectedAccount.Name);
             account.ShouldNotBeNull($"Account with name '{expectedAccount.Name}' not found.");
-            account.Description.ShouldBe(expectedAccount.Description);
             account.Balance.Keys.Count.ShouldBe(1);
             account.Balance.ContainsKey(expectedAccount.InitialBalance.Currency).ShouldBeTrue();
             account.Balance[expectedAccount.InitialBalance.Currency].ShouldBe(expectedAccount.InitialBalance.Amount);
@@ -153,9 +165,7 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             AccountId: accounts[0].Id,
             Value: new Money(100, "USD"),
             Date: DateTimeOffset.UtcNow.AddDays(-2),
-            Title: "gift",
-            Comment: "birthday",
-            Tags: ["extra"]);
+            Title: "gift");
 
         var currencyExchange = new CreateCurrencyExchangeCommand(
             AccountId: accounts[0].Id,
@@ -163,32 +173,26 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             Buy: new Money(85.38m, "EUR"),
             Sell: new Money(100, "USD"),
             Date: DateTimeOffset.UtcNow.AddDays(-1),
-            Title: null,
-            Comment: null);
+            Title: null);
 
         var salary = new CreateAccountTransactionCommand(
             AccountId: accounts[1].Id,
             Value: new Money(3000.01m, "EUR"),
             Date: DateTimeOffset.UtcNow,
-            Title: "salary",
-            Comment: null,
-            Tags: ["regular"]);
+            Title: "salary");
 
         var savingsTransfer = new CreateAccountTransferCommand(
             AccountId: accounts[1].Id,
             TargetAccountId: accounts[2].Id,
             Value: new Money(1000, "EUR"),
             Date: DateTimeOffset.UtcNow.AddDays(-1),
-            Title: "monthly",
-            Comment: "from salary");
+            Title: "monthly");
 
         var rent = new CreateAccountTransactionCommand(
             AccountId: accounts[1].Id,
             Value: new Money(-1000, "EUR"),
             Date: DateTimeOffset.UtcNow,
-            Title: "rent",
-            Comment: null,
-            Tags: ["regular"]);
+            Title: "rent");
 
         await POST($"/api/accounts/{accounts[0].Id}/transaction", cashGift);
         await POST($"/api/accounts/{accounts[0].Id}/currencyExchange", currencyExchange);
@@ -204,99 +208,87 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
     }
 
     [Fact, TestPriority(6)]
-    public async Task FetchLedgerTransactions()
+    public async Task FetchLedgerFeed()
     {
         _testState.CreatedIncomes.ShouldNotBeNull();
         _testState.CreatedExpenses.ShouldNotBeNull();
         _testState.CreatedTransfers.ShouldNotBeNull();
         _testState.CreatedCurrencyExchanges.ShouldNotBeNull();
 
-        var response = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/transactions");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-
-        var transactions = await response.Content.ReadFromJsonAsync<LedgerTransactionsDTO>();
-
-        transactions.ShouldNotBeNull();
+        var feed = await GetFeedAsync();
 
         foreach (var expectedIncome in _testState.CreatedIncomes)
         {
-            var transaction = transactions.Incomes.FirstOrDefault(x => x.Title == expectedIncome.Title);
-            transaction.ShouldNotBeNull($"Income with title '{expectedIncome.Title}' not found.");
-            transaction.Comment.ShouldBe(expectedIncome.Comment);
-            transaction.Title.ShouldBe(expectedIncome.Title);
-            transaction.Value.ShouldBe(expectedIncome.Value);
-            transaction.Received.ShouldBeNull();
+            var item = feed.Items.FirstOrDefault(x => x.Type == FeedItemType.Income && x.Title == expectedIncome.Title);
+            item.ShouldNotBeNull($"Income with title '{expectedIncome.Title}' not found.");
+            item.Value.ShouldBe(expectedIncome.Value);
+            item.Received.ShouldBeNull();
         }
 
         foreach (var expectedExpense in _testState.CreatedExpenses)
         {
-            var transaction = transactions.Expenses.FirstOrDefault(x => x.Title == expectedExpense.Title);
-            transaction.ShouldNotBeNull($"Expense with title '{expectedExpense.Title}' not found.");
-            transaction.Comment.ShouldBe(expectedExpense.Comment);
-            transaction.Title.ShouldBe(expectedExpense.Title);
-            transaction.Value.ShouldBe(expectedExpense.Value);
-            transaction.Received.ShouldBeNull();
+            var item = feed.Items.FirstOrDefault(x => x.Type == FeedItemType.Expense && x.Title == expectedExpense.Title);
+            item.ShouldNotBeNull($"Expense with title '{expectedExpense.Title}' not found.");
+            item.Value.ShouldBe(expectedExpense.Value);
+            item.Received.ShouldBeNull();
         }
 
         foreach (var expectedTransfer in _testState.CreatedTransfers)
         {
-            var transfer = transactions.Transfers.FirstOrDefault(x => x.Title == expectedTransfer.Title);
-            transfer.ShouldNotBeNull($"Transfer with title '{expectedTransfer.Title}' not found.");
-            transfer.Comment.ShouldBe(expectedTransfer.Comment);
-            transfer.Title.ShouldBe(expectedTransfer.Title);
-            transfer.Value.ShouldBe(expectedTransfer.Value);
-            transfer.Received.ShouldBeNull();
+            var item = feed.Items.FirstOrDefault(x => x.Type == FeedItemType.Transfer && x.Title == expectedTransfer.Title);
+            item.ShouldNotBeNull($"Transfer with title '{expectedTransfer.Title}' not found.");
+            item.Value.ShouldBe(expectedTransfer.Value);
+            item.Received.ShouldBeNull();
         }
 
         foreach (var expectedCurrencyExchange in _testState.CreatedCurrencyExchanges)
         {
-            var exchange = transactions.CurrencyExchanges.FirstOrDefault(x => x.Title == expectedCurrencyExchange.Title);
-            exchange.ShouldNotBeNull($"Currency Exchange with title '{expectedCurrencyExchange.Title}' not found.");
-            exchange.Comment.ShouldBe(expectedCurrencyExchange.Comment);
-            exchange.Title.ShouldBe(expectedCurrencyExchange.Title);
-            exchange.Value.ShouldBe(expectedCurrencyExchange.Sell);
-            exchange.Received.ShouldBe(expectedCurrencyExchange.Buy);
+            var item = feed.Items.FirstOrDefault(x => x.Type == FeedItemType.Exchange && x.Title == expectedCurrencyExchange.Title);
+            item.ShouldNotBeNull("Currency exchange not found.");
+            item.Value.ShouldBe(expectedCurrencyExchange.Sell);
+            item.Received.ShouldBe(expectedCurrencyExchange.Buy);
         }
-        _testState.LedgerTransactions = transactions;
+
+        _testState.LedgerFeed = feed;
     }
 
     [Fact, TestPriority(7)]
     public async Task UpdateIncome()
     {
-        _testState.LedgerTransactions.ShouldNotBeNull();
-        var income = _testState.LedgerTransactions.Incomes.First(x => x.Title == "salary");
+        _testState.LedgerFeed.ShouldNotBeNull();
+        var income = _testState.LedgerFeed.Items.First(x => x.Type == FeedItemType.Income && x.Title == "salary");
+        var accountId = income.AccountId.ShouldNotBeNull();
         var request = new UpdateAccountTransactionCommand(
             income.Id,
-            income.AccountId,
+            accountId,
             new Money(3000, income.Value.Currency),
             income.Date.AddDays(-1),
-            income.Title,
-            "invoice XYZ",
-            [.. income.Tags ?? [], "taxed"]);
+            income.Title);
 
-        var response = await Client.PutAsJsonAsync($"/api/accounts/{income.AccountId}/transaction/{income.Id}", request);
+        var response = await Client.PutAsJsonAsync($"/api/accounts/{accountId}/transaction/{income.Id}", request);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
 
-        var transactionsResponse = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/transactions");
-        transactionsResponse.StatusCode.ShouldBe(HttpStatusCode.OK, await transactionsResponse.Content.ReadAsStringAsync());
+        var feed = await GetFeedAsync();
 
-        var transactions = await transactionsResponse.Content.ReadFromJsonAsync<LedgerTransactionsDTO>();
-
-        transactions.ShouldNotBeNull();
-
-        var updated = transactions.Incomes.FirstOrDefault(x => x.Id == income.Id);
+        var updated = feed.Items.FirstOrDefault(x => x.Id == income.Id);
 
         updated.ShouldNotBeNull()
             .ShouldSatisfyAllConditions(
                 x => x.AccountId.ShouldBe(request.AccountId),
                 x => x.Value.ShouldBe(request.Amount),
                 x => x.Date.ShouldBe(request.Date),
-                x => x.Title.ShouldBe(request.Title),
-                x => x.Comment.ShouldBe(request.Comment),
-                x => x.Tags.ShouldBe(request.Tags));
+                x => x.Title.ShouldBe(request.Title));
 
-        _testState.LedgerTransactions = transactions;
+        _testState.LedgerFeed = feed;
+    }
+
+    private async Task<LedgerFeedPageDTO> GetFeedAsync()
+    {
+        var response = await Client.GetAsync($"/api/ledgers/{_testState.LedgerId}/feed");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+
+        var feed = await response.Content.ReadFromJsonAsync<LedgerFeedPageDTO>();
+        return feed.ShouldNotBeNull();
     }
 
     [Fact, TestPriority(8)]
@@ -372,47 +364,9 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
                     account => account.Income.Keys.ShouldBeEmpty(),
                     account => account.Expense.Keys.ShouldBeEmpty()
                 ),
-                x => x.Tags.Count().ShouldBe(3),
-                x => x.Tags.FirstOrDefault(x => x.Name == "extra").ShouldNotBeNull().ShouldSatisfyAllConditions(
-                    tag => tag.Income.Keys.Count.ShouldBe(1),
-                    tag => tag.Income.GetValueOrDefault("USD")
-                        .ShouldNotBeNull().ShouldEqual(new(
-                            Total: 100,
-                            Average: 100,
-                            Min: 100,
-                            Max: 100
-                        )),
-                    tag => tag.Expense.Keys.ShouldBeEmpty()
-                ),
-                x => x.Tags.FirstOrDefault(x => x.Name == "regular").ShouldNotBeNull().ShouldSatisfyAllConditions(
-                    tag => tag.Income.Keys.Count.ShouldBe(1),
-                    tag => tag.Income.GetValueOrDefault("EUR")
-                        .ShouldNotBeNull().ShouldEqual(new(
-                            Total: 3000,
-                            Average: 3000,
-                            Min: 3000,
-                            Max: 3000
-                        )),
-                    tag => tag.Expense.Keys.Count.ShouldBe(1),
-                    tag => tag.Expense.GetValueOrDefault("EUR")
-                        .ShouldNotBeNull().ShouldEqual(new(
-                            Total: -1000,
-                            Average: -1000,
-                            Min: -1000,
-                            Max: -1000
-                        ))
-                ),
-                x => x.Tags.FirstOrDefault(x => x.Name == "taxed").ShouldNotBeNull().ShouldSatisfyAllConditions(
-                    tag => tag.Income.Keys.Count.ShouldBe(1),
-                    tag => tag.Income.GetValueOrDefault("EUR")
-                        .ShouldNotBeNull().ShouldEqual(new(
-                            Total: 3000,
-                            Average: 3000,
-                            Min: 3000,
-                            Max: 3000
-                        )),
-                    tag => tag.Expense.Keys.ShouldBeEmpty()
-                )
+                x => x.Budgets.ShouldNotBeEmpty(),
+                x => x.FundTotals["EUR"].Ending.ShouldBe(
+                    _testState.Ledger.ShouldNotBeNull().Budgets.SelectMany(b => b.Funds).Sum(f => f.Balance.GetValueOrDefault("EUR")))
             );
     }
 
@@ -425,11 +379,15 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
             LedgerId: _testState.LedgerId.Value,
             Name: "Holiday budget",
             Funds: [
-                new("Flights", [new("EUR", 0, AllocationType.Fixed, Amount: 500)]),
-                new("Hotels", [new("EUR", 1, AllocationType.Fixed, Amount: 700)]),
-                new("Spending money", [new("EUR", 2, AllocationType.Percent, Percent: 50)])
+                new("Flights"),
+                new("Hotels"),
+                new("Spending money")
             ],
-            Description: "Summer trip");
+            AllocationTemplates: [new("Trip", "EUR", [
+                new("Flights", 0, AllocationType.Fixed, Amount: 500),
+                new("Hotels", 1, AllocationType.Fixed, Amount: 700),
+                new("Spending money", 2, AllocationType.Percent, Percent: 50)
+            ])]);
 
         var response = await Client.PostAsJsonAsync("/api/budgets", command);
 
@@ -452,7 +410,6 @@ public class CompleteWorkflowTest(ITestOutputHelper testOutputHelper, ApiFixture
         budget.ShouldNotBeNull()
             .ShouldSatisfyAllConditions(
                 x => x.Name.ShouldBe(command.Name),
-                x => x.Description.ShouldBe(command.Description),
                 x => x.Funds.Count().ShouldBe(command.Funds.Count()),
                 x => x.Funds.Select(f => f.Name).ShouldBe(command.Funds.Select(f => f.Name), ignoreOrder: true),
                 x => x.Balance.Keys.ShouldBeEmpty());
@@ -629,7 +586,7 @@ public class TestState
     public CreateLedgerCommand? CreatedLedger { get; set; }
     public CreateBudgetCommand? CreatedBudget { get; set; }
     public LedgerDTO? Ledger { get; set; }
-    public LedgerTransactionsDTO? LedgerTransactions { get; set; }
+    public LedgerFeedPageDTO? LedgerFeed { get; set; }
 
     public CreateAccountTransactionCommand[]? CreatedIncomes { get; set; }
     public CreateAccountTransactionCommand[]? CreatedExpenses { get; set; }

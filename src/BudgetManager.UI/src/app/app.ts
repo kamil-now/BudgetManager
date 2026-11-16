@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { currentLanguage } from './i18n/i18n';
 
 @Component({
   imports: [RouterOutlet],
@@ -8,5 +9,5 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('budget-manager');
+  protected readonly language = currentLanguage;
 }

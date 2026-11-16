@@ -22,6 +22,13 @@ public class AccountsController(IMediator mediator) : BaseController
         return CreatedAtAction(nameof(GetAccount), new { accountId = id }, id);
     }
 
+    [HttpPut("{accountId}")]
+    public async Task<ActionResult> UpdateAccount([FromRoute] Guid accountId, [FromBody] UpdateAccountCommand request)
+    {
+        await mediator.Send(request with { Id = accountId });
+        return NoContent();
+    }
+
     [HttpPost("{accountId}/transaction")]
     public async Task<ActionResult> CreateTransaction([FromRoute] Guid accountId, [FromBody] CreateAccountTransactionCommand request)
     {
@@ -55,6 +62,13 @@ public class AccountsController(IMediator mediator) : BaseController
         return Ok();
     }
 
+    [HttpDelete("{accountId}/transaction/{transactionId}")]
+    public async Task<ActionResult> DeleteTransaction([FromRoute] Guid accountId, [FromRoute] Guid transactionId)
+    {
+        await mediator.Send(new DeleteAccountTransactionCommand(accountId, transactionId));
+        return NoContent();
+    }
+
     [HttpGet("{accountId}/transfer/{transferId}")]
     public async Task<ActionResult> GetTransfer([FromRoute] Guid accountId, [FromRoute] Guid transferId)
     {
@@ -78,6 +92,13 @@ public class AccountsController(IMediator mediator) : BaseController
     {
         await mediator.Send(request with { Id = transferId, AccountId = accountId });
         return Ok();
+    }
+
+    [HttpDelete("{accountId}/transfer/{transferId}")]
+    public async Task<ActionResult> DeleteTransfer([FromRoute] Guid accountId, [FromRoute] Guid transferId)
+    {
+        await mediator.Send(new DeleteAccountTransferCommand(accountId, transferId));
+        return NoContent();
     }
 
     [HttpPut("{accountId}/currencyExchange/{transferId}")]

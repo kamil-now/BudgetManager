@@ -20,8 +20,6 @@ public sealed class AccountTransferReader(ApplicationDbContext dbContext) : IAcc
                 x.Income.Account.Name,
                 x.Income.Value,
                 x.Income.Date,
-                x.Income.Title,
-                x.Income.Comment,
-                x.Income.Tags))
+                x.Income.Title))
             .SingleOrDefaultAsync(cancellationToken);
 }

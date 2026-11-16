@@ -18,6 +18,22 @@ services:
     depends_on:
       budget-manager-db:
         condition: service_healthy
+      budget-manager-seed:
+        condition: service_completed_successfully
+
+  # one-shot: migrates the database and creates the demo data, then exits
+  budget-manager-seed:
+    build:
+      context: ..
+      dockerfile: utils/DemoDataInitializer/Dockerfile
+    networks:
+      - network
+    environment:
+      ConnectionStrings__DefaultConnection: Host=budget-manager-db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+    depends_on:
+      budget-manager-db:
+        condition: service_healthy
+    restart: "no"
 
   budget-manager-ui:
     build:

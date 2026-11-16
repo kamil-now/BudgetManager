@@ -1,0 +1,182 @@
+@if (budgets(); as list) {
+  <app-modal
+    size="lg"
+    [title]="'ledgerTemplates.title' | t"
+    [submitting]="submitting() || removing()"
+    [submitLabel]="'templates.save' | t"
+    [busyLabel]="(removing() ? 'templates.removing' : 'common.saving') | t"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="save()"
+  >
+    @switch (loadState()) {
+      @case ('loading') {
+        <p class="muted small" role="status">{{ 'templates.loading' | t }}</p>
+      }
+      @case ('error') {
+        <div class="load-error">
+          <p class="error" role="alert">{{ loadError() }}</p>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="retry()">
+            {{ 'common.tryAgain' | t }}
+          </button>
+        </div>
+      }
+      @default {
+        <p class="hint">{{ 'ledgerTemplates.help' | t }}</p>
+
+        <div class="tpl-bar">
+          <ul class="tpl-list" [attr.aria-label]="'templates.list' | t">
+            @for (d of drafts(); track d.key) {
+              <li>
+                <button
+                  type="button"
+                  class="tpl"
+                  [class.active]="d.key === selectedKey()"
+                  [attr.aria-pressed]="d.key === selectedKey()"
+                  (click)="select(d.key)"
+                >
+                  <span class="tpl-name">{{ d.name || ('templates.unnamed' | t) }}</span>
+                  <span class="tpl-meta">
+                    {{ d.currency }}
+                    @if (minimumOf(d); as min) {
+                      · {{ formatMoney(min, d.currency) }}
+                    }
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+          @if (list.length > 0) {
+            <button type="button" id="lae-new" class="btn btn-ghost btn-sm btn-dashed" (click)="addTemplate()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              {{ 'templates.new' | t }}
+            </button>
+          }
+        </div>
+
+        @if (list.length === 0) {
+          <p class="muted small">{{ 'ledgerTemplates.noBudgets' | t }}</p>
+        } @else if (selected(); as draft) {
+          <div class="form-grid">
+            <div class="field">
+              <label for="lae-name">{{ 'templates.name' | t }}</label>
+              <div class="input">
+                <input
+                  id="lae-name"
+                  name="lae-name"
+                  type="text"
+                  autocomplete="off"
+                  [maxLength]="maxNameLength"
+                  [ngModel]="draft.name"
+                  (ngModelChange)="patch(draft.key, { name: $event })"
+                  (keydown.enter)="$event.preventDefault()"
+                />
+              </div>
+            </div>
+            <div class="field">
+              @if (draft.id === null) {
+                <label for="lae-currency">{{ 'common.currency' | t }}</label>
+                <div class="input">
+                  <select
+                    id="lae-currency"
+                    name="lae-currency"
+                    [ngModel]="draft.currency"
+                    (ngModelChange)="patch(draft.key, { currency: $event })"
+                  >
+                    @let ccy = currencies();
+                    @if (ccy.favorites.length > 0) {
+                      <optgroup [label]="'currency.favorites' | t">
+                        @for (c of ccy.favorites; track c) {
+                          <option [value]="c">{{ c }}</option>
+                        }
+                      </optgroup>
+                    }
+                    <optgroup [label]="'currency.all' | t">
+                      @for (c of ccy.others; track c) {
+                        <option [value]="c">{{ c }}</option>
+                      }
+                    </optgroup>
+                  </select>
+                </div>
+              } @else {
+                <span class="label" id="lae-currency-label">{{ 'common.currency' | t }}</span>
+                <p class="currency-fixed" aria-labelledby="lae-currency-label">
+                  <strong>{{ draft.currency }}</strong>
+                  <span class="hint">{{ 'templates.currencyFixed' | t }}</span>
+                </p>
+              }
+            </div>
+          </div>
+
+          <app-allocation-steps
+            target="budget"
+            [funds]="targets()"
+            [currency]="draft.currency"
+            [steps]="draft.steps"
+            (stepsChange)="patch(draft.key, { steps: $event })"
+            [sample]="sampleIncome()"
+          />
+
+          <div class="field">
+            <label for="lae-sample">{{ 'templates.tryAmount' | t }}</label>
+            <div class="input">
+              <input
+                id="lae-sample"
+                name="lae-sample"
+                class="num-in"
+                type="number"
+                step="0.01"
+                min="0"
+                inputmode="decimal"
+                placeholder="0.00"
+                [ngModel]="sampleIncome()"
+                (ngModelChange)="sampleIncome.set($event)"
+                (keydown.enter)="$event.preventDefault()"
+              />
+              <span class="suffix" aria-hidden="true">{{ draft.currency }}</span>
+            </div>
+          </div>
+        } @else {
+          <p class="muted small">{{ 'ledgerTemplates.none' | t }}</p>
+        }
+      }
+    }
+
+    <div modalFootStart class="foot-start">
+      @if (loadState() === 'ready') {
+        @if (selected(); as draft) {
+          @if (confirmingRemove()) {
+            <span class="small" id="lae-confirm-text">{{
+              'templates.confirmRemove' | t: { name: draft.name }
+            }}</span>
+            <div class="confirm-actions" role="group" aria-labelledby="lae-confirm-text">
+              <button
+                type="button"
+                id="lae-confirm-yes"
+                class="btn btn-danger btn-sm"
+                [disabled]="removing()"
+                (click)="remove()"
+              >
+                {{ (removing() ? 'templates.removing' : 'templates.yesRemove') | t }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                [disabled]="removing()"
+                (click)="cancelRemove()"
+              >
+                {{ 'templates.keep' | t }}
+              </button>
+            </div>
+          } @else {
+            <button type="button" id="lae-remove" class="btn btn-danger btn-sm" (click)="askRemove()">
+              {{ 'templates.removeTemplate' | t }}
+            </button>
+          }
+        }
+      }
+    </div>
+  </app-modal>
+}

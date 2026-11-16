@@ -8,7 +8,7 @@ public record CreateBudgetCommand(
   Guid LedgerId,
   string Name,
   IEnumerable<CreateFundDTO> Funds,
-  string? Description = null
+  IEnumerable<CreateAllocationTemplateDTO>? AllocationTemplates = null
 ) : IRequest<Guid>, IRequiresAccess
 {
     IEnumerable<Resource> IRequiresAccess.Resources => [Resource.Of<Ledger>(LedgerId)];

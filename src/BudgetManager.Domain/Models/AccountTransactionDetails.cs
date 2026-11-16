@@ -7,5 +7,5 @@ public record AccountTransactionDetails(
     Money Value,
     DateTimeOffset Date,
     string? Title,
-    string? Comment,
-    List<string>? Tags);
+    IEnumerable<FundAmount> Allocations,
+    Guid? FundId = null);

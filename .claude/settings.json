@@ -31,12 +31,21 @@
       "Bash(git stash*)",
       "Bash(git restore*)",
       "Bash(git switch*)",
+      "Bash(git apply --cached*)",
 
       "Bash(gh pr view*)",
       "Bash(gh pr list*)",
       "Bash(gh issue view*)",
 
-      "Bash(explorer.exe *)"
+      "Bash(explorer.exe *)",
+
+      "Bash(npm run lint*)",
+      "Bash(npm run build*)",
+      "Bash(npm run test*)",
+      "Bash(npm run e2e*)",
+
+      "Bash(docker compose *)",
+      "Bash(docker desktop start*)"
     ],
     "deny": [
       "Read(./.env)",

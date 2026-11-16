@@ -15,13 +15,9 @@ public sealed class CreateBudgetHandler(IEntityStore store) : IRequestHandler<Cr
         var budget = new Budget
         {
             LedgerId = command.LedgerId,
-            Name = command.Name,
-            Description = command.Description
+            Name = command.Name
         };
-        foreach (var fund in command.Funds)
-        {
-            budget.AddFund(fund.Name, fund.Description, fund.AllocationTemplates);
-        }
+        budget.AddFundsAndTemplates(command.Funds, command.AllocationTemplates);
 
         var entity = await store.CreateAsync(budget, cancellationToken) ?? throw new InvalidOperationException("Failed to create budget.");
 
@@ -38,8 +34,8 @@ public sealed class CreateBudgetHandler(IEntityStore store) : IRequestHandler<Cr
     {
         command.LedgerId.EnsureNotEmpty();
         command.Name.EnsureNotEmpty("Budget name").EnsureNotLongerThan(Constants.MaxNameLength, "Budget name");
-        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
         command.Funds.EnsureNotEmpty().EnsureValidFunds();
+        command.AllocationTemplates.EnsureValidAllocationTemplates(command.Funds);
 
         if (await store.ExistsAsync<Budget>(x => x.Name == command.Name && x.LedgerId == command.LedgerId, cancellationToken))
         {

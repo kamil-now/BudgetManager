@@ -1,0 +1,304 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.filters .field {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.input input[type='date'] {
+  color-scheme: inherit;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 9px;
+}
+
+.toggle label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--line);
+  background: var(--field);
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.switch[aria-checked='true']::after {
+  transform: translateX(16px);
+  background: var(--accent);
+}
+
+.stat .value.is-in,
+.stat .value.amount--in {
+  color: var(--accent);
+}
+
+.stat .value.is-out,
+.stat .value.amount--out {
+  color: var(--danger);
+}
+
+.stat .sub:empty {
+  display: none;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.sw--in,
+.bar--in {
+  background: var(--accent);
+}
+
+.sw--out,
+.bar--out {
+  background: var(--danger);
+}
+
+.chart {
+  --lab: 112px;
+  --val: 92px;
+}
+
+.crow {
+  display: grid;
+  grid-template-columns: var(--lab) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.crow + .crow {
+  border-top: 1px dashed var(--line);
+}
+
+.clabel {
+  font-size: 0.86rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.clabel small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.74rem;
+}
+
+.plot {
+  position: relative;
+  padding-right: var(--val);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.plot::before {
+  content: '';
+  position: absolute;
+  inset: -6px var(--val) -6px 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--line), var(--line)) 0 0 / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) 33.333% 0 / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) 66.666% 0 / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) 100% 0 / 1px 100% no-repeat;
+  opacity: 0.7;
+}
+
+.brow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 18px;
+  min-width: 0;
+}
+
+.bar {
+  height: 14px;
+  border-radius: 0 4px 4px 0;
+  flex: none;
+  min-width: 0;
+}
+
+.bval {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  margin-left: 8px;
+  color: var(--ink);
+}
+
+.bval.none {
+  color: var(--muted);
+}
+
+.axis {
+  display: grid;
+  grid-template-columns: var(--lab) minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ticks {
+  position: relative;
+  height: 18px;
+  margin-right: var(--val);
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.ticks span:first-child {
+  transform: none;
+}
+
+.ticks span:last-child {
+  transform: translateX(-100%);
+}
+
+.axis-title {
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-top: 2px;
+  margin-right: var(--val);
+  margin-left: calc(var(--lab) + 12px);
+}
+
+.tcard-head {
+  margin-bottom: 6px;
+}
+
+.table tbody th,
+.table tfoot th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.table tr.group th {
+  padding-top: 14px;
+  color: var(--muted);
+}
+
+.table tr.subtotal th,
+.table tr.subtotal td {
+  font-weight: 650;
+}
+
+.caption {
+  margin: 0 0 6px;
+}
+
+@media (max-width: 520px) {
+  .filters .btn {
+    flex: 1 1 100%;
+  }
+
+  .stat .value {
+    font-size: 1.25rem;
+  }
+
+  .chart {
+    --lab: 78px;
+    --val: 78px;
+  }
+
+  .crow,
+  .axis {
+    gap: 8px;
+  }
+
+  .crow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .axis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .axis > span {
+    display: none;
+  }
+
+  .axis-title {
+    margin-left: 0;
+  }
+}

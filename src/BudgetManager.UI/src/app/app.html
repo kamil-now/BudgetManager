@@ -1,1 +1,7 @@
-<router-outlet />
+<!--
+  Keyed by the language: a language change re-renders every page, so the pure `t` pipe and the
+  texts computed once by components pick up the new language. The router re-activates the routes.
+-->
+@for (lang of [language()]; track lang) {
+  <router-outlet />
+}

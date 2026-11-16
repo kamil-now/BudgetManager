@@ -17,9 +17,6 @@ public class BudgetConfiguration : IEntityTypeConfiguration<Budget>
             .IsRequired()
             .HasMaxLength(Constants.MaxNameLength);
 
-        builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxCommentLength);
-
         builder.HasMany(x => x.Funds)
             .WithOne(x => x.Budget)
             .HasForeignKey(x => x.BudgetId)

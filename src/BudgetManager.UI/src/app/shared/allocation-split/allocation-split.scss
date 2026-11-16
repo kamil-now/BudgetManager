@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+.split {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+
+  .hint,
+  .error {
+    margin: 0;
+  }
+}
+
+.split-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.split-title {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.template-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+
+  .field {
+    flex: 1 1 200px;
+  }
+}
+
+.split-left {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+}

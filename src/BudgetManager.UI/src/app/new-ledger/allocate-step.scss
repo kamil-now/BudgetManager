@@ -1,0 +1,96 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nothing {
+  margin: 0;
+}
+
+.plan {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .hint {
+    margin: 0;
+  }
+}
+
+.plan-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+
+  .section-title {
+    margin: 0;
+  }
+
+  .fill-from {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+.budget-name {
+  font-size: 0.82rem;
+  margin: 6px 0 0;
+}
+
+.plan-funds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  column-gap: 16px;
+}
+
+.plan-fund {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 150px) auto;
+
+  .name {
+    font-size: 0.86rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .input {
+    min-height: 32px;
+  }
+
+  input {
+    min-height: 30px;
+  }
+}
+
+@media (max-width: 519.98px) {
+  .plan-fund {
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    .input {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+  }
+}
+
+.plan-totals {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+
+  strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  strong.bad {
+    color: var(--danger);
+  }
+}

@@ -34,10 +34,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<Guid>("LedgerId")
                         .HasColumnType("uuid");
 
@@ -74,10 +70,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -86,10 +78,6 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Tags")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Title")
                         .HasMaxLength(200)
@@ -106,7 +94,7 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("AccountId", "Date");
 
                     b.ToTable("AccountTransactions", (string)null);
                 });
@@ -146,6 +134,45 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.ToTable("AccountTransfers", (string)null);
                 });
 
+            modelBuilder.Entity("BudgetManager.Domain.Entities.Allocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsInitial")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LedgerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LedgerId", "Date");
+
+                    b.ToTable("Allocations", (string)null);
+                });
+
             modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -163,6 +190,11 @@ namespace BudgetManager.Infrastructure.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -174,7 +206,7 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BudgetId", "Currency")
+                    b.HasIndex("BudgetId", "Name")
                         .IsUnique();
 
                     b.ToTable("AllocationTemplates", (string)null);
@@ -212,10 +244,9 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FundId");
+                    b.HasIndex("AllocationTemplateId");
 
-                    b.HasIndex("AllocationTemplateId", "FundId")
-                        .IsUnique();
+                    b.HasIndex("FundId");
 
                     b.ToTable("AllocationTemplateLines", (string)null);
 
@@ -232,10 +263,6 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<Guid>("LedgerId")
                         .HasColumnType("uuid");
@@ -276,10 +303,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -307,9 +330,11 @@ namespace BudgetManager.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                    b.Property<Guid?>("AccountTransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AllocationId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -335,44 +360,16 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FundId");
+                    b.HasIndex("AccountTransactionId");
 
-                    b.ToTable("FundTransactions", (string)null);
-                });
+                    b.HasIndex("AllocationId");
 
-            modelBuilder.Entity("BudgetManager.Domain.Entities.FundTransfer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.HasIndex("FundId", "Date");
 
-                    b.Property<Guid>("AllocationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("DeallocationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AllocationId")
-                        .IsUnique();
-
-                    b.HasIndex("DeallocationId")
-                        .IsUnique();
-
-                    b.ToTable("FundTransfers", (string)null);
+                    b.ToTable("FundTransactions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_FundTransactions_Source", "num_nonnulls(\"AccountTransactionId\", \"AllocationId\") = 1");
+                        });
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Ledger", b =>
@@ -383,10 +380,6 @@ namespace BudgetManager.Infrastructure.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -410,6 +403,92 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Ledgers", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.LedgerAllocationTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<Guid>("LedgerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LedgerId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("LedgerAllocationTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.LedgerAllocationTemplateLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("LedgerAllocationTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Percent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetId");
+
+                    b.HasIndex("LedgerAllocationTemplateId");
+
+                    b.ToTable("LedgerAllocationTemplateLines", (string)null);
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.User", b =>
@@ -543,6 +622,17 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("Income");
                 });
 
+            modelBuilder.Entity("BudgetManager.Domain.Entities.Allocation", b =>
+                {
+                    b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
+                        .WithMany()
+                        .HasForeignKey("LedgerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ledger");
+                });
+
             modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplate", b =>
                 {
                     b.HasOne("BudgetManager.Domain.Entities.Budget", "Budget")
@@ -597,6 +687,16 @@ namespace BudgetManager.Infrastructure.Migrations
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.FundTransaction", b =>
                 {
+                    b.HasOne("BudgetManager.Domain.Entities.AccountTransaction", "AccountTransaction")
+                        .WithMany()
+                        .HasForeignKey("AccountTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BudgetManager.Domain.Entities.Allocation", "Allocation")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AllocationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("BudgetManager.Domain.Entities.Fund", "Fund")
                         .WithMany("Transactions")
                         .HasForeignKey("FundId")
@@ -627,29 +727,14 @@ namespace BudgetManager.Infrastructure.Migrations
                                 .HasForeignKey("FundTransactionId");
                         });
 
+                    b.Navigation("AccountTransaction");
+
+                    b.Navigation("Allocation");
+
                     b.Navigation("Fund");
 
                     b.Navigation("Value")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("BudgetManager.Domain.Entities.FundTransfer", b =>
-                {
-                    b.HasOne("BudgetManager.Domain.Entities.FundTransaction", "Allocation")
-                        .WithOne("InTransfer")
-                        .HasForeignKey("BudgetManager.Domain.Entities.FundTransfer", "AllocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BudgetManager.Domain.Entities.FundTransaction", "Deallocation")
-                        .WithOne("OutTransfer")
-                        .HasForeignKey("BudgetManager.Domain.Entities.FundTransfer", "DeallocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Allocation");
-
-                    b.Navigation("Deallocation");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.Ledger", b =>
@@ -663,6 +748,85 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("BudgetManager.Domain.Entities.LedgerAllocationTemplate", b =>
+                {
+                    b.HasOne("BudgetManager.Domain.Entities.Ledger", "Ledger")
+                        .WithMany("AllocationTemplates")
+                        .HasForeignKey("LedgerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ledger");
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.LedgerAllocationTemplateLine", b =>
+                {
+                    b.HasOne("BudgetManager.Domain.Entities.Budget", "Budget")
+                        .WithMany()
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BudgetManager.Domain.Entities.LedgerAllocationTemplate", "LedgerAllocationTemplate")
+                        .WithMany("Lines")
+                        .HasForeignKey("LedgerAllocationTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Budget");
+
+                    b.Navigation("LedgerAllocationTemplate");
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.User", b =>
+                {
+                    b.OwnsOne("BudgetManager.Domain.Models.UserPreferences", "Preferences", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("DateFormat")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("DateFormat");
+
+                            b1.Property<string>("DefaultCurrency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("DefaultCurrency");
+
+                            b1.Property<string>("FavoriteCurrencies")
+                                .IsRequired()
+                                .HasMaxLength(39)
+                                .HasColumnType("character varying(39)")
+                                .HasColumnName("FavoriteCurrencies");
+
+                            b1.Property<string>("Language")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("Language");
+
+                            b1.Property<string>("Theme")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)")
+                                .HasColumnName("Theme");
+
+                            b1.HasKey("UserId");
+
+                            b1.ToTable("Users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.Navigation("Preferences")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BudgetManager.Domain.Entities.Account", b =>
                 {
                     b.Navigation("Transactions");
@@ -673,6 +837,11 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("InTransfer");
 
                     b.Navigation("OutTransfer");
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.Allocation", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.AllocationTemplate", b =>
@@ -694,18 +863,18 @@ namespace BudgetManager.Infrastructure.Migrations
                     b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("BudgetManager.Domain.Entities.FundTransaction", b =>
-                {
-                    b.Navigation("InTransfer");
-
-                    b.Navigation("OutTransfer");
-                });
-
             modelBuilder.Entity("BudgetManager.Domain.Entities.Ledger", b =>
                 {
                     b.Navigation("Accounts");
 
+                    b.Navigation("AllocationTemplates");
+
                     b.Navigation("Budgets");
+                });
+
+            modelBuilder.Entity("BudgetManager.Domain.Entities.LedgerAllocationTemplate", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("BudgetManager.Domain.Entities.User", b =>

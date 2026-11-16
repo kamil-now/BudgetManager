@@ -1,0 +1,180 @@
+@if (open()) {
+  <app-modal
+    size="lg"
+    [title]="(isEdit() ? 'exchange.edit' : 'feed.currencyExchange') | t"
+    [submitting]="submitting()"
+    [submitLabel]="(isEdit() ? 'common.saveChanges' : 'exchange.save') | t"
+    [busyLabel]="'common.saving' | t"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="submit()"
+  >
+    <div class="form-grid">
+      <div class="field">
+        <label for="ex-account">{{ 'common.account' | t }}</label>
+        <div class="input">
+          <select
+            id="ex-account"
+            name="account"
+            [ngModel]="accountId()"
+            (ngModelChange)="setAccount($event)"
+          >
+            @for (a of accounts(); track a.id) {
+              <option [value]="a.id">{{ a.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ex-target">{{ 'exchange.toAccount' | t }}</label>
+        <div class="input">
+          <select
+            id="ex-target"
+            name="target"
+            [ngModel]="targetId()"
+            (ngModelChange)="targetId.set($event)"
+          >
+            <option value="">{{ 'exchange.sameAccount' | t }}</option>
+            @for (a of targets(); track a.id) {
+              <option [value]="a.id">{{ a.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    @let ccy = currencyOptions();
+    <div class="swap-row">
+      <div class="field side side--sell">
+        <label for="ex-sell-amt">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14" />
+            <path d="m19 12-7 7-7-7" />
+          </svg>
+          {{ 'exchange.sell' | t }}
+        </label>
+        <div class="input">
+          <select
+            class="ccy-select"
+            name="sellCurrency"
+            [attr.aria-label]="'exchange.sellCurrency' | t"
+            [ngModel]="sellCurrency()"
+            (ngModelChange)="sellCurrency.set($event)"
+          >
+            @if (ccy.favorites.length > 0) {
+              <optgroup [label]="'currency.favorites' | t">
+                @for (c of ccy.favorites; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </optgroup>
+            }
+            <optgroup [label]="'currency.all' | t">
+              @for (c of ccy.others; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </optgroup>
+          </select>
+          <input
+            id="ex-sell-amt"
+            name="sellAmount"
+            class="num-in"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            autocomplete="off"
+            [ngModel]="sellAmount()"
+            (ngModelChange)="sellAmount.set($event)"
+          />
+        </div>
+      </div>
+
+      <span class="swap-icon" aria-hidden="true">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M8 16H3v5" />
+        </svg>
+      </span>
+
+      <div class="field side side--buy">
+        <label for="ex-buy-amt">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="m5 12 7-7 7 7" />
+          </svg>
+          {{ 'exchange.buy' | t }}
+        </label>
+        <div class="input">
+          <select
+            class="ccy-select"
+            name="buyCurrency"
+            [attr.aria-label]="'exchange.buyCurrency' | t"
+            [ngModel]="buyCurrency()"
+            (ngModelChange)="buyCurrency.set($event)"
+          >
+            @if (ccy.favorites.length > 0) {
+              <optgroup [label]="'currency.favorites' | t">
+                @for (c of ccy.favorites; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </optgroup>
+            }
+            <optgroup [label]="'currency.all' | t">
+              @for (c of ccy.others; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </optgroup>
+          </select>
+          <input
+            id="ex-buy-amt"
+            name="buyAmount"
+            class="num-in"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            autocomplete="off"
+            [ngModel]="buyAmount()"
+            (ngModelChange)="buyAmount.set($event)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="rate-line">
+      <span class="rate" aria-live="polite">{{ rate() }}</span>
+      @if (sameCurrency()) {
+        <span class="error" role="alert">{{ 'exchange.mustDiffer' | t }}</span>
+      }
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="ex-date">{{ 'common.date' | t }}</label>
+        <div class="input"><input id="ex-date" name="date" type="date" [(ngModel)]="date" /></div>
+      </div>
+
+      <div class="field">
+        <label for="ex-title-input">{{ 'common.title' | t }}</label>
+        <div class="input">
+          <input
+            id="ex-title-input"
+            name="title"
+            type="text"
+            maxlength="200"
+            [placeholder]="'common.optional' | t"
+            [(ngModel)]="title"
+          />
+        </div>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <p class="loading muted small" role="status">{{ 'exchange.loading' | t }}</p>
+    }
+  </app-modal>
+}

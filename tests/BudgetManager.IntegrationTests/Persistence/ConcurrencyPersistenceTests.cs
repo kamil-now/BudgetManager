@@ -1,4 +1,7 @@
+using BudgetManager.Application.Validators;
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Interfaces;
+using BudgetManager.Infrastructure.Persistence.Services;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit.Abstractions;
@@ -18,17 +21,17 @@ public class ConcurrencyPersistenceTests(ITestOutputHelper testOutputHelper, Per
         var firstAccount = await first.Accounts.SingleAsync(x => x.Id == account.Id);
         var secondAccount = await second.Accounts.SingleAsync(x => x.Id == account.Id);
 
-        firstAccount.Description = "First";
+        firstAccount.Name = $"First {Guid.NewGuid()}";
         await first.SaveChangesAsync(CancellationToken.None);
 
         // Act
-        secondAccount.Description = "Second";
+        secondAccount.Name = $"Second {Guid.NewGuid()}";
 
         // Assert
         await Should.ThrowAsync<DbUpdateConcurrencyException>(() => second.SaveChangesAsync(CancellationToken.None));
 
         var result = await GetContext().Accounts.SingleAsync(x => x.Id == account.Id);
-        result.Description.ShouldBe("First");
+        result.Name.ShouldBe(firstAccount.Name);
     }
 
     [Fact]
@@ -41,12 +44,24 @@ public class ConcurrencyPersistenceTests(ITestOutputHelper testOutputHelper, Per
         var tracked = await dbContext.Accounts.SingleAsync(x => x.Id == account.Id);
 
         // Act
-        tracked.Description = "Updated";
+        tracked.Name = $"Updated {Guid.NewGuid()}";
         await dbContext.SaveChangesAsync(CancellationToken.None);
 
         // Assert
         var result = await GetContext().Accounts.SingleAsync(x => x.Id == account.Id);
-        result.Description.ShouldBe("Updated");
+        result.Name.ShouldBe(tracked.Name);
+    }
+
+    [Fact]
+    public async Task EntityStoreSaveChangesAsync_WhenUniqueIndexIsViolated_ThrowsConflictException()
+    {
+        // Arrange
+        var account = await AddAccountAsync();
+        IEntityStore store = new EntityStore(GetContext());
+        await store.CreateAsync(new Account { LedgerId = account.LedgerId, Name = account.Name });
+
+        // Act & Assert
+        await Should.ThrowAsync<ConflictException>(() => store.SaveChangesAsync());
     }
 
     private async Task<Account> AddAccountAsync()

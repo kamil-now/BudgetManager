@@ -20,12 +20,30 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4200',
     headless: true,
-    viewport: { width: 1280, height: 900 },
+    // Amounts and dates render with the browser locale: pin it so the assertions are stable.
+    locale: 'en-US',
     actionTimeout: 15_000,
     navigationTimeout: 20_000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
+  projects: [
+    {
+      name: 'desktop',
+      testIgnore: '**/mobile.spec.ts',
+      use: { browserName: 'chromium', viewport: { width: 1280, height: 900 } },
+    },
+    {
+      name: 'iphone-16',
+      testMatch: '**/mobile.spec.ts',
+      use: {
+        browserName: 'chromium',
+        viewport: { width: 393, height: 852 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+  ],
 });

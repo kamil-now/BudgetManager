@@ -1,0 +1,57 @@
+<section class="card panel" aria-labelledby="h-accounts">
+  <div class="card-head">
+    <h2 class="section-title" id="h-accounts">{{ 'accounts.title' | t }}</h2>
+    <span class="count muted tiny">{{ accounts().length }}</span>
+    <button
+      type="button"
+      class="btn-icon btn-icon-sm"
+      [attr.aria-label]="'common.addAccount' | t"
+      [title]="'common.addAccount' | t"
+      (click)="addAccount()"
+    >
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    </button>
+  </div>
+  @if (accounts().length === 0) {
+    <p class="muted small none">{{ 'accounts.none' | t }}</p>
+  } @else {
+    <ul class="tiles panel-scroll">
+      @for (account of accounts(); track account.id) {
+        <li class="account-row">
+          <button
+            type="button"
+            class="tile"
+            [class.on]="isScoped(account)"
+            [attr.aria-pressed]="isScoped(account)"
+            (click)="toggle(account)"
+          >
+            <span class="tile-money">
+              @for (line of balanceLines(account.balance); track line.currency) {
+                <span class="amount" [class.amount--out]="line.amount < 0"
+                  >{{ line.number }}<span class="ccy">{{ line.currency }}</span></span
+                >
+              } @empty {
+                <span class="muted" aria-hidden="true">—</span>
+                <span class="sr-only">{{ 'common.empty' | t }}</span>
+              }
+            </span>
+            <span class="tile-name">{{ account.name }}</span>
+          </button>
+          <button
+            type="button"
+            class="btn-icon btn-icon-sm edit"
+            [title]="'account.edit' | t"
+            [attr.aria-label]="'account.editFor' | t: { name: account.name }"
+            (click)="edit(account)"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</section>

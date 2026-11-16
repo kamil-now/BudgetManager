@@ -17,9 +17,6 @@ public class FundConfiguration : IEntityTypeConfiguration<Fund>
             .IsRequired()
             .HasMaxLength(Constants.MaxNameLength);
 
-        builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxCommentLength);
-
         builder.HasIndex(x => x.BudgetId);
 
         builder.HasMany(x => x.Transactions)

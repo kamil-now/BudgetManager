@@ -1,0 +1,46 @@
+@switch (state()) {
+  @case ('loading') {
+    <p class="muted" role="status">{{ 'settings.loading' | t }}</p>
+  }
+  @case ('error') {
+    <div class="card empty" role="alert">
+      <p>{{ 'settings.loadError' | t }}</p>
+      <button type="button" class="btn btn-secondary" (click)="load()">
+        {{ 'common.tryAgain' | t }}
+      </button>
+    </div>
+  }
+  @default {
+    <div class="settings">
+      <form class="settings-form" (ngSubmit)="save()" novalidate>
+        <app-preferences-form [value]="draft()" (valueChange)="edit($event)" />
+
+        <div class="actions">
+          @if (error()) {
+            <p class="error" role="alert">{{ error() }}</p>
+          }
+          @if (saved()) {
+            <p class="saved" role="status">{{ 'settings.saved' | t }}</p>
+          }
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            {{ (submitting() ? 'common.saving' : 'settings.save') | t }}
+          </button>
+        </div>
+      </form>
+
+      <section class="card group danger-zone" aria-labelledby="s-delete-account">
+        <h2 class="section-title" id="s-delete-account">{{ 'settings.deleteAccount' | t }}</h2>
+        <p class="muted small">{{ 'settings.deleteAccountHint' | t }}</p>
+        <div>
+          <button type="button" class="btn btn-danger btn-sm" (click)="deletingAccount.set(true)">
+            {{ 'settings.deleteAccountOpen' | t }}
+          </button>
+        </div>
+      </section>
+    </div>
+
+    @if (deletingAccount()) {
+      <app-delete-account (closed)="deletingAccount.set(false)" />
+    }
+  }
+}

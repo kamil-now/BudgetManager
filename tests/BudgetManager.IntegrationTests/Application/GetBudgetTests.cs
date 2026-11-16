@@ -14,9 +14,9 @@ public class GetBudgetTests(ITestOutputHelper testOutputHelper, ApplicationFixtu
 {
     private static CreateLedgerCommand ValidLedger() => new(
         "Ledger",
-        null,
-        [new("Main budget", [new CreateFundDTO("Food", [new("EUR", 0, AllocationType.Fixed, Amount: 100)])])],
-        [new(new(100, "EUR"), "Cash")]);
+        [new("Main budget", [new CreateFundDTO("Food")])],
+        [new(new(100, "EUR"), "Cash")],
+        [new("Main budget", "Food", new(100, "EUR"))]);
 
     [Fact]
     public async Task GetBudget_WhenBudgetBelongsToUser_ShouldReturnBudgetWithFunds()
@@ -55,20 +55,19 @@ public class GetBudgetTests(ITestOutputHelper testOutputHelper, ApplicationFixtu
         await MockAuthenticatedUserAsync();
         var ledgerId = await Mediator.Send(new CreateLedgerCommand(
             "Ledger",
-            null,
             [new("Main budget",
             [
-                new CreateFundDTO("Food", [new("EUR", 0, AllocationType.Fixed, Amount: 100)]),
-                new CreateFundDTO("Rent", [new("EUR", 1, AllocationType.Fixed, Amount: 100)]),
+                new CreateFundDTO("Food"),
+                new CreateFundDTO("Rent"),
             ])],
-            [new(new(100, "EUR"), "Cash")]));
+            [new(new(0, "EUR"), "Cash")]));
         var budgetId = (await Mediator.Send(new GetLedgerQuery(ledgerId))).Budgets.Single().Id;
         var funds = (await EntityStore.GetAsync<Fund>(x => x.BudgetId == budgetId, default)).ToArray();
         var food = funds.Single(x => x.Name == "Food");
         var rent = funds.Single(x => x.Name == "Rent");
         foreach (var value in new[] { new Money(100, "EUR"), new Money(50, "EUR"), new Money(30, "USD") })
         {
-            await EntityStore.CreateAsync(new FundTransaction { FundId = food.Id, Value = value, Date = DateTimeOffset.UtcNow });
+            await EntityStore.CreateAsync(Allocation.Create(ledgerId, value.Currency, DateTimeOffset.UtcNow, [new FundAmount(food.Id, value.Amount)]));
         }
         await EntityStore.SaveChangesAsync();
 

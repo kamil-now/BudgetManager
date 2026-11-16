@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BudgetManager.Api\BudgetManager.Api.csproj" />
+    <ProjectReference Include="..\..\utils\DemoDataInitializer\BudgetManager.DemoDataInitializer.csproj" />
   </ItemGroup>
 
 </Project>

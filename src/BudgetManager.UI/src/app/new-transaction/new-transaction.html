@@ -1,0 +1,161 @@
+@if (open()) {
+  <app-modal
+    size="lg"
+    [title]="(isEdit ? 'txd.edit' : 'tx.new') | t"
+    [submitting]="submitting()"
+    [submitLabel]="(isEdit ? 'common.saveChanges' : 'txd.save') | t"
+    [busyLabel]="'common.saving' | t"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="submit()"
+  >
+    <div class="tx-top">
+      <div
+        class="segment"
+        [class.seg-in]="kind() === 'income'"
+        [class.seg-out]="kind() === 'expense'"
+        role="group"
+        [attr.aria-label]="'tx.type' | t"
+      >
+        <button
+          type="button"
+          [class.active]="kind() === 'income'"
+          [attr.aria-pressed]="kind() === 'income'"
+          (click)="kind.set('income')"
+        >
+          {{ 'common.income' | t }}
+        </button>
+        <button
+          type="button"
+          [class.active]="kind() === 'expense'"
+          [attr.aria-pressed]="kind() === 'expense'"
+          (click)="kind.set('expense')"
+        >
+          {{ 'common.expense' | t }}
+        </button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="tx-account">{{ 'common.account' | t }}</label>
+        <div class="input">
+          <select id="tx-account" name="account" [(ngModel)]="accountId" [disabled]="isEdit">
+            @for (a of store.accounts(); track a.id) {
+              <option [value]="a.id">{{ a.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (!initialBalance()) {
+        <div class="field">
+          <label for="tx-date">{{ 'common.date' | t }}</label>
+          <div class="input"><input id="tx-date" name="date" type="date" [(ngModel)]="date" /></div>
+        </div>
+      }
+
+      <div class="field">
+        <label for="tx-amount">{{ 'common.amount' | t }}</label>
+        <div class="input">
+          <select
+            class="ccy-select"
+            name="currency"
+            [attr.aria-label]="'common.currency' | t"
+            [ngModel]="currency()"
+            (ngModelChange)="setCurrency($event)"
+          >
+            @let ccy = currencyOptions();
+            @if (ccy.favorites.length > 0) {
+              <optgroup [label]="'currency.favorites' | t">
+                @for (c of ccy.favorites; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </optgroup>
+            }
+            <optgroup [label]="'currency.all' | t">
+              @for (c of ccy.others; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </optgroup>
+          </select>
+          <div
+            class="amount-input"
+            [class.is-in]="kind() === 'income'"
+            [class.is-out]="kind() === 'expense'"
+          >
+            @if (kind() === 'expense') {
+              <span class="sign" aria-hidden="true">−</span>
+            }
+            <input
+              id="tx-amount"
+              name="amount"
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              [ngModel]="amount()"
+              (ngModelChange)="amount.set($event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tx-title-input">{{ 'common.title' | t }}</label>
+        <div class="input">
+          <input
+            id="tx-title-input"
+            name="title"
+            type="text"
+            maxlength="200"
+            [placeholder]="'common.optional' | t"
+            [(ngModel)]="title"
+          />
+        </div>
+      </div>
+
+      @if (kind() === 'expense' && !initialBalance()) {
+        <div class="field span-2">
+          <label for="tx-fund">{{ 'txd.fund' | t }}</label>
+          <div class="input">
+            <select id="tx-fund" name="fund" [(ngModel)]="fundId">
+              <option [ngValue]="null">{{ 'txd.noFund' | t }}</option>
+              @for (b of store.budgets(); track b.id) {
+                @if (b.funds.length > 0) {
+                  <optgroup [label]="b.name">
+                    @for (f of b.funds; track f.id) {
+                      <option [ngValue]="f.id">{{ f.name }}</option>
+                    }
+                  </optgroup>
+                }
+              }
+            </select>
+          </div>
+          <span class="hint">{{ 'txd.noFundHint' | t }}</span>
+        </div>
+      }
+    </div>
+
+    @if (!initialBalance()) {
+      <!-- Hidden, not removed, for an expense: switching back keeps the split. -->
+      <div class="alloc" [hidden]="kind() !== 'income'">
+        <app-allocation-split
+          [budgets]="store.budgets()"
+          [amount]="amount()"
+          [currency]="currency()"
+          [allowNone]="true"
+          [disabled]="allocLoading()"
+          [prefill]="prefill()"
+        />
+        @if (allocLoading()) {
+          <p class="hint" role="status">{{ 'txd.loadingAllocations' | t }}</p>
+        }
+        @if (allocError()) {
+          <p class="error">{{ allocError() }}</p>
+        }
+      </div>
+    }
+  </app-modal>
+}

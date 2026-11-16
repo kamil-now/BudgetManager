@@ -1,0 +1,14 @@
+.loading {
+  margin: 0;
+}
+
+.summary {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+
+  .icon {
+    color: var(--accent);
+    margin-top: 2px;
+  }
+}

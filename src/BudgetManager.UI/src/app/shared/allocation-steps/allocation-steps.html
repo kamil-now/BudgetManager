@@ -1,0 +1,145 @@
+@let ccy = currency();
+<div class="steps">
+  <p class="steps-min" aria-live="polite">
+    @if (!minimum()) {
+      {{ 'templates.noMinimum' | t }}
+    } @else {
+      {{ 'templates.minimum' | t: { amount: formatMoney(minimum() ?? 0, ccy) } }}
+    }
+  </p>
+
+  <ol class="flat-rows steps-list" [attr.aria-label]="'steps.list' | t">
+    @for (step of steps(); track step.key; let i = $index, first = $first, last = $last) {
+      @let n = i + 1;
+      @let row = run().rows[i];
+      <li class="flat-row step">
+        <div class="pick">
+          <span class="n" aria-hidden="true">{{ n }}</span>
+          <div class="input">
+            <select
+              [id]="id + '-' + step.key + '-fund'"
+              [name]="id + 'fund' + step.key"
+              [attr.aria-label]="(target() === 'budget' ? 'split.budgetN' : 'split.fundN') | t: { n: n }"
+              [ngModel]="step.fundId"
+              (ngModelChange)="patch(step.key, { fundId: $event })"
+            >
+              <option value="" disabled>{{ (target() === 'budget' ? 'split.chooseBudget' : 'split.chooseFund') | t }}</option>
+              @for (g of groups(); track g.label) {
+                @if (g.label !== null) {
+                  <optgroup [label]="g.label">
+                    @for (f of g.funds; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </optgroup>
+                } @else {
+                  @for (f of g.funds; track f.id) {
+                    <option [value]="f.id">{{ f.label }}</option>
+                  }
+                }
+              }
+            </select>
+          </div>
+        </div>
+        <div class="segment" role="group" [attr.aria-label]="'split.lineType' | t: { n: n }">
+          <button
+            type="button"
+            [class.active]="step.kind === 'Fixed'"
+            [attr.aria-pressed]="step.kind === 'Fixed'"
+            (click)="setKind(step, 'Fixed')"
+          >
+            {{ 'common.fixed' | t }}
+          </button>
+          <button
+            type="button"
+            [class.active]="step.kind === 'Percent'"
+            [attr.aria-pressed]="step.kind === 'Percent'"
+            (click)="setKind(step, 'Percent')"
+          >
+            {{ 'common.percent' | t }}
+          </button>
+        </div>
+        <div class="input val">
+          <input
+            class="num-in"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            [name]="id + 'value' + step.key"
+            [attr.aria-label]="(step.kind === 'Fixed' ? 'split.fundAmount' : 'split.fundPercent') | t: { n: n }"
+            [ngModel]="step.value"
+            (ngModelChange)="patch(step.key, { value: $event })"
+            (keydown.enter)="$event.preventDefault()"
+          />
+          <span class="suffix" aria-hidden="true">{{ step.kind === 'Percent' ? '%' : ccy }}</span>
+        </div>
+        <div class="step-actions">
+          <button
+            type="button"
+            class="btn-icon btn-icon-sm"
+            [id]="id + '-' + step.key + '-up'"
+            [attr.aria-label]="'split.moveUp' | t: { n: n }"
+            [disabled]="first"
+            (click)="move(i, -1)"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
+          </button>
+          <button
+            type="button"
+            class="btn-icon btn-icon-sm"
+            [id]="id + '-' + step.key + '-down'"
+            [attr.aria-label]="'split.moveDown' | t: { n: n }"
+            [disabled]="last"
+            (click)="move(i, 1)"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          <button
+            type="button"
+            class="btn-icon btn-icon-sm remove"
+            [attr.aria-label]="'split.remove' | t: { n: n }"
+            (click)="remove(step.key)"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        @if (row) {
+          <p class="takes" aria-live="off">
+            <span>{{ 'steps.takes' | t: { amount: formatMoney(row.amount, ccy) } }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ 'steps.left' | t: { amount: formatMoney(row.left, ccy) } }}</span>
+            @if (row.short > 0) {
+              <span class="short">{{ 'steps.short' | t: { amount: formatMoney(row.short, ccy) } }}</span>
+            }
+          </p>
+        }
+      </li>
+    } @empty {
+      <li class="hint">{{ 'split.noLines' | t }}</li>
+    }
+  </ol>
+
+  <div class="steps-foot">
+    <button type="button" class="btn btn-sm btn-secondary" [id]="id + '-add'" (click)="add()">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      {{ 'steps.add' | t }}
+    </button>
+  </div>
+
+  <div aria-live="polite">
+    @if (problem()) {
+      <p class="error">{{ problem() }}</p>
+    } @else if (belowMinimum()) {
+      <p class="error">{{ 'steps.belowMinimum' | t: { amount: formatMoney(minimum() ?? 0, ccy) } }}</p>
+    } @else if (steps().length > 0) {
+      <p class="steps-left">
+        {{ 'steps.leftOver' | t: { amount: formatMoney(run().unallocated, ccy) } }}
+      </p>
+    }
+  </div>
+</div>

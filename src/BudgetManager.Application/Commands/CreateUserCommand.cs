@@ -6,5 +6,6 @@ namespace BudgetManager.Application.Commands;
 public record CreateUserCommand(
   string Email,
   string Password,
-  string? Name
+  string? Name,
+  UserPreferencesDTO? Preferences = null
 ) : IRequest<UserDTO>, IAnonymousRequest;

@@ -1,0 +1,49 @@
+<section class="card panel" aria-labelledby="h-budgets">
+  <div class="card-head">
+    <h2 class="section-title" id="h-budgets">{{ 'budgets.title' | t }}</h2>
+    <span class="count muted tiny">{{ budgets().length }}</span>
+    @if (budgets().length > 1) {
+      <button
+        type="button"
+        class="btn-icon btn-icon-sm"
+        [attr.aria-label]="'ledgerTemplates.open' | t"
+        [title]="'ledgerTemplates.open' | t"
+        (click)="openLedgerTemplates()"
+      >
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
+          <circle cx="16" cy="6" r="2" />
+          <circle cx="10" cy="12" r="2" />
+          <circle cx="18" cy="18" r="2" />
+        </svg>
+      </button>
+    }
+    <button
+      type="button"
+      class="btn-icon btn-icon-sm"
+      [attr.aria-label]="'budgets.new' | t"
+      [title]="'budgets.new' | t"
+      (click)="newBudget()"
+    >
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    </button>
+  </div>
+  @if (budgets().length === 0) {
+    <div class="none">
+      <p class="muted small">{{ 'budgets.none' | t }}</p>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="newBudget()">
+        {{ 'budgets.create' | t }}
+      </button>
+    </div>
+  } @else {
+    <ul class="budgets panel-scroll">
+      @for (budget of budgets(); track budget.id) {
+        <li>
+          <app-budget-card [budget]="budget" [scope]="scope()" (scopeChange)="scopeChange.emit($event)" />
+        </li>
+      }
+    </ul>
+  }
+</section>

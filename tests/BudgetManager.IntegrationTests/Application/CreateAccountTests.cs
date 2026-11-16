@@ -15,7 +15,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
     {
         // Arrange
         MockUnauthenticatedUser();
-        var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account");
 
         // Act & Assert
         var ex = await Should.ThrowAsync<AuthenticationException>(() => Mediator.Send(command));
@@ -28,7 +28,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         // Arrange
         await MockAuthenticatedUserAsync();
 
-        var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(Guid.NewGuid(), new(0, "PLN"), "Test Account");
 
         // Act & Assert
         await Should.ThrowAsync<AuthorizationException>(() => Mediator.Send(command));
@@ -42,7 +42,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         var ledger = await CreateLedgerAsync(otherUserId);
 
         await MockAuthenticatedUserAsync();
-        var command = new CreateAccountCommand(ledger.Id, new(0, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(ledger.Id, new(0, "PLN"), "Test Account");
 
         // Act & Assert
         await Should.ThrowAsync<AuthorizationException>(() => Mediator.Send(command));
@@ -55,7 +55,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         var userId = await MockAuthenticatedUserAsync();
         var ledger = await CreateLedgerAsync(userId);
 
-        var command = new CreateAccountCommand(ledger.Id, new(123.456m, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(ledger.Id, new(123.456m, "PLN"), "Test Account");
 
         // Act & Assert
         var ex = await Should.ThrowAsync<ValidationException>(() => Mediator.Send(command));
@@ -69,7 +69,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         var userId = await MockAuthenticatedUserAsync();
         var ledger = await CreateLedgerAsync(userId);
 
-        var command = new CreateAccountCommand(ledger.Id, new(123, "PLN"), "Test Account", "Test Account Description");
+        var command = new CreateAccountCommand(ledger.Id, new(123, "PLN"), "Test Account");
 
         // Act
         var accountId = await Mediator.Send(command);
@@ -80,7 +80,6 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApplicationF
         account.ShouldNotBeNull();
         account.Id.ShouldBe(accountId);
         account.Name.ShouldBe(command.Name);
-        account.Description.ShouldBe(command.Description);
         account.LedgerId.ShouldBe(ledger.Id);
         var transactions = (await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == accountId)).ToArray();
         transactions.Length.ShouldBe(1);

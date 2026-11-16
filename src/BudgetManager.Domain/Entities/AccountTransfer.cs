@@ -20,12 +20,10 @@ public sealed class AccountTransfer : Entity, IAccessControlled<AccountTransfer>
         Guid targetAccountId,
         Money value,
         DateTimeOffset date,
-        string? title,
-        string? comment,
-        IEnumerable<string>? tags)
+        string? title)
     {
         EnsureValidTransfer(sourceAccountId, targetAccountId, value);
-        return Create(sourceAccountId, -value, targetAccountId, value, date, title, comment, tags);
+        return Create(sourceAccountId, -value, targetAccountId, value, date, title);
     }
 
     public static AccountTransfer Exchange(
@@ -34,12 +32,10 @@ public sealed class AccountTransfer : Entity, IAccessControlled<AccountTransfer>
         Money sell,
         Money buy,
         DateTimeOffset date,
-        string? title,
-        string? comment,
-        IEnumerable<string>? tags)
+        string? title)
     {
         EnsureValidExchange(sell, buy);
-        return Create(sourceAccountId, -sell, targetAccountId, buy, date, title, comment, tags);
+        return Create(sourceAccountId, -sell, targetAccountId, buy, date, title);
     }
 
     public void UpdateTransfer(
@@ -47,12 +43,10 @@ public sealed class AccountTransfer : Entity, IAccessControlled<AccountTransfer>
         Guid targetAccountId,
         Money value,
         DateTimeOffset date,
-        string? title,
-        string? comment,
-        IEnumerable<string>? tags)
+        string? title)
     {
         EnsureValidTransfer(sourceAccountId, targetAccountId, value);
-        Set(sourceAccountId, -value, targetAccountId, value, date, title, comment, tags);
+        Set(sourceAccountId, -value, targetAccountId, value, date, title);
     }
 
     public void UpdateExchange(
@@ -61,12 +55,10 @@ public sealed class AccountTransfer : Entity, IAccessControlled<AccountTransfer>
         Money sell,
         Money buy,
         DateTimeOffset date,
-        string? title,
-        string? comment,
-        IEnumerable<string>? tags)
+        string? title)
     {
         EnsureValidExchange(sell, buy);
-        Set(sourceAccountId, -sell, targetAccountId, buy, date, title, comment, tags);
+        Set(sourceAccountId, -sell, targetAccountId, buy, date, title);
     }
 
     private static void EnsureValidTransfer(Guid sourceAccountId, Guid targetAccountId, Money value)
@@ -99,17 +91,15 @@ public sealed class AccountTransfer : Entity, IAccessControlled<AccountTransfer>
         Guid incomeAccountId,
         Money incomeValue,
         DateTimeOffset date,
-        string? title,
-        string? comment,
-        IEnumerable<string>? tags)
+        string? title)
     {
         if (Expense is null || Income is null)
         {
             throw new InvalidOperationException($"Transactions of transfer {Id} are not loaded.");
         }
 
-        Expense.Set(expenseAccountId, expenseValue, date, title, comment, tags);
-        Income.Set(incomeAccountId, incomeValue, date, title, comment, tags);
+        Expense.Set(expenseAccountId, expenseValue, date, title);
+        Income.Set(incomeAccountId, incomeValue, date, title);
     }
 
     private static AccountTransfer Create(
@@ -118,12 +108,10 @@ public sealed class AccountTransfer : Entity, IAccessControlled<AccountTransfer>
         Guid incomeAccountId,
         Money incomeValue,
         DateTimeOffset date,
-        string? title,
-        string? comment,
-        IEnumerable<string>? tags)
+        string? title)
     {
-        var expense = AccountTransaction.CreateTransfer(AccountTransactionType.TransferOut, expenseAccountId, expenseValue, date, title, comment, tags);
-        var income = AccountTransaction.CreateTransfer(AccountTransactionType.TransferIn, incomeAccountId, incomeValue, date, title, comment, tags);
+        var expense = AccountTransaction.CreateTransfer(AccountTransactionType.TransferOut, expenseAccountId, expenseValue, date, title);
+        var income = AccountTransaction.CreateTransfer(AccountTransactionType.TransferIn, incomeAccountId, incomeValue, date, title);
 
         return new AccountTransfer
         {

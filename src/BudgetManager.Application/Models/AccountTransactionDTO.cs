@@ -5,7 +5,8 @@ namespace BudgetManager.Application.Models;
 /// <summary>
 /// A single account transaction as the UI consumes it. A plain income/expense has no
 /// <see cref="Received"/> or target; a transfer carries the target account; a currency exchange
-/// carries both the received money and the target account.
+/// carries both the received money and the target account. <see cref="Allocations"/> lists the fund
+/// allocations made from an income; it is empty for everything else. <see cref="FundId"/> is the fund an expense is paid from.
 /// </summary>
 public record AccountTransactionDTO(
     Guid Id,
@@ -17,5 +18,5 @@ public record AccountTransactionDTO(
     Guid? TargetAccountId,
     string? TargetAccountName,
     string? Title,
-    string? Comment,
-    IEnumerable<string>? Tags);
+    IEnumerable<FundAmount> Allocations,
+    Guid? FundId = null);

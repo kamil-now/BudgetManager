@@ -16,6 +16,11 @@ public class RequestAuthorizerTests
 
     private record AnonymousRequest : IAnonymousRequest;
 
+    private record NoResourceRequest : IRequiresAccess
+    {
+        IEnumerable<Resource> IRequiresAccess.Resources => [];
+    }
+
     private record AccountRequest(params Guid[] AccountIds) : IRequiresAccess
     {
         IEnumerable<Resource> IRequiresAccess.Resources => [.. AccountIds.Select(Resource.Of<Account>)];
@@ -100,6 +105,33 @@ public class RequestAuthorizerTests
         await ownerReader.Received(1).ReadOwnerIdAsync(targetAccountId, Arg.Any<Expression<Func<Account, Guid>>>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task AuthorizeAsync_WhenUserNoLongerExists_ShouldThrowAuthenticationException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var authorizer = CreateAuthorizer(userId, out var ownerReader);
+        ownerReader.ReadOwnerIdAsync(userId, Arg.Any<Expression<Func<User, Guid>>>(), Arg.Any<CancellationToken>()).Returns((Guid?)null);
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<AuthenticationException>(() => authorizer.AuthorizeAsync(new NoResourceRequest(), default));
+        ex.Message.ShouldBe($"User with ID '{userId}' no longer exists.");
+    }
+
+    [Fact]
+    public async Task AuthorizeAsync_WhenRequestDeclaresNoResources_ShouldCheckTheUserExists()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var authorizer = CreateAuthorizer(userId, out var ownerReader);
+
+        // Act
+        await authorizer.AuthorizeAsync(new NoResourceRequest(), default);
+
+        // Assert
+        await ownerReader.Received(1).ReadOwnerIdAsync(userId, Arg.Any<Expression<Func<User, Guid>>>(), Arg.Any<CancellationToken>());
+    }
+
     private static RequestAuthorizer CreateAuthorizer(Guid? userId, out IResourceOwnerReader ownerReader)
     {
         var currentUser = Substitute.For<ICurrentUserService>();
@@ -113,6 +145,10 @@ public class RequestAuthorizerTests
         }
 
         ownerReader = Substitute.For<IResourceOwnerReader>();
+        if (userId is Guid existingUserId)
+        {
+            ownerReader.ReadOwnerIdAsync(existingUserId, Arg.Any<Expression<Func<User, Guid>>>(), Arg.Any<CancellationToken>()).Returns(existingUserId);
+        }
 
         return new RequestAuthorizer(currentUser, ownerReader);
     }

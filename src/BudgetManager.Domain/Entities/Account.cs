@@ -7,7 +7,6 @@ public class Account : Entity, IAccessControlled<Account>
 {
     public required Guid LedgerId { get; set; }
     public required string Name { get; set; }
-    public string? Description { get; set; }
 
     public Ledger Ledger { get; set; } = null!;
     public virtual ICollection<AccountTransaction> Transactions { get; set; } = [];

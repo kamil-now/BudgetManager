@@ -11,7 +11,7 @@ public sealed class AccountReader(ApplicationDbContext dbContext) : IAccountRead
         var account = await dbContext.Accounts
             .AsNoTracking()
             .Where(x => x.Id == id)
-            .Select(x => new { x.Id, x.LedgerId, x.Name, x.Description })
+            .Select(x => new { x.Id, x.LedgerId, x.Name })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (account is null)
@@ -32,6 +32,6 @@ public sealed class AccountReader(ApplicationDbContext dbContext) : IAccountRead
             balance.Add(new Money(row.Amount, row.Currency));
         }
 
-        return new AccountSummary(account.Id, account.LedgerId, account.Name, account.Description, balance);
+        return new AccountSummary(account.Id, account.LedgerId, account.Name, balance);
     }
 }

@@ -5,6 +5,7 @@ using BudgetManager.Application.Validators;
 using BudgetManager.Domain;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
+using BudgetManager.Domain.Models;
 
 namespace BudgetManager.Application.Handlers;
 
@@ -13,13 +14,14 @@ public sealed class CreateUserHandler(IEntityStore store, IPasswordHasher passwo
     public async Task<UserDTO> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
         var email = command.Email.NormalizeEmail();
-        await ValidateCommandAsync(command, email, cancellationToken);
+        var preferences = await ValidateCommandAsync(command, email, cancellationToken);
 
         var entity = await store.CreateAsync(new User
         {
             Name = command.Name,
             Email = email,
             HashedPassword = passwordHasher.Hash(command.Password),
+            Preferences = preferences,
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create user.");
 
         await store.SaveChangesAsync(cancellationToken);
@@ -31,15 +33,18 @@ public sealed class CreateUserHandler(IEntityStore store, IPasswordHasher passwo
         return new UserDTO(entity);
     }
 
-    private async Task ValidateCommandAsync(CreateUserCommand command, string email, CancellationToken cancellationToken)
+    private async Task<UserPreferences> ValidateCommandAsync(CreateUserCommand command, string email, CancellationToken cancellationToken)
     {
         email.EnsureValidEmail(nameof(command.Email));
         command.Name?.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxNameLength);
         command.Password.EnsureValidPassword();
+        var preferences = command.Preferences?.EnsureValidPreferences() ?? new UserPreferences();
 
         if (await store.ExistsAsync<User>(x => x.Email == email, cancellationToken))
         {
             throw new ConflictException($"User with email '{email}' already exists.");
         }
+
+        return preferences;
     }
 }

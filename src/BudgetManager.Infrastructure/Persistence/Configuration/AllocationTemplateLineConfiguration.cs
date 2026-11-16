@@ -16,8 +16,5 @@ public class AllocationTemplateLineConfiguration : IEntityTypeConfiguration<Allo
         builder.HasDiscriminator<AllocationType>("Type")
             .HasValue<FixedAllocationTemplateLine>(AllocationType.Fixed)
             .HasValue<PercentAllocationTemplateLine>(AllocationType.Percent);
-
-        builder.HasIndex(x => new { x.AllocationTemplateId, x.FundId })
-            .IsUnique();
     }
 }

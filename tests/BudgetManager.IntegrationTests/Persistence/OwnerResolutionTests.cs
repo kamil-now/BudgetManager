@@ -1,4 +1,5 @@
 using BudgetManager.Domain.Entities;
+using BudgetManager.Domain.Models;
 using BudgetManager.Infrastructure.Persistence.Readers;
 using Shouldly;
 using Xunit.Abstractions;
@@ -7,7 +8,7 @@ namespace BudgetManager.IntegrationTests.Persistence;
 
 public class OwnerResolutionTests(ITestOutputHelper testOutputHelper, PersistenceFixture fixture) : BaseTest(testOutputHelper, fixture)
 {
-    private record Seed(Guid OwnerId, Guid LedgerId, Guid AccountTransactionId);
+    private record Seed(Guid OwnerId, Guid LedgerId, Guid AccountTransactionId, Guid FundId, Guid FundTransactionId, Guid AllocationId);
 
     [Fact]
     public async Task ReadOwnerIdAsync_WhenOwnerIsOnTheEntity_ShouldReturnIt()
@@ -30,6 +31,45 @@ public class OwnerResolutionTests(ITestOutputHelper testOutputHelper, Persistenc
 
         // Act
         var ownerId = await reader.ReadOwnerIdAsync<AccountTransaction>(seed.AccountTransactionId, x => x.Account.Ledger.OwnerId);
+
+        // Assert
+        ownerId.ShouldBe(seed.OwnerId);
+    }
+
+    [Fact]
+    public async Task ReadOwnerIdAsync_WhenEntityIsFund_ShouldReturnOwnerOfItsLedger()
+    {
+        // Arrange
+        var (seed, reader) = await SeedAsync();
+
+        // Act
+        var ownerId = await reader.ReadOwnerIdAsync(seed.FundId, Fund.OwnerId);
+
+        // Assert
+        ownerId.ShouldBe(seed.OwnerId);
+    }
+
+    [Fact]
+    public async Task ReadOwnerIdAsync_WhenEntityIsFundTransaction_ShouldReturnOwnerOfItsLedger()
+    {
+        // Arrange
+        var (seed, reader) = await SeedAsync();
+
+        // Act
+        var ownerId = await reader.ReadOwnerIdAsync(seed.FundTransactionId, FundTransaction.OwnerId);
+
+        // Assert
+        ownerId.ShouldBe(seed.OwnerId);
+    }
+
+    [Fact]
+    public async Task ReadOwnerIdAsync_WhenEntityIsAllocation_ShouldReturnOwnerOfItsLedger()
+    {
+        // Arrange
+        var (seed, reader) = await SeedAsync();
+
+        // Act
+        var ownerId = await reader.ReadOwnerIdAsync(seed.AllocationId, Allocation.OwnerId);
 
         // Assert
         ownerId.ShouldBe(seed.OwnerId);
@@ -62,10 +102,14 @@ public class OwnerResolutionTests(ITestOutputHelper testOutputHelper, Persistenc
         var ledger = new Ledger { Id = Guid.NewGuid(), OwnerId = user.Id, Name = "Test Ledger" };
         var account = new Account { Id = Guid.NewGuid(), LedgerId = ledger.Id, Name = "Test Account" };
         var accountTransaction = AccountTransaction.Create(account.Id, new(1, "PLN"), default, null);
+        var budget = new Budget { Id = Guid.NewGuid(), LedgerId = ledger.Id, Name = "Test Budget" };
+        var fund = new Fund { Id = Guid.NewGuid(), BudgetId = budget.Id, Name = "Test Fund" };
+        var fundTransaction = FundTransaction.Allocate(fund.Id, new(1, "PLN"), accountTransaction);
+        var allocation = Allocation.Create(ledger.Id, "PLN", default, [new FundAmount(fund.Id, 1)]);
 
-        dbContext.AddRange(user, ledger, account, accountTransaction);
+        dbContext.AddRange(user, ledger, account, accountTransaction, budget, fund, fundTransaction, allocation);
         await dbContext.SaveChangesAsync();
 
-        return (new Seed(user.Id, ledger.Id, accountTransaction.Id), new ResourceOwnerReader(dbContext));
+        return (new Seed(user.Id, ledger.Id, accountTransaction.Id, fund.Id, fundTransaction.Id, allocation.Id), new ResourceOwnerReader(dbContext));
     }
 }

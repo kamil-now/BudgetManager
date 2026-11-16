@@ -1,6 +1,8 @@
 using BudgetManager.Application.Configuration;
+using BudgetManager.Application.Interfaces;
 using BudgetManager.Application.Services;
 using BudgetManager.Application.Validators;
+using BudgetManager.Infrastructure.Auth.Services;
 using BudgetManager.Infrastructure.Configuration;
 using BudgetManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,8 @@ public class ApplicationFixture : TestBedFixture
 
         services.AddSingleton<MockCurrentUserService>();
         services.AddSingleton<ICurrentUserService>(s => s.GetService<MockCurrentUserService>()!);
+
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
         services.UseStore();
         services.UseMediator();

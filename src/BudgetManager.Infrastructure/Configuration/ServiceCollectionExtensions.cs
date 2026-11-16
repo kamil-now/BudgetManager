@@ -65,9 +65,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
-        // Register all handlers from the assembly of the provided type
         var assembly = typeof(T).Assembly;
-        // Find all types in the assembly that implement IDomainEventHandler<,> or IRequestHandler<>
         var handlerTypes = assembly.GetTypes()
           .Where(t => !t.IsAbstract && !t.IsInterface)
           .Where(t =>
@@ -101,12 +99,17 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ILedgerReader, LedgerReader>();
         services.AddScoped<ILedgerListReader, LedgerListReader>();
-        services.AddScoped<ILedgerIncomesExpensesReader, LedgerIncomesExpensesReader>();
-        services.AddScoped<ILedgerTransactionsReader, LedgerTransactionsReader>();
+        services.AddScoped<ILedgerStatisticsReader, LedgerStatisticsReader>();
+        services.AddScoped<ILedgerFeedReader, LedgerFeedReader>();
         services.AddScoped<IAccountReader, AccountReader>();
         services.AddScoped<IBudgetReader, BudgetReader>();
         services.AddScoped<IAccountTransactionReader, AccountTransactionReader>();
         services.AddScoped<IAccountTransferReader, AccountTransferReader>();
+        services.AddScoped<IAllocationTemplateReader, AllocationTemplateReader>();
+        services.AddScoped<ILedgerAllocationTemplateReader, LedgerAllocationTemplateReader>();
+        services.AddScoped<IFundLabelReader, FundLabelReader>();
+        services.AddScoped<IUnallocatedReader, UnallocatedReader>();
+        services.AddScoped<IUserPreferencesReader, UserPreferencesReader>();
         services.AddScoped<IResourceOwnerReader, ResourceOwnerReader>();
 
         return services;

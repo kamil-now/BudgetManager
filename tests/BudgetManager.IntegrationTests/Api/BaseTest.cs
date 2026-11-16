@@ -3,10 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using BudgetManager.Api.Models;
 using BudgetManager.Application.Commands;
-using BudgetManager.Infrastructure.Auth.Interfaces;
+using BudgetManager.Application.Models;
 using BudgetManager.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
@@ -35,21 +33,20 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fi
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    protected string GetValidToken()
-    {
-        var tokenGenerator = GetServiceProvider().GetService<IJwtTokenGenerator>()
-          ?? throw new InvalidOperationException($"{nameof(IJwtTokenGenerator)} is not registered in the service collection.");
-
-
-        return tokenGenerator.GenerateToken(new(Guid.NewGuid(), "Test User", $"test@email{Guid.NewGuid()}"));
-    }
-
     protected async Task<Guid> RegisterAndLogin()
     {
         var user = new CreateUserCommand($"test{Guid.NewGuid()}@email.com", "password", "Test User");
         var userId = await Register(user);
         await Login(new(user.Email, user.Password));
         return userId;
+    }
+
+    protected async Task<CreateUserCommand> RegisterAndLogin(UserPreferencesDTO? preferences)
+    {
+        var user = new CreateUserCommand($"test{Guid.NewGuid()}@email.com", "password", "Test User", preferences);
+        await Register(user);
+        await Login(new(user.Email, user.Password));
+        return user;
     }
 
     private async Task<Guid> Register(CreateUserCommand command)
@@ -80,13 +77,5 @@ public abstract class BaseTest(ITestOutputHelper testOutputHelper, ApiFixture fi
         token.ShouldNotBeEmpty();
 
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    }
-
-    private IServiceProvider GetServiceProvider()
-    {
-        var scope = _fixture.GetServiceProvider(_testOutputHelper).CreateScope();
-        var factory = scope.ServiceProvider.GetService<WebApplicationFactory<Program>>()
-          ?? throw new InvalidOperationException($"{nameof(WebApplicationFactory<Program>)} is not registered in the service collection.");
-        return factory.Services;
     }
 }

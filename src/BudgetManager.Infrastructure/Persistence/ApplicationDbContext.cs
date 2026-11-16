@@ -14,8 +14,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Fund> Funds { get; set; }
     public DbSet<AllocationTemplate> AllocationTemplates { get; set; }
     public DbSet<AllocationTemplateLine> AllocationTemplateLines { get; set; }
+    public DbSet<LedgerAllocationTemplate> LedgerAllocationTemplates { get; set; }
+    public DbSet<LedgerAllocationTemplateLine> LedgerAllocationTemplateLines { get; set; }
     public DbSet<FundTransaction> FundTransactions { get; set; }
-    public DbSet<FundTransfer> FundTransfers { get; set; }
+    public DbSet<Allocation> Allocations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

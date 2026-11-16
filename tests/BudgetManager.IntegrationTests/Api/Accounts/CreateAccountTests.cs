@@ -37,8 +37,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture f
     public async Task CreateAccount_WhenBearerTokenIsValid_Succeeds()
     {
         // Arrange
-
-        Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", GetValidToken());
+        await RegisterAndLogin();
 
         // Act
         var response = await Client.PostAsJsonAsync(_url, new { });
@@ -60,8 +59,7 @@ public class CreateAccountTests(ITestOutputHelper testOutputHelper, ApiFixture f
         var request = new CreateAccountCommand(
           ledgerId,
           new(100, "PLN"),
-          "Test Account",
-          "Test Account Description");
+          "Test Account");
 
         // Act
         var response = await Client.PostAsJsonAsync(_url, request);

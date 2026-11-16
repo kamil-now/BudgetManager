@@ -17,9 +17,6 @@ public class LedgerConfiguration : IEntityTypeConfiguration<Ledger>
             .IsRequired()
             .HasMaxLength(Constants.MaxNameLength);
 
-        builder.Property(x => x.Description)
-            .HasMaxLength(Constants.MaxCommentLength);
-
         builder.HasMany(x => x.Budgets)
             .WithOne(x => x.Ledger)
             .HasForeignKey(x => x.LedgerId)
@@ -29,6 +26,11 @@ public class LedgerConfiguration : IEntityTypeConfiguration<Ledger>
             .WithOne(x => x.Ledger)
             .HasForeignKey(x => x.LedgerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.AllocationTemplates)
+            .WithOne(x => x.Ledger)
+            .HasForeignKey(x => x.LedgerId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => x.OwnerId);
     }

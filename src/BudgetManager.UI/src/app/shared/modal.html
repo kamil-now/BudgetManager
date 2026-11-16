@@ -1,0 +1,51 @@
+<div class="backdrop" (mousedown)="onBackdrop($event)">
+  <form
+    class="modal"
+    appDialog
+    role="dialog"
+    aria-modal="true"
+    [class.modal--sm]="size() === 'sm'"
+    [class.modal--md]="size() === 'md'"
+    [class.modal--lg]="size() === 'lg'"
+    [class.modal--xl]="size() === 'xl'"
+    [attr.aria-labelledby]="titleId"
+    (submit)="onSubmit($event)"
+    novalidate
+  >
+    <div class="modal-head">
+      <h2 class="section-title" [id]="titleId">{{ title() }}</h2>
+      <button type="button" class="close" [attr.aria-label]="'common.close' | t" (click)="requestClose()">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <ng-content />
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+    </div>
+    <div class="modal-foot">
+      <div class="modal-foot-start">
+        <ng-content select="[modalFootStart]" />
+      </div>
+      <button type="button" class="btn btn-ghost" (click)="requestClose()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button
+        type="submit"
+        class="btn"
+        [class.btn-danger]="danger()"
+        [class.btn-primary]="!danger()"
+        [disabled]="submitting()"
+      >
+        @if (submitting()) {
+          {{ busyLabel() || ('common.saving' | t) }}
+        } @else {
+          {{ submitLabel() || ('common.save' | t) }}
+        }
+      </button>
+    </div>
+  </form>
+</div>

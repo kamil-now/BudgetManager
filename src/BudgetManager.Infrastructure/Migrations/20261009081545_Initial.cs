@@ -19,6 +19,11 @@ namespace BudgetManager.Infrastructure.Migrations
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
                     HashedPassword = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
+                    Theme = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    DateFormat = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    DefaultCurrency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    FavoriteCurrencies = table.Column<string>(type: "character varying(39)", maxLength: 39, nullable: false),
+                    Language = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -35,7 +40,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -58,7 +62,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -81,7 +84,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -107,8 +109,6 @@ namespace BudgetManager.Infrastructure.Migrations
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     Type = table.Column<int>(type: "integer", nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -131,6 +131,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     BudgetId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -148,13 +149,35 @@ namespace BudgetManager.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LedgerAllocationTemplates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LedgerAllocationTemplates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LedgerAllocationTemplates_Ledgers_LedgerId",
+                        column: x => x.LedgerId,
+                        principalTable: "Ledgers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Funds",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     BudgetId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -231,6 +254,62 @@ namespace BudgetManager.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LedgerAllocationTemplateLines",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    LedgerAllocationTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    BudgetId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Sequence = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    Percent = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LedgerAllocationTemplateLines", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LedgerAllocationTemplateLines_Budgets_BudgetId",
+                        column: x => x.BudgetId,
+                        principalTable: "Budgets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LedgerAllocationTemplateLines_LedgerAllocationTemplates_Led~",
+                        column: x => x.LedgerAllocationTemplateId,
+                        principalTable: "LedgerAllocationTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Allocations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    LedgerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
+                    Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsInitial = table.Column<bool>(type: "boolean", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Allocations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Allocations_Ledgers_LedgerId",
+                        column: x => x.LedgerId,
+                        principalTable: "Ledgers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FundTransactions",
                 columns: table => new
                 {
@@ -240,7 +319,8 @@ namespace BudgetManager.Infrastructure.Migrations
                     Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    AccountTransactionId = table.Column<Guid>(type: "uuid", nullable: true),
+                    AllocationId = table.Column<Guid>(type: "uuid", nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
@@ -248,38 +328,23 @@ namespace BudgetManager.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FundTransactions", x => x.Id);
+                    table.CheckConstraint("CK_FundTransactions_Source", "num_nonnulls(\"AccountTransactionId\", \"AllocationId\") = 1");
+                    table.ForeignKey(
+                        name: "FK_FundTransactions_AccountTransactions_AccountTransactionId",
+                        column: x => x.AccountTransactionId,
+                        principalTable: "AccountTransactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FundTransactions_Allocations_AllocationId",
+                        column: x => x.AllocationId,
+                        principalTable: "Allocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_FundTransactions_Funds_FundId",
                         column: x => x.FundId,
                         principalTable: "Funds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "FundTransfers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AllocationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DeallocationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FundTransfers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_FundTransfers_FundTransactions_AllocationId",
-                        column: x => x.AllocationId,
-                        principalTable: "FundTransactions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_FundTransfers_FundTransactions_DeallocationId",
-                        column: x => x.DeallocationId,
-                        principalTable: "FundTransactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -296,9 +361,9 @@ namespace BudgetManager.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_AccountTransactions_AccountId",
+                name: "IX_AccountTransactions_AccountId_Date",
                 table: "AccountTransactions",
-                column: "AccountId");
+                columns: new[] { "AccountId", "Date" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AccountTransfers_ExpenseId",
@@ -313,10 +378,14 @@ namespace BudgetManager.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_AllocationTemplateLines_AllocationTemplateId_FundId",
+                name: "IX_Allocations_LedgerId_Date",
+                table: "Allocations",
+                columns: new[] { "LedgerId", "Date" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AllocationTemplateLines_AllocationTemplateId",
                 table: "AllocationTemplateLines",
-                columns: new[] { "AllocationTemplateId", "FundId" },
-                unique: true);
+                column: "AllocationTemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AllocationTemplateLines_FundId",
@@ -324,9 +393,9 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "FundId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AllocationTemplates_BudgetId_Currency",
+                name: "IX_AllocationTemplates_BudgetId_Name",
                 table: "AllocationTemplates",
-                columns: new[] { "BudgetId", "Currency" },
+                columns: new[] { "BudgetId", "Name" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -346,20 +415,34 @@ namespace BudgetManager.Infrastructure.Migrations
                 column: "BudgetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FundTransactions_FundId",
+                name: "IX_FundTransactions_AccountTransactionId",
                 table: "FundTransactions",
-                column: "FundId");
+                column: "AccountTransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FundTransfers_AllocationId",
-                table: "FundTransfers",
-                column: "AllocationId",
-                unique: true);
+                name: "IX_FundTransactions_AllocationId",
+                table: "FundTransactions",
+                column: "AllocationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FundTransfers_DeallocationId",
-                table: "FundTransfers",
-                column: "DeallocationId",
+                name: "IX_FundTransactions_FundId_Date",
+                table: "FundTransactions",
+                columns: new[] { "FundId", "Date" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LedgerAllocationTemplateLines_BudgetId",
+                table: "LedgerAllocationTemplateLines",
+                column: "BudgetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LedgerAllocationTemplateLines_LedgerAllocationTemplateId",
+                table: "LedgerAllocationTemplateLines",
+                column: "LedgerAllocationTemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LedgerAllocationTemplates_LedgerId_Name",
+                table: "LedgerAllocationTemplates",
+                columns: new[] { "LedgerId", "Name" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -384,7 +467,13 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "AllocationTemplateLines");
 
             migrationBuilder.DropTable(
-                name: "FundTransfers");
+                name: "FundTransactions");
+
+            migrationBuilder.DropTable(
+                name: "LedgerAllocationTemplateLines");
+
+            migrationBuilder.DropTable(
+                name: "Allocations");
 
             migrationBuilder.DropTable(
                 name: "AccountTransactions");
@@ -393,7 +482,7 @@ namespace BudgetManager.Infrastructure.Migrations
                 name: "AllocationTemplates");
 
             migrationBuilder.DropTable(
-                name: "FundTransactions");
+                name: "LedgerAllocationTemplates");
 
             migrationBuilder.DropTable(
                 name: "Accounts");

@@ -20,8 +20,7 @@ public sealed class GetAccountHandler(IAccountReader accountReader) : IRequestHa
             Id = account.Id,
             LedgerId = account.LedgerId,
             Balance = account.Balance,
-            Name = account.Name,
-            Description = account.Description
+            Name = account.Name
         };
     }
 }

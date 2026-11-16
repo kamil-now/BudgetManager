@@ -8,115 +8,72 @@ namespace BudgetManager.UnitTests.Domain;
 public class BudgetTests
 {
     [Fact]
-    public void AddFund_ShouldAddFundToBudget()
+    public void AddFund_ShouldAddFundToBudgetAndReturnIt()
     {
         // Arrange
         var budget = NewBudget();
 
         // Act
-        budget.AddFund("Fund", "Description", []);
+        var result = budget.AddFund("Fund");
 
         // Assert
         var fund = budget.Funds.ShouldHaveSingleItem();
+        fund.ShouldBeSameAs(result);
         fund.ShouldSatisfyAllConditions(
             x => x.BudgetId.ShouldBe(budget.Id),
-            x => x.Name.ShouldBe("Fund"),
-            x => x.Description.ShouldBe("Description"));
+            x => x.Name.ShouldBe("Fund"));
     }
 
     [Fact]
-    public void AddFund_WhenAllocationsAreEmpty_ShouldNotAddAllocationTemplates()
+    public void AddAllocationTemplate_ShouldAddNamedTemplateWithLines()
     {
         // Arrange
         var budget = NewBudget();
+        var fund = budget.AddFund("Fund");
 
         // Act
-        budget.AddFund("Fund", null, []);
+        var result = budget.AddAllocationTemplate("Salary", "EUR", [
+            new AllocationLine(fund.Id, 0, AllocationType.Fixed, Amount: 100),
+            new AllocationLine(fund.Id, 1, AllocationType.Percent, Percent: 12.5m)]);
 
         // Assert
-        budget.AllocationTemplates.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void AddFund_WhenAllocationIsFixed_ShouldAddFixedLine()
-    {
-        // Arrange
-        var budget = NewBudget();
-
-        // Act
-        budget.AddFund("Fund", null, [new("EUR", 3, AllocationType.Fixed, Amount: 100)]);
-
-        // Assert
-        var fund = budget.Funds.Single();
         var template = budget.AllocationTemplates.ShouldHaveSingleItem();
+        template.ShouldBeSameAs(result);
         template.ShouldSatisfyAllConditions(
             x => x.BudgetId.ShouldBe(budget.Id),
+            x => x.Name.ShouldBe("Salary"),
             x => x.Currency.ShouldBe("EUR"));
-        template.Lines.ShouldHaveSingleItem().ShouldBeOfType<FixedAllocationTemplateLine>().ShouldSatisfyAllConditions(
-            x => x.AllocationTemplateId.ShouldBe(template.Id),
-            x => x.FundId.ShouldBe(fund.Id),
-            x => x.Sequence.ShouldBe(3),
-            x => x.Amount.ShouldBe(100));
+        template.ToRules().ShouldBe([
+            new AllocationRule(fund.Id, 0, AllocationType.Fixed, 100),
+            new AllocationRule(fund.Id, 1, AllocationType.Percent, 12.5m)]);
+        template.Lines.ShouldAllBe(x => x.AllocationTemplateId == template.Id);
     }
 
     [Fact]
-    public void AddFund_WhenAllocationIsPercent_ShouldAddPercentLine()
+    public void AddAllocationTemplate_WhenCurrencyRepeats_ShouldAddAnotherTemplate()
     {
         // Arrange
         var budget = NewBudget();
+        var fund = budget.AddFund("Fund");
+        AllocationLine[] lines = [new(fund.Id, 0, AllocationType.Percent, Percent: 10)];
 
         // Act
-        budget.AddFund("Fund", null, [new("EUR", 3, AllocationType.Percent, Percent: 12.5m)]);
+        budget.AddAllocationTemplate("A", "EUR", lines);
+        budget.AddAllocationTemplate("B", "EUR", lines);
 
         // Assert
-        var fund = budget.Funds.Single();
-        var template = budget.AllocationTemplates.Single();
-        template.Lines.ShouldHaveSingleItem().ShouldBeOfType<PercentAllocationTemplateLine>().ShouldSatisfyAllConditions(
-            x => x.AllocationTemplateId.ShouldBe(template.Id),
-            x => x.FundId.ShouldBe(fund.Id),
-            x => x.Sequence.ShouldBe(3),
-            x => x.Percent.ShouldBe(12.5m));
+        budget.AllocationTemplates.Select(x => x.Name).ShouldBe(["A", "B"]);
     }
 
     [Fact]
-    public void AddFund_WhenTemplateForCurrencyExists_ShouldAddLineToIt()
+    public void AddAllocationTemplate_WhenAllocationTypeIsUnknown_ShouldThrowNotSupportedException()
     {
         // Arrange
         var budget = NewBudget();
-        budget.AddFund("Fund A", null, [new("EUR", 0, AllocationType.Fixed, Amount: 100)]);
-
-        // Act
-        budget.AddFund("Fund B", null, [new("EUR", 1, AllocationType.Percent, Percent: 10)]);
-
-        // Assert
-        var template = budget.AllocationTemplates.ShouldHaveSingleItem();
-        template.Lines.Select(x => x.FundId).ShouldBe(budget.Funds.Select(x => x.Id), ignoreOrder: true);
-    }
-
-    [Fact]
-    public void AddFund_WhenAllocationsHaveDifferentCurrencies_ShouldAddTemplatePerCurrency()
-    {
-        // Arrange
-        var budget = NewBudget();
-
-        // Act
-        budget.AddFund("Fund", null, [
-            new("EUR", 0, AllocationType.Fixed, Amount: 100),
-            new("USD", 0, AllocationType.Percent, Percent: 10)
-        ]);
-
-        // Assert
-        budget.AllocationTemplates.Select(x => x.Currency).ShouldBe(["EUR", "USD"], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void AddFund_WhenAllocationTypeIsUnknown_ShouldThrowNotSupportedException()
-    {
-        // Arrange
-        var budget = NewBudget();
+        var fund = budget.AddFund("Fund");
 
         // Act & Assert
-        Should.Throw<NotSupportedException>(() => budget.AddFund("Fund", null, [new FundAllocation("EUR", 0, (AllocationType)2)]));
+        Should.Throw<NotSupportedException>(() => budget.AddAllocationTemplate("A", "EUR", [new AllocationLine(fund.Id, 0, (AllocationType)2)]));
     }
 
     private static Budget NewBudget() => new() { LedgerId = Guid.NewGuid(), Name = "Budget" };

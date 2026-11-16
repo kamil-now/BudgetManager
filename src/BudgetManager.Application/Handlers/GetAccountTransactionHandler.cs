@@ -26,7 +26,7 @@ public sealed class GetAccountTransactionHandler(IAccountTransactionReader trans
             null,
             null,
             transaction.Title,
-            transaction.Comment,
-            transaction.Tags);
+            transaction.Allocations,
+            transaction.FundId);
     }
 }

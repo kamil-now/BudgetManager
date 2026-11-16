@@ -17,7 +17,7 @@ public class GetAccountTransactionTests(ITestOutputHelper testOutputHelper, Appl
         var userId = await MockAuthenticatedUserAsync();
         var account = await CreateAccountAsync(userId);
         var transaction = await EntityStore.CreateAsync(
-            AccountTransaction.Create(account.Id, new Money(50, "PLN"), DateTimeOffset.UtcNow, "Groceries", "weekly", ["food"]));
+            AccountTransaction.Create(account.Id, new Money(50, "PLN"), DateTimeOffset.UtcNow, "Groceries"));
         await EntityStore.SaveChangesAsync();
 
         // Act
@@ -30,7 +30,61 @@ public class GetAccountTransactionTests(ITestOutputHelper testOutputHelper, Appl
         result.AccountName.ShouldBe(account.Name);
         result.Value.ShouldBe(new Money(50, "PLN"));
         result.Title.ShouldBe("Groceries");
-        result.Tags.ShouldBe(["food"]);
+    }
+
+    [Fact]
+    public async Task GetAccountTransaction_WhenExpenseIsPaidFromFund_ShouldReturnFundId()
+    {
+        // Arrange
+        await MockAuthenticatedUserAsync();
+        var ledger = await SeedLedgerAsync("Food");
+        var accountId = ledger.Accounts.Single().Id;
+        var id = await Mediator.Send(new CreateAccountTransactionCommand(
+            accountId, new(-30, "EUR"), DateTimeOffset.UtcNow, "Groceries", FundId: FundId(ledger, "Food")));
+
+        // Act
+        var result = await Mediator.Send(new GetAccountTransactionQuery(accountId, id));
+
+        // Assert
+        result.ShouldSatisfyAllConditions(
+            x => x.FundId.ShouldBe(FundId(ledger, "Food")),
+            x => x.Allocations.ShouldBeEmpty());
+    }
+
+    [Fact]
+    public async Task GetAccountTransaction_WhenExpenseIsNotPaidFromFund_ShouldHaveNoFundId()
+    {
+        // Arrange
+        await MockAuthenticatedUserAsync();
+        var ledger = await SeedLedgerAsync("Food");
+        var accountId = ledger.Accounts.Single().Id;
+        var id = await Mediator.Send(new CreateAccountTransactionCommand(accountId, new(-30, "EUR"), DateTimeOffset.UtcNow, "Groceries"));
+
+        // Act
+        var result = await Mediator.Send(new GetAccountTransactionQuery(accountId, id));
+
+        // Assert
+        result.FundId.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetAccountTransaction_WhenIncomeIsAllocated_ShouldReturnAllocationsAndNoFundId()
+    {
+        // Arrange
+        await MockAuthenticatedUserAsync();
+        var ledger = await SeedLedgerAsync("Food");
+        var accountId = ledger.Accounts.Single().Id;
+        var id = await Mediator.Send(new CreateAccountTransactionCommand(
+            accountId, new(100, "EUR"), DateTimeOffset.UtcNow, "Salary",
+            Allocation: new BudgetManager.Application.Models.AllocationInput(Lines: [new(FundId(ledger, "Food"), 0, BudgetManager.Domain.Enums.AllocationType.Fixed, 60)])));
+
+        // Act
+        var result = await Mediator.Send(new GetAccountTransactionQuery(accountId, id));
+
+        // Assert
+        result.ShouldSatisfyAllConditions(
+            x => x.FundId.ShouldBeNull(),
+            x => x.Allocations.ShouldHaveSingleItem().Amount.ShouldBe(60));
     }
 
     [Fact]
@@ -74,7 +128,7 @@ public class GetAccountTransactionTests(ITestOutputHelper testOutputHelper, Appl
         var source = await CreateAccountAsync(userId);
         var target = await CreateAccountAsync(userId, source.LedgerId);
         await Mediator.Send(new CreateAccountTransferCommand(source.Id, target.Id, new(100, "PLN"), DateTimeOffset.UtcNow, null));
-        var transaction =(await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == source.Id, default)).Single();
+        var transaction = (await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == source.Id, default)).Single();
 
         // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() =>
@@ -89,7 +143,7 @@ public class GetAccountTransactionTests(ITestOutputHelper testOutputHelper, Appl
         var source = await CreateAccountAsync(userId);
         var target = await CreateAccountAsync(userId, source.LedgerId);
         await Mediator.Send(new CreateAccountTransferCommand(source.Id, target.Id, new(100, "PLN"), DateTimeOffset.UtcNow, null));
-        var transaction =(await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == target.Id, default)).Single();
+        var transaction = (await EntityStore.GetAsync<AccountTransaction>(x => x.AccountId == target.Id, default)).Single();
 
         // Act & Assert
         await Should.ThrowAsync<NotFoundException>(() =>

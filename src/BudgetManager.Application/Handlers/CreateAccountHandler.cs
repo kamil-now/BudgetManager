@@ -18,7 +18,6 @@ public sealed class CreateAccountHandler(IEntityStore store) : IRequestHandler<C
             Id = accountId,
             LedgerId = command.LedgerId,
             Name = command.Name,
-            Description = command.Description,
             Transactions = [AccountTransaction.CreateInitialBalance(accountId, command.InitialBalance)]
         }, cancellationToken) ?? throw new InvalidOperationException("Failed to create account.");
 
@@ -40,6 +39,5 @@ public sealed class CreateAccountHandler(IEntityStore store) : IRequestHandler<C
         command.LedgerId.EnsureNotEmpty();
         command.Name.EnsureNotEmpty().EnsureNotLongerThan(Constants.MaxNameLength);
         command.InitialBalance.EnsureValidInitialBalance();
-        command.Description?.EnsureNotLongerThan(Constants.MaxCommentLength);
     }
 }

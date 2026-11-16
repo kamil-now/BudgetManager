@@ -1,0 +1,21 @@
+.none {
+  margin: 0;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-row .tile {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+.account-row .edit {
+  flex: none;
+}

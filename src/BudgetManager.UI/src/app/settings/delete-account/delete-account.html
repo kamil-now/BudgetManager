@@ -1,0 +1,27 @@
+<app-modal
+  size="sm"
+  [danger]="true"
+  [title]="'deleteAccount.title' | t"
+  [submitLabel]="'deleteAccount.submit' | t"
+  [busyLabel]="'delete.busy' | t"
+  [submitting]="submitting()"
+  [error]="error()"
+  (closed)="closed.emit()"
+  (submitted)="confirm()"
+>
+  <p class="muted small">{{ 'deleteAccount.warning' | t }} {{ 'delete.cannotUndo' | t }}</p>
+  <div class="field">
+    <label for="da-password">{{ 'deleteAccount.password' | t }}</label>
+    <div class="input">
+      <input
+        id="da-password"
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        [ngModelOptions]="{ standalone: true }"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+      />
+    </div>
+  </div>
+</app-modal>

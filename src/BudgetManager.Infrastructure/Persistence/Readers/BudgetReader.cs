@@ -15,8 +15,7 @@ public sealed class BudgetReader(ApplicationDbContext dbContext) : IBudgetReader
             {
                 x.Id,
                 x.Name,
-                x.Description,
-                Funds = x.Funds.Select(f => new { f.Id, f.Name, f.Description }).ToList()
+                Funds = x.Funds.Select(f => new { f.Id, f.Name }).ToList()
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -35,7 +34,6 @@ public sealed class BudgetReader(ApplicationDbContext dbContext) : IBudgetReader
         return new BudgetSummary(
             budget.Id,
             budget.Name,
-            budget.Description,
-            [.. budget.Funds.Select(f => new BudgetSummary.Fund(f.Id, f.Name, f.Description, BalanceRows.BalanceOf(fundBalances, f.Id)))]);
+            [.. budget.Funds.Select(f => new BudgetSummary.Fund(f.Id, f.Name,BalanceRows.BalanceOf(fundBalances, f.Id)))]);
     }
 }

@@ -14,7 +14,7 @@ public class AccountTransferTests
     public void Transfer_ShouldCreateOppositeTransactions()
     {
         // Act
-        var transfer = AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, "title", "comment", ["tag"]);
+        var transfer = AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, "title");
 
         // Assert
         transfer.ShouldSatisfyAllConditions(
@@ -24,7 +24,7 @@ public class AccountTransferTests
             x => x.Income.AccountId.ShouldBe(TargetAccountId),
             x => x.Income.Value.ShouldBe(new Money(100, "PLN")),
             x => x.Income.Type.ShouldBe(AccountTransactionType.TransferIn),
-            x => x.Income.Tags.ShouldBe(["tag"]));
+            x => x.Income.Title.ShouldBe("title"));
     }
 
     [Theory]
@@ -34,7 +34,7 @@ public class AccountTransferTests
     {
         // Act & Assert
         Should.Throw<InvalidOperationException>(() =>
-            AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(amount, "PLN"), DateTimeOffset.UtcNow, null, null, null));
+            AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(amount, "PLN"), DateTimeOffset.UtcNow, null));
     }
 
     [Fact]
@@ -42,14 +42,14 @@ public class AccountTransferTests
     {
         // Act & Assert
         Should.Throw<InvalidOperationException>(() =>
-            AccountTransfer.Transfer(SourceAccountId, SourceAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null, null, null));
+            AccountTransfer.Transfer(SourceAccountId, SourceAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null));
     }
 
     [Fact]
     public void Exchange_ShouldNegateSell()
     {
         // Act
-        var transfer = AccountTransfer.Exchange(SourceAccountId, SourceAccountId, new(100, "USD"), new(90, "EUR"), DateTimeOffset.UtcNow, null, null, null);
+        var transfer = AccountTransfer.Exchange(SourceAccountId, SourceAccountId, new(100, "USD"), new(90, "EUR"), DateTimeOffset.UtcNow, null);
 
         // Assert
         transfer.ShouldSatisfyAllConditions(
@@ -62,18 +62,18 @@ public class AccountTransferTests
     {
         // Act & Assert
         Should.Throw<InvalidOperationException>(() =>
-            AccountTransfer.Exchange(SourceAccountId, TargetAccountId, new(100, "PLN"), new(90, "PLN"), DateTimeOffset.UtcNow, null, null, null));
+            AccountTransfer.Exchange(SourceAccountId, TargetAccountId, new(100, "PLN"), new(90, "PLN"), DateTimeOffset.UtcNow, null));
     }
 
     [Fact]
     public void UpdateTransfer_ShouldUpdateBothTransactions()
     {
         // Arrange
-        var transfer = AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null, null, null);
+        var transfer = AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null);
         var date = DateTimeOffset.UtcNow.AddDays(-1);
 
         // Act
-        transfer.UpdateTransfer(TargetAccountId, SourceAccountId, new(50, "EUR"), date, "title", "comment", ["tag"]);
+        transfer.UpdateTransfer(TargetAccountId, SourceAccountId, new(50, "EUR"), date, "title");
 
         // Assert
         transfer.ShouldSatisfyAllConditions(
@@ -94,17 +94,17 @@ public class AccountTransferTests
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() =>
-            transaction.Update(TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null, null, null));
+            transaction.Update(TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null));
     }
 
     [Fact]
     public void Update_WhenTransactionIsTransfer_ShouldThrow()
     {
         // Arrange
-        var transfer = AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null, null, null);
+        var transfer = AccountTransfer.Transfer(SourceAccountId, TargetAccountId, new(100, "PLN"), DateTimeOffset.UtcNow, null);
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() =>
-            transfer.Income.Update(TargetAccountId, new(500, "PLN"), DateTimeOffset.UtcNow, null, null, null));
+            transfer.Income.Update(TargetAccountId, new(500, "PLN"), DateTimeOffset.UtcNow, null));
     }
 }

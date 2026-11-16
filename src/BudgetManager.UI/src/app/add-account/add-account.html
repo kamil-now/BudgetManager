@@ -1,0 +1,68 @@
+@if (open()) {
+  @let editing = account() !== null;
+  <app-modal
+    size="sm"
+    [title]="(editing ? 'account.edit' : 'common.addAccount') | t"
+    [submitting]="submitting()"
+    [submitLabel]="(editing ? 'common.saveChanges' : 'common.addAccount') | t"
+    [busyLabel]="'common.saving' | t"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="submit()"
+  >
+    <div class="field">
+      <label for="aa-name">{{ 'common.name' | t }}</label>
+      <div class="input">
+        <input
+          id="aa-name"
+          name="name"
+          type="text"
+          maxlength="100"
+          autocomplete="off"
+          [placeholder]="'account.namePlaceholder' | t"
+          [(ngModel)]="name"
+        />
+      </div>
+    </div>
+
+    @if (!editing) {
+    <div class="field">
+      <label for="aa-amount">{{ 'account.initialBalance' | t }}</label>
+      <div class="input">
+        <select
+          class="ccy-select"
+          name="currency"
+          [attr.aria-label]="'common.currency' | t"
+          [(ngModel)]="currency"
+        >
+          @let ccy = currencyOptions();
+          @if (ccy.favorites.length > 0) {
+            <optgroup [label]="'currency.favorites' | t">
+              @for (c of ccy.favorites; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </optgroup>
+          }
+          <optgroup [label]="'currency.all' | t">
+            @for (c of ccy.others; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </optgroup>
+        </select>
+        <input
+          #aaAmount
+          id="aa-amount"
+          name="amount"
+          class="num-in"
+          type="number"
+          inputmode="decimal"
+          step="0.01"
+          placeholder="0.00"
+          autocomplete="off"
+          [(ngModel)]="amount"
+        />
+      </div>
+    </div>
+    }
+  </app-modal>
+}

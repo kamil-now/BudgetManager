@@ -91,8 +91,8 @@ public class UpdateTransferTests(ITestOutputHelper testOutputHelper, ApiFixture 
         ledgerResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         var ledgerId = await ledgerResponse.Content.ReadFromJsonAsync<Guid>();
 
-        var source = await PostAsync("/api/accounts", new CreateAccountCommand(ledgerId, new(0, "EUR"), $"Source {Guid.NewGuid()}", null));
-        var target = await PostAsync("/api/accounts", new CreateAccountCommand(ledgerId, new(0, "EUR"), $"Target {Guid.NewGuid()}", null));
+        var source = await PostAsync("/api/accounts", new CreateAccountCommand(ledgerId, new(0, "EUR"), $"Source {Guid.NewGuid()}"));
+        var target = await PostAsync("/api/accounts", new CreateAccountCommand(ledgerId, new(0, "EUR"), $"Target {Guid.NewGuid()}"));
         return (source, target);
     }
 

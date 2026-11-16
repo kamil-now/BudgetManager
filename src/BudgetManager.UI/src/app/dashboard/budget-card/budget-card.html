@@ -1,0 +1,82 @@
+@let b = budget();
+<div class="budget-head">
+  <h3 class="budget-title">
+    <button type="button"
+      class="budget-tile"
+      [class.on]="isBudgetScoped(b)"
+      [attr.aria-pressed]="isBudgetScoped(b)"
+      (click)="toggleBudget(b)">
+      <span class="budget-name">{{ b.name }}</span>
+      <span class="budget-total">
+        @for (line of balanceLines(b.balance); track line.currency) {
+        <span class="amount">{{ line.number }}<span class="ccy">{{ line.currency }}</span></span>
+        } @empty {
+        <span class="muted" aria-hidden="true">—</span>
+        <span class="sr-only">{{ 'common.empty' | t }}</span>
+        }
+      </span>
+    </button>
+  </h3>
+  <app-menu-button
+    class="actions"
+    triggerClass="btn-icon btn-icon-sm"
+    align="end"
+    [label]="'budgets.actionsFor' | t: { name: b.name }"
+    [items]="menu()"
+    (picked)="onAction($event)">
+    <svg class="icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true">
+      <circle cx="12"
+        cy="5"
+        r="1" />
+      <circle cx="12"
+        cy="12"
+        r="1" />
+      <circle cx="12"
+        cy="19"
+        r="1" />
+    </svg>
+  </app-menu-button>
+  <button type="button"
+    class="btn-icon btn-icon-sm expand"
+    [class.open]="expanded()"
+    [title]="'budgets.funds' | t"
+    [attr.aria-label]="'budgets.fundsFor' | t: { name: b.name }"
+    [attr.aria-expanded]="expanded()"
+    [attr.aria-controls]="'budget-body-' + b.id"
+    (click)="toggleExpanded()">
+    <svg class="icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  </button>
+</div>
+<div class="budget-body"
+  [id]="'budget-body-' + b.id"
+  [hidden]="!expanded()">
+<ul class="tiles">
+  @for (fund of b.funds; track fund.id) {
+  <li>
+    <button type="button"
+      class="tile"
+      [class.on]="isFundScoped(fund)"
+      [attr.aria-pressed]="isFundScoped(fund)"
+      (click)="toggleFund(b, fund)">
+      <span class="tile-money">
+        @for (line of balanceLines(fund.balance); track line.currency) {
+        <span class="amount" [class.amount--out]="line.amount < 0">{{ line.number }}<span class="ccy">{{ line.currency }}</span></span>
+        } @empty {
+        <span class="muted" aria-hidden="true">—</span>
+        <span class="sr-only">{{ 'common.empty' | t }}</span>
+        }
+      </span>
+      <span class="tile-name">{{ fund.name }}</span>
+    </button>
+  </li>
+  } @empty {
+  <li class="muted small no-funds">{{ 'budgets.noFunds' | t }}</li>
+  }
+</ul>
+</div>

@@ -1,0 +1,40 @@
+.tx-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.amount-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+
+  &.is-in {
+    color: var(--accent);
+  }
+  &.is-out {
+    color: var(--danger);
+  }
+
+  .sign {
+    font-weight: 600;
+  }
+  input {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.alloc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .hint,
+  .error {
+    margin: 0;
+  }
+}

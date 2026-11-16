@@ -1,0 +1,19 @@
+@switch (state()) {
+  @case ('loading') {
+    <p class="muted" role="status">{{ loadingText() || ('common.loading' | t) }}</p>
+  }
+  @case ('no-ledger') {
+    <div class="card empty" role="status">
+      <p>{{ 'status.noLedger' | t }}</p>
+      <a routerLink="/new-ledger" class="btn btn-primary">{{ 'status.createLedger' | t }}</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="card empty" role="alert">
+      <p>{{ errorText() || ('status.error' | t) }}</p>
+      <button type="button" class="btn btn-secondary" (click)="retry.emit()">
+        {{ 'common.tryAgain' | t }}
+      </button>
+    </div>
+  }
+}

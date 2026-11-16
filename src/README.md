@@ -27,7 +27,7 @@ Controllers hold no logic. They take a command or query as the request body and 
 Exceptions thrown by a handler become status codes at the edge — 404 for not found, 422 for
 bad values, 401 for not logged in, 403 for not yours. Anything else surfaces as a 500.
 
-Writes go through one store of generic entity operations. Every read has a class of its own that fetches the rows that read needs and nothing else - `LedgerTransactionsReader` returns a ledger's transactions - written next to the database code and named after the data it returns. One such class can feed more than one read, and a new read adds files instead of growing a shared one. Handlers never touch the database context, the store never saves, and multi-row writes run inside a transaction. Reads still share the write model, so a ledger view loads all of its transactions before adding them up.
+Writes go through one store of generic entity operations. Every read has a class of its own that fetches the rows that read needs and nothing else - `LedgerFeedReader` returns a page of a ledger's feed - written next to the database code and named after the data it returns. One such class can feed more than one read, and a new read adds files instead of growing a shared one. Handlers never touch the database context, the store never saves, and multi-row writes run inside a transaction. Reads still share the write model, so a ledger view loads all of its transactions before adding them up.
 
 ## Design decisions
 

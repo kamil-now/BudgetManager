@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-Build/test target the root `BudgetManager.sln` (contains all 7 projects). `src/BudgetManager.sln` and `tests/BudgetManager.Tests.sln` are partial solutions.
+Build/test target the root `BudgetManager.sln` (contains all 8 projects). `src/BudgetManager.sln` and `tests/BudgetManager.Tests.sln` are partial solutions.
 
 ```powershell
 dotnet build BudgetManager.sln
@@ -27,8 +27,15 @@ Run the API:
 
 ```powershell
 dotnet run --project src/BudgetManager.Api        # http://localhost:5219, `/` redirects to `/scalar`
-docker/run.ps1                                   # dotnet watch in docker + postgres 17, needs docker/.env (see .env.example)
+docker/run.ps1                                   # dotnet watch in docker + postgres 17, needs docker/.env (see .env.example); the one-shot `budget-manager-seed` service migrates and seeds test@example.com / testtest before the API starts
 scripts/setup.ps1                                # installs the git pre-commit hook
+```
+
+Demo data (`utils/DemoDataInitializer`, a console tool, not part of the API or its image; does nothing when the user exists already):
+
+```powershell
+dotnet run --project utils/DemoDataInitializer -- --ConnectionStrings:DefaultConnection "Host=localhost;Port=<DB_EXTERNAL_PORT>;Database=<DB_NAME>;Username=<DB_USER>;Password=<DB_PASSWORD>"
+docker compose -f docker/docker-compose.dev.yml down -v   # wipe the dev database (and the seed with it)
 ```
 
 Migrations (run from `/src`):
@@ -47,11 +54,13 @@ All integration tests run against a `postgres:17` container started by Testconta
 
 **Hand-rolled mediator** (`BudgetManager.Common/Mediator.cs`) — not MediatR. `IRequest<TResponse>` / `IRequestHandler<,>`, resolved via reflection from the DI container; handlers are auto-registered by scanning the Application assembly (`UseMediator()`). `BudgetManager.Common` is a global using in Api and Application, so `IMediator`/`IRequest` need no import.
 
-**Request flow**: controller takes the command/query record straight as its request body/query model and passes it to `mediator.Send`. Controllers do no validation and no mapping. `Mediator.Send` first calls `IRequestAuthorizer` (`Application/Security/RequestAuthorizer`), which authenticates every request except those marked `IAnonymousRequest` and checks ownership of the `Resources` a request declares through `IRequiresAccess`. Handlers then validate (`ValidationExtensions` throwing `ValidationException`) and mutate through `IBudgetManagerService`; they never authenticate or authorize, and read the current user from `ICurrentUserService.UserId`.
+**Request flow**: controller takes the command/query record straight as its request body/query model and passes it to `mediator.Send`. Controllers do no validation and no mapping. `Mediator.Send` first calls `IRequestAuthorizer` (`Application/Security/RequestAuthorizer`), which authenticates every request except those marked `IAnonymousRequest`, checks that the signed-in user still exists (a token outlives a deleted account, so it gets 401) and checks ownership of the `Resources` a request declares through `IRequiresAccess`. Handlers then validate (`ValidationExtensions` throwing `ValidationException`) and mutate through `IEntityStore`; they never authenticate or authorize, and read the current user from `ICurrentUserService.UserId`.
 
 **Exceptions map to status codes** in `ExceptionHandlingMiddleware`: `NotFoundException` 404, `ValidationException` 422, `AuthenticationException` 401, `AuthorizationException` 403. Nothing else is caught.
 
-**Data access** goes through `IBudgetManagerService` (`Domain/Interfaces`), a generic-plus-bespoke facade over `ApplicationDbContext`. Handlers never touch the DbContext. Rules: don't call `SaveChangesAsync` inside a service method — the handler calls it once so EF wraps the whole unit of work; use `RunInTransactionAsync` for multi-step operations. Add methods to the service when a handler needs a new query.
+**Data access** goes through `IEntityStore` (`Domain/Interfaces`), a generic facade over `ApplicationDbContext`, for writes, and through `*Reader` interfaces (`Application/Interfaces`, implemented in `Infrastructure/Persistence/Readers`) for queries. Handlers never touch the DbContext. Rules: don't call `SaveChangesAsync` inside a store method — the handler calls it once so EF wraps the whole unit of work; use `RunInTransactionAsync` for multi-step operations. Add a reader when a handler needs a new query, never a read method on the store.
+
+**Demo data initializer** (`utils/DemoDataInitializer`): a console tool that builds its own DI container (`UsePostgreSQL` + `UseMediator`, no JWT setup), signs in as the user it creates and creates `test@example.com` / `testtest` with EUR-only data (two ledgers, three budgets each) only through mediator commands (user, ledgers with initial allocations, allocation templates, incomes, expenses paid from funds, transfers, allocations) inside one database transaction. The API does not reference it; in the dev compose stack it runs once as `budget-manager-seed` and the API waits for it. Its tests are in `tests/BudgetManager.IntegrationTests/Seeding`.
 
 **Authorization is ownership-based**, not role-based. `MapControllers().RequireAuthorization()` makes every endpoint authenticated (`AuthController` is `[AllowAnonymous]`); JWT bearer settings come from the `JwtTokenSettings` config section. Per-resource access is checked in the mediator's authorizer, comparing the owner of each declared resource with the user id from the token. Only `Ledger` stores `OwnerId`; every other entity reaches it through its parent, declared once per entity as `IAccessControlled<T>.OwnerPath` (`Account` → `x.Ledger.OwnerId`, `AccountTransaction` → `x.Account.Ledger.OwnerId`). A request that implements neither `IRequiresAccess` nor `IAnonymousRequest` is refused by the authorizer, so a create with no parent to check declares `IRequiresAccess` with an empty resource list.
 

@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+.git/
+.github/
+.vs/
+.vscode/
+src/BudgetManager.UI/
+tests/
+coveragereport/
+docker/.env

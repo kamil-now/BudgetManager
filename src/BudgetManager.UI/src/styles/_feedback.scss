@@ -1,0 +1,131 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  color: var(--muted);
+  padding: 32px 20px;
+}
+.empty p {
+  margin: 0;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex: none;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 19, 17, 0.5);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 50;
+}
+.modal {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+}
+.modal--sm {
+  max-width: 440px;
+}
+.modal--md {
+  max-width: 560px;
+}
+.modal--lg {
+  max-width: 680px;
+}
+.modal--xl {
+  max-width: 780px;
+}
+.modal-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: var(--modal-pad-y) var(--modal-pad-x);
+  border-bottom: 1px solid var(--line);
+}
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--modal-pad-y) var(--modal-pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-form);
+}
+.modal-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--modal-pad-y) var(--modal-pad-x);
+  border-top: 1px solid var(--line);
+}
+.modal-foot-start {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 6px;
+}
+@media (max-width: 519.98px) {
+  .backdrop {
+    padding: 0;
+    place-items: stretch;
+  }
+  .backdrop .modal {
+    max-width: none;
+    max-height: none;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+  .modal-head,
+  .modal-body,
+  .modal-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .modal-foot {
+    padding-bottom: max(var(--modal-pad-y), env(safe-area-inset-bottom));
+  }
+  .modal-foot .btn {
+    flex: 1 1 0;
+  }
+  .modal-foot .modal-foot-start .btn {
+    flex: 0 1 auto;
+  }
+}

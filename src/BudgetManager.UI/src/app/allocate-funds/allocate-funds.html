@@ -1,0 +1,88 @@
+@if (income(); as tx) {
+  <app-new-transaction
+    [open]="true"
+    [transaction]="tx"
+    [startAllocating]="true"
+    (closed)="closed.emit()"
+    (saved)="saved.emit()"
+  />
+} @else if (dialog()) {
+  <app-modal
+    size="lg"
+    [title]="(editing() ? 'allocate.editTitle' : 'new.allocate') | t"
+    [submitLabel]="(editing() ? 'allocate.save' : 'allocate.submit') | t"
+    [busyLabel]="(editing() ? 'common.saving' : 'allocate.busy') | t"
+    [submitting]="submitting()"
+    [error]="error()"
+    (closed)="closed.emit()"
+    (submitted)="submit()"
+  >
+    <p class="af-left" aria-live="polite">
+      {{ (editing() ? 'allocate.available' : 'common.unallocated') | t }}
+      <strong class="amount" [class.amount--out]="unallocated() < 0">{{
+        formatMoney(unallocated(), currency())
+      }}</strong>
+    </p>
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="af-amount">{{ 'common.amount' | t }}</label>
+        <div class="input">
+          <select
+            class="ccy-select"
+            name="currency"
+            [attr.aria-label]="'common.currency' | t"
+            [ngModel]="currency()"
+            (ngModelChange)="setCurrency($event)"
+          >
+            @for (c of currencies(); track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+          <input
+            id="af-amount"
+            name="amount"
+            class="num-in"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            [max]="unallocated()"
+            [ngModel]="amount()"
+            (ngModelChange)="amount.set($event)"
+          />
+        </div>
+      </div>
+
+      @if (!editing()?.initial) {
+        <div class="field">
+          <label for="af-date">{{ 'common.date' | t }}</label>
+          <div class="input"><input id="af-date" name="date" type="date" [(ngModel)]="date" /></div>
+        </div>
+      }
+
+      <div class="field span-2">
+        <label for="af-title">{{ 'common.title' | t }}</label>
+        <div class="input">
+          <input
+            id="af-title"
+            name="title"
+            type="text"
+            maxlength="200"
+            [placeholder]="'allocate.titlePlaceholder' | t"
+            [(ngModel)]="title"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-allocation-split
+      [heading]="'allocate.split' | t"
+      [budgets]="store.budgets()"
+      [amount]="amount()"
+      [currency]="currency()"
+      [prefill]="prefill()"
+    />
+  </app-modal>
+}

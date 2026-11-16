@@ -1,0 +1,22 @@
+// fills the side column below the accounts, like the transactions panel fills the main one
+.panel {
+  flex: 1 1 auto;
+}
+
+.budgets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.none {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  p {
+    margin: 0;
+  }
+}

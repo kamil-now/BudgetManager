@@ -9,7 +9,9 @@ public record LedgerStatisticsDTO
     public required Dictionary<string, Statistics> TotalExpense { get; init; }
 
     public required IEnumerable<ItemStatistics> Accounts { get; init; }
-    public required IEnumerable<ItemStatistics> Tags { get; init; }
+
+    public required Dictionary<string, FundFlow> FundTotals { get; init; }
+    public required IEnumerable<BudgetStatistics> Budgets { get; init; }
 
     public record ItemStatistics(
         string Name,
@@ -23,4 +25,20 @@ public record LedgerStatisticsDTO
         decimal Min,
         decimal Max);
 
+    public record BudgetStatistics(
+        Guid Id,
+        string Name,
+        Dictionary<string, FundFlow> Totals,
+        IEnumerable<FundStatistics> Funds);
+
+    public record FundStatistics(
+        Guid Id,
+        string Name,
+        Dictionary<string, FundFlow> Flows);
+
+    public record FundFlow(
+        decimal Allocated,
+        decimal Spent,
+        decimal NetChange,
+        decimal Ending);
 }

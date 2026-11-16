@@ -26,6 +26,30 @@
       "type": "dotnet",
       "request": "launch",
       "projectPath": "${workspaceFolder}/src/BudgetManager.Api/BudgetManager.Api.csproj"
+    },
+    {
+      "name": "UI (ng serve)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm start",
+      "cwd": "${workspaceFolder}/src/BudgetManager.UI"
+    },
+    {
+      "name": "UI Debug (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/src/BudgetManager.UI"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "API + UI",
+      "configurations": [
+        "API Debug",
+        "UI (ng serve)"
+      ],
+      "stopAll": true
     }
   ]
 }

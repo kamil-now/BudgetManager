@@ -1,0 +1,329 @@
+<section
+  class="card tx"
+  aria-labelledby="h-transactions"
+  [attr.aria-busy]="status() === 'loading'"
+>
+  <div class="card-head">
+    <h2 class="section-title" id="h-transactions">{{ 'tx.title' | t }}</h2>
+    @if (status() === 'loading' && total() !== null) {
+      <span class="muted tiny" role="status">{{ 'tx.updating' | t }}</span>
+    }
+  </div>
+
+  <div class="filters" [class.compact-filters]="compact()">
+    <div class="field period">
+      <label class="sr-only" for="tx-period">{{ 'tx.period' | t }}</label>
+      <div class="input">
+        <select id="tx-period" [ngModel]="period()" (ngModelChange)="period.set($event)">
+          @for (option of periodOptions; track option.value) {
+            <option [value]="option.value">{{ option.label | t }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    @if (compact()) {
+      <div class="field type">
+        <label class="sr-only" for="tx-type">{{ 'tx.type' | t }}</label>
+        <div class="input">
+          <select id="tx-type" [ngModel]="type()" (ngModelChange)="type.set($event)">
+            @for (option of typeOptions; track option.value) {
+              <option [value]="option.value">{{ option.label | t }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    }
+    @if (period() === 'custom') {
+      <div class="field inline range">
+        <label for="tx-from">{{ 'common.from' | t }}</label>
+        <div class="input">
+          <input
+            id="tx-from"
+            type="date"
+            [ngModel]="customFrom()"
+            (ngModelChange)="customFrom.set($event ?? '')"
+          />
+        </div>
+      </div>
+      <div class="field inline range">
+        <label for="tx-to">{{ 'common.to' | t }}</label>
+        <div class="input">
+          <input
+            id="tx-to"
+            type="date"
+            [ngModel]="customTo()"
+            (ngModelChange)="customTo.set($event ?? '')"
+          />
+        </div>
+      </div>
+    }
+    @if (!compact()) {
+      <div class="segment-wrap">
+        <div class="segment" role="group" [attr.aria-label]="'tx.type' | t">
+          @for (option of typeOptions; track option.value) {
+            <button
+              type="button"
+              [class.active]="type() === option.value"
+              [attr.aria-pressed]="type() === option.value"
+              (click)="type.set(option.value)"
+            >
+              {{ option.label | t }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+    <div class="field search">
+      <label class="sr-only" for="tx-search">{{ 'tx.search' | t }}</label>
+      <div class="input">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+        <input
+          id="tx-search"
+          type="search"
+          maxlength="100"
+          [placeholder]="'tx.searchPlaceholder' | t"
+          [ngModel]="searchText()"
+          (ngModelChange)="searchText.set($event ?? '')"
+        />
+      </div>
+    </div>
+    <label class="check day-toggle">
+      <input
+        type="checkbox"
+        [ngModel]="showDays()"
+        (ngModelChange)="showDays.set($event)"
+      />
+      {{ 'tx.showDays' | t }}
+    </label>
+    @if (scope(); as s) {
+      <span class="chip chip--accent scope-chip">
+        {{ scopeLabel(s) }}
+        <button
+          type="button"
+          [attr.aria-label]="'tx.clearScope' | t: { scope: scopeLabel(s) }"
+          (click)="scope.set(null)"
+        >
+          ×
+        </button>
+      </span>
+    }
+    <button type="button" class="btn btn-ghost btn-sm clear" [disabled]="pristine()" (click)="clear()">
+      {{ 'tx.clear' | t }}
+    </button>
+  </div>
+
+  @if (rangeError()) {
+    <div class="empty fill" role="alert">{{ rangeError() }}</div>
+  } @else if (status() === 'error' && total() === null) {
+    <div class="empty fill" role="alert">
+      <p>{{ 'tx.loadError' | t }}</p>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="retry()">
+        {{ 'common.tryAgain' | t }}
+      </button>
+    </div>
+  } @else if (total() === null) {
+    <p class="empty fill" role="status">{{ 'tx.loading' | t }}</p>
+  } @else if (total() === 0) {
+    <div class="empty fill">
+      <p>{{ 'tx.noMatch' | t }}</p>
+      <div class="empty-actions">
+        @if (period() !== 'all') {
+          <button type="button" class="btn btn-secondary btn-sm" (click)="showAllTime()">
+            {{ 'tx.showAllTime' | t }}
+          </button>
+        }
+        <button type="button" class="btn btn-primary btn-sm" (click)="newTransaction()">
+          <span aria-hidden="true">+</span>
+          {{ 'tx.new' | t }}
+        </button>
+      </div>
+    </div>
+  } @else {
+    @let v = view();
+    <div
+      #scroller
+      class="table-scroll"
+      tabindex="0"
+      role="region"
+      [attr.aria-label]="'tx.tableRegion' | t"
+      (scroll)="onScroll($event)"
+    >
+      <div
+        class="grid"
+        role="table"
+        [class.compact]="compact()"
+        [class.dated]="!showDays()"
+        [attr.aria-label]="'tx.title' | t"
+        [style.--tx-row]="metrics().row + 'px'"
+        [style.--tx-day]="metrics().day + 'px'"
+      >
+        <div class="sr-only" role="row">
+          <span role="columnheader">{{ 'common.type' | t }}</span>
+          @if (!showDays()) {
+            <span role="columnheader">{{ 'common.date' | t }}</span>
+          }
+          <span role="columnheader">{{ 'common.amount' | t }}</span>
+          <span role="columnheader">{{ 'common.title' | t }}</span>
+          <span role="columnheader">{{ 'tx.details' | t }}</span>
+          <span role="columnheader">{{ 'common.actions' | t }}</span>
+        </div>
+        <div class="spacer" aria-hidden="true" [style.height.px]="v.before"></div>
+        @for (block of v.blocks; track block.key) {
+          <div class="day" role="rowgroup" [class.borrowed]="block.borrowed">
+            @if (block.header; as h) {
+              <div class="day-head" role="row">
+                <span class="day-label" role="rowheader">{{ h.label }}</span>
+                <span class="day-net" role="cell">
+                  @for (line of h.net; track line.currency) {
+                    <span class="amount" [class.amount--in]="line.amount > 0" [class.amount--out]="line.amount < 0">
+                      {{ line.text }}
+                    </span>
+                  }
+                </span>
+              </div>
+            }
+            @for (r of block.rows; track r.key) {
+              @if (r.kind === 'item') {
+                @let x = r.row;
+                <div class="row item" role="row" [class.editable]="x.editable">
+                  <span class="cell sym" role="cell" [class]="x.symClass" [title]="x.kindLabel">
+                    <span aria-hidden="true">{{ x.symbol }}</span>
+                    <span class="sr-only">{{ x.kindLabel }}</span>
+                  </span>
+                  <span class="cell amt" role="cell">
+                    <span class="amount" [class]="x.amountClass"
+                      >{{ x.amountNumber }}<span class="ccy">{{ x.currency }}</span></span
+                    >
+                  </span>
+                  @if (!showDays()) {
+                    <span class="cell date" role="cell">{{ x.date }}</span>
+                  }
+                  <span class="cell title-cell" role="cell">
+                    <button
+                      type="button"
+                      class="row-main"
+                      [attr.aria-label]="'tx.editRow' | t: { title: x.title }"
+                      (click)="edit(x)"
+                    >
+                      {{ x.title }}
+                    </button>
+                  </span>
+                  <span class="cell meta" role="cell">{{ x.meta }}</span>
+                  <span class="cell tgl" role="cell">
+                    @if (x.item.allocations.length > 0) {
+                      <button
+                        type="button"
+                        class="toggle"
+                        [attr.aria-label]="(r.expanded ? 'tx.hideAllocations' : 'tx.showAllocations') | t"
+                        [attr.aria-expanded]="r.expanded"
+                        (click)="toggle(x)"
+                      >
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="m9 6 6 6-6 6" />
+                        </svg>
+                      </button>
+                    }
+                  </span>
+                  <span class="cell actions" role="cell">
+                    @if (!compact()) {
+                      <span class="icon-actions">
+                        @for (a of x.actions; track a) {
+                          <button
+                            type="button"
+                            class="btn-icon btn-icon-sm"
+                            [class.remove]="a === 'delete'"
+                            [attr.aria-label]="actionLabels[a] | t"
+                            [title]="actionLabels[a] | t"
+                            (click)="onAction(x, a)"
+                          >
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                              @switch (a) {
+                                @case ('edit') {
+                                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                }
+                                @case ('copy') {
+                                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                }
+                                @case ('allocate') {
+                                  <path d="M12 5v14M19 12l-7 7-7-7" />
+                                }
+                                @case ('delete') {
+                                  <path
+                                    d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                                  />
+                                }
+                              }
+                            </svg>
+                          </button>
+                        }
+                      </span>
+                    } @else if (x.actions.length > 0) {
+                      <app-menu-button
+                        triggerClass="btn-icon btn-icon-sm row-menu"
+                        align="end"
+                        [label]="'tx.actionsFor' | t: { title: x.title }"
+                        [items]="menuOf(x)"
+                        (picked)="onAction(x, $event)"
+                      >
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </app-menu-button>
+                    }
+                  </span>
+                </div>
+              } @else if (r.kind === 'alloc') {
+                <div
+                  class="row child"
+                  role="row"
+                  [attr.aria-label]="
+                    'tx.fromIncome' | t: { fund: r.allocation.fundName, title: r.parent.title }
+                  "
+                >
+                  <span class="cell sym sym--info" role="cell" [title]="'kind.allocation' | t">
+                    <span aria-hidden="true">{{ r.symbol }}</span>
+                    <span class="sr-only">{{ 'kind.allocation' | t }}</span>
+                  </span>
+                  <span class="cell amt" role="cell">
+                    <span class="amount amount--info"
+                      >{{ r.amountNumber }}<span class="ccy">{{ r.currency }}</span></span
+                    >
+                  </span>
+                  <span class="cell title-cell" role="cell">{{ r.title }}</span>
+                  <span class="cell meta" role="cell">{{ r.meta }}</span>
+                  <span class="cell tgl" role="cell"></span>
+                  <span class="cell actions" role="cell"></span>
+                </div>
+              } @else {
+                <div class="gap" aria-hidden="true" [style.height.px]="r.height">
+                  <span class="muted tiny">{{ 'common.loading' | t }}</span>
+                </div>
+              }
+            }
+          </div>
+        }
+        <div class="spacer" aria-hidden="true" [style.height.px]="v.after"></div>
+      </div>
+    </div>
+  }
+
+  @if (total() !== null && !rangeError()) {
+    <div class="foot">
+      <span class="count">{{ 'tx.count' | t: { count: total() ?? 0 } }}</span>
+      @if (pageError()) {
+        <span class="page-error" role="alert">
+          {{ 'tx.pageError' | t }}
+          <button type="button" class="btn btn-ghost btn-sm" (click)="retry()">
+            {{ 'common.tryAgain' | t }}
+          </button>
+        </span>
+      }
+    </div>
+  }
+</section>

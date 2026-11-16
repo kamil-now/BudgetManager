@@ -28,6 +28,61 @@ public class RegisterTests(ITestOutputHelper testOutputHelper, ApiFixture fixtur
     }
 
     [Fact]
+    public async Task Register_WhenPreferencesAreGiven_ShouldStoreThem()
+    {
+        // Arrange
+        var command = new CreateUserCommand($"test{Guid.NewGuid()}@email.com", "password", null, new("dark", "dd.MM.yyyy", "PLN", ["PLN", "EUR"], "pl"));
+
+        // Act
+        var response = await Client.PostAsJsonAsync(_url, command);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
+        var preferences = (await DbContext.Users.AsNoTracking().SingleAsync(x => x.Id == id)).Preferences;
+        preferences.ShouldSatisfyAllConditions(
+            x => x.Theme.ShouldBe("dark"),
+            x => x.DateFormat.ShouldBe("dd.MM.yyyy"),
+            x => x.DefaultCurrency.ShouldBe("PLN"),
+            x => x.FavoriteCurrencies.ShouldBe(["PLN", "EUR"]),
+            x => x.Language.ShouldBe("pl"));
+    }
+
+    [Fact]
+    public async Task Register_WhenPreferencesAreOmitted_ShouldStoreDefaults()
+    {
+        // Arrange
+        var body = new { email = $"test{Guid.NewGuid()}@email.com", password = "password" };
+
+        // Act
+        var response = await Client.PostAsJsonAsync(_url, body);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
+        var preferences = (await DbContext.Users.AsNoTracking().SingleAsync(x => x.Id == id)).Preferences;
+        preferences.ShouldSatisfyAllConditions(
+            x => x.Theme.ShouldBe("system"),
+            x => x.DateFormat.ShouldBe("yyyy-MM-dd"),
+            x => x.DefaultCurrency.ShouldBe("EUR"),
+            x => x.FavoriteCurrencies.ShouldBe(["EUR", "USD", "PLN"]),
+            x => x.Language.ShouldBe("en"));
+    }
+
+    [Fact]
+    public async Task Register_WhenPreferencesAreInvalid_ShouldReturnUnprocessableEntity()
+    {
+        // Arrange
+        var command = new CreateUserCommand($"test{Guid.NewGuid()}@email.com", "password", null, new("neon", "dd.MM.yyyy", "PLN", ["PLN"], "pl"));
+
+        // Act
+        var response = await Client.PostAsJsonAsync(_url, command);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
     public async Task Register_WhenEmailHasUpperCaseAndWhitespace_ShouldStoreItNormalized()
     {
         // Arrange

@@ -65,6 +65,7 @@ Merged code coverage report can be generated using `dotnet-reportgenerator-globa
 - register the reader in `UseStore()` in `Infrastructure/Configuration/ServiceCollectionExtensions.cs`
 - avoid using `SaveChangesAsync()` in `EntityStore` methods - saving should be invoked by command/query handler after all changes are applied (`SaveChangesAsync` then wraps all in single transaction)
 - use explicit transactions for complex operations with `EntityStore.RunInTransactionAsync`
+- bulk deletes (`ExecuteDeleteAsync`, as in `EntityStore.DeleteUserAsync`) run at once and skip the change tracker: call them inside `RunInTransactionAsync`, delete children before parents where the key is `Restrict`, clear the change tracker afterwards, and never use them on entities with owned `Money` (`AccountTransaction`, `FundTransaction`) - those go with their parent through the cascade
 
 ### Migrations
 - use Entity Framework Tools (`dotnet tool install --global dotnet-ef`)
@@ -80,7 +81,7 @@ Merged code coverage report can be generated using `dotnet-reportgenerator-globa
 
 ### Authentication and authorization
 - never authenticate or authorize in handlers - `RequestAuthorizer` does both for every request sent through the mediator
-- every request needs a signed in user unless it implements `IAnonymousRequest`
+- every request needs a signed in user unless it implements `IAnonymousRequest`; `RequestAuthorizer` also checks on every such request that the user still exists (`Resource.Of<User>`), so a token of a deleted account gets `AuthenticationException` (401) - every test that sends authenticated requests needs a persisted user
 - to guard a resource implement `IRequiresAccess` and list its `Resources`:
   - `Resource.Of<Ledger>(LedgerId)` - every entity declares where its owner is as `IAccessControlled<T>.OwnerPath`, so the call is the same for a ledger and for anything owned through a parent
 - a resource owned by somebody else and a resource that does not exist both give `AuthorizationException`

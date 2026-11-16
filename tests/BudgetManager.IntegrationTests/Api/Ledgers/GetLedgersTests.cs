@@ -9,7 +9,7 @@ public class GetLedgersTests(ITestOutputHelper testOutputHelper, ApiFixture fixt
 {
     private const string _baseUrl = "/api/ledgers";
 
-    private sealed record LedgerItem(Guid Id, string Name, string? Description);
+    private sealed record LedgerItem(Guid Id, string Name,Dictionary<string, decimal> Balance);
 
     [Fact]
     public async Task GetLedgers_WhenUserIsUnauthorized_401()
@@ -43,7 +43,9 @@ public class GetLedgersTests(ITestOutputHelper testOutputHelper, ApiFixture fixt
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var ledgers = await response.Content.ReadFromJsonAsync<LedgerItem[]>();
         ledgers.ShouldNotBeNull();
-        ledgers.ShouldHaveSingleItem().Id.ShouldBe(ledgerId);
+        ledgers.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
+            x => x.Id.ShouldBe(ledgerId),
+            x => x.Balance.ShouldHaveSingleItem().ShouldBe(new KeyValuePair<string, decimal>("EUR", 123)));
     }
 
     [Fact]

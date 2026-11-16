@@ -13,6 +13,10 @@ public class AllocationTemplateConfiguration : IEntityTypeConfiguration<Allocati
 
         builder.ConfigureEntity();
 
+        builder.Property(x => x.Name)
+            .IsRequired()
+            .HasMaxLength(Constants.MaxNameLength);
+
         builder.Property(x => x.Currency)
             .IsRequired()
             .HasMaxLength(Constants.CurrencyCodeLength);
@@ -22,7 +26,7 @@ public class AllocationTemplateConfiguration : IEntityTypeConfiguration<Allocati
             .HasForeignKey(x => x.AllocationTemplateId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(x => new { x.BudgetId, x.Currency })
+        builder.HasIndex(x => new { x.BudgetId, x.Name })
             .IsUnique();
     }
 }

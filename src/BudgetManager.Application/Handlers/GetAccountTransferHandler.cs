@@ -24,7 +24,6 @@ public sealed class GetAccountTransferHandler(IAccountTransferReader transferRea
             transfer.IncomeAccountId,
             transfer.IncomeAccountName,
             transfer.Title,
-            transfer.Comment,
-            transfer.Tags);
+            []);
     }
 }

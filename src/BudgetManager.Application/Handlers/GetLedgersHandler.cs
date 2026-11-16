@@ -11,6 +11,6 @@ public sealed class GetLedgersHandler(ICurrentUserService currentUser, ILedgerLi
     public async Task<IReadOnlyList<LedgerListItemDTO>> Handle(GetLedgersQuery query, CancellationToken cancellationToken)
     {
         var ledgers = await ledgerListReader.ReadAllAsync(currentUser.UserId, cancellationToken);
-        return [.. ledgers.Select(x => new LedgerListItemDTO { Id = x.Id, Name = x.Name, Description = x.Description })];
+        return [.. ledgers.Select(x => new LedgerListItemDTO { Id = x.Id, Name = x.Name, Balance = x.Balance })];
     }
 }

@@ -19,9 +19,7 @@ public sealed class UpdateAccountTransferHandler(IEntityStore store) : IRequestH
             command.TargetAccountId,
             command.Value,
             command.Date,
-            command.Title,
-            command.Comment,
-            command.Tags);
+            command.Title);
 
         await store.SaveChangesAsync(cancellationToken);
     }
@@ -36,7 +34,5 @@ public sealed class UpdateAccountTransferHandler(IEntityStore store) : IRequestH
         }
 
         command.Title?.EnsureNotLongerThan(Constants.MaxTitleLength);
-        command.Comment?.EnsureNotLongerThan(Constants.MaxCommentLength);
-        command.Tags.EnsureValidTags();
     }
 }

@@ -3,6 +3,7 @@ using BudgetManager.Application.Validators;
 using BudgetManager.Domain.Entities;
 using BudgetManager.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace BudgetManager.Infrastructure.Persistence.Services;
 
@@ -17,6 +18,10 @@ public class EntityStore(ApplicationDbContext dbContext) : IEntityStore
         catch (DbUpdateConcurrencyException ex)
         {
             throw new ConflictException(ConcurrencyMessage(ex));
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } unique)
+        {
+            throw new ConflictException($"The record conflicts with an existing one ({unique.ConstraintName}).");
         }
     }
 
@@ -45,6 +50,29 @@ public class EntityStore(ApplicationDbContext dbContext) : IEntityStore
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    public Task RunInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+        => RunInTransactionAsync(async () =>
+        {
+            await action();
+            return true;
+        }, cancellationToken);
+
+    public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        // Bulk deletes skip the change tracker, so children go first; the Restrict keys would refuse any other order.
+        // Not for entities with owned Money (AccountTransaction, FundTransaction): they go with their account / fund / allocation.
+        await dbContext.AccountTransfers
+            .Where(x => x.Income.Account.Ledger.OwnerId == userId || x.Expense.Account.Ledger.OwnerId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Accounts.Where(x => x.Ledger.OwnerId == userId).ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Budgets.Where(x => x.Ledger.OwnerId == userId).ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Allocations.Where(x => x.Ledger.OwnerId == userId).ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Ledgers.Where(x => x.OwnerId == userId).ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Users.Where(x => x.Id == userId).ExecuteDeleteAsync(cancellationToken);
+
+        dbContext.ChangeTracker.Clear();
     }
 
     public async Task<T> CreateAsync<T>(T entity, CancellationToken cancellationToken) where T : Entity

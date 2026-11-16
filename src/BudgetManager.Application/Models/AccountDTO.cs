@@ -8,5 +8,4 @@ public record AccountDTO
     public required Guid LedgerId { get; init; }
     public required Balance Balance { get; init; }
     public required string Name { get; init; }
-    public string? Description { get; init; }
 }

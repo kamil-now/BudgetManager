@@ -1,0 +1,175 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--field-gap);
+  min-width: 0;
+}
+.field label,
+.field .label {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--control-h);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.input:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.input input,
+.input select,
+.input textarea {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  min-height: calc(var(--control-h) - 2px);
+  padding: 0;
+  outline: none;
+}
+.input textarea {
+  padding: 7px 0;
+  resize: vertical;
+}
+.input input::placeholder,
+.input textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.75;
+}
+.input input[type='date'] {
+  color-scheme: inherit;
+}
+
+.input select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 22px;
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 16px 16px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.input select option {
+  color: var(--ink);
+  background: var(--card);
+}
+.input .ccy-select {
+  flex: none;
+  width: auto;
+  font-weight: 600;
+  padding-right: 26px;
+  background-position: right 6px center;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+}
+.input .prefix,
+.input .suffix {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.num-in {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+.hint {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.error {
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.segment {
+  display: inline-flex;
+  align-items: stretch;
+  height: 34px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 3px;
+}
+.segment button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.segment button:disabled {
+  cursor: not-allowed;
+}
+.segment button.active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.segment.seg-in button.active {
+  color: var(--accent);
+}
+.segment.seg-out button.active {
+  color: var(--danger);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-form);
+}
+.form-grid > .span-2 {
+  grid-column: 1 / -1;
+}
+@media (max-width: 519.98px) {
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+// iOS zooms into a focused control whose font is under 16px.
+@media (max-width: 859.98px) {
+  input,
+  select,
+  textarea,
+  .input input,
+  .input select,
+  .input textarea {
+    font-size: 16px;
+  }
+}
